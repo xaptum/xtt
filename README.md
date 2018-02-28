@@ -16,7 +16,7 @@ TODO: Actually briefly summarize protocol justification and features.
 - A C99-compliant compiler
 - libsodium >= 1.0.8
 - milagro-crypto-c >= 4.1.1
-- [ecdaa](https://github.com/xaptum/ecdaa) >= 0.6.0
+- [ecdaa](https://github.com/xaptum/ecdaa) >= 0.7.0
   - Requires header files (e.g. "dev" package)
 - [xaptum-tpm](https://github.com/xaptum/xaptum-tpm) >= 0.4.0
   - Requires header files (e.g. "dev" package)

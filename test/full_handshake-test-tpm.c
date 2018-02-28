@@ -51,10 +51,6 @@ static
 int
 read_cred(xtt_daa_credential_lrsw *cred_out);
 
-// TODO: We don't use the public key for signing, so ECDAA shouldn't require it of us
-// For now, we're using a dummy key.
-const uint8_t tpm_pub_key[] = {0X4, 0XF4, 0XB3, 0XB2, 0X99, 0XD6, 0X73, 0XF3, 0XB0, 0XD3, 0X43, 0XB2, 0X33, 0X89, 0X21, 0X8D, 0XC1, 0XF3, 0X34, 0X75, 0XD7, 0XEF, 0X59, 0X9F, 0XA7, 0X39, 0X94, 0XC0, 0XA1, 0XDB, 0X77, 0XB, 0X64, 0XB, 0XB5, 0XCD, 0XE6, 0X43, 0XF7, 0XC1, 0X1F, 0XC3, 0XA5, 0X33, 0X61, 0XD7, 0XEA, 0X5C, 0XF2, 0X44, 0X52, 0X28, 0X92, 0XCE, 0X29, 0X65, 0XFD, 0XA8, 0X84, 0X73, 0XB, 0X2, 0X49, 0XB2, 0X2C};
-
 TPM_HANDLE key_handle_g = 0x81000000;
 TPM_HANDLE gpk_handle_g = 0x1600000;
 TPM_HANDLE cred_handle_g = 0x1600001;
@@ -127,7 +123,6 @@ int main()
 
     struct ecdaa_tpm_context tpm_ctx;
     int ret = ecdaa_tpm_context_init_socket(&tpm_ctx,
-                                            tpm_pub_key,
                                             key_handle_g,
                                             tpm_hostname_g,
                                             tpm_port_g,
