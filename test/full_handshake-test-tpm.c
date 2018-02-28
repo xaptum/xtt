@@ -367,10 +367,25 @@ init_sapi_ctx(void)
     return sapi_context;
 }
 
+void cleanup_sapi_ctx(TSS2_SYS_CONTEXT *sapi_ctx)
+{
+    TSS2_TCTI_CONTEXT *tcti_context = NULL;
+    TSS2_RC rc;
+
+    if (sapi_ctx != NULL) {
+        rc = Tss2_Sys_GetTctiContext(sapi_ctx, &tcti_context);
+        TEST_ASSERT(TSS2_RC_SUCCESS == rc);
+
+        tss2_tcti_finalize(tcti_context);
+
+        Tss2_Sys_Finalize(sapi_ctx);
+    }
+}
+
 int
 read_cred(xtt_daa_credential_lrsw *cred_out)
 {
-    int ret;
+    int ret = 0;
     
     TSS2_SYS_CONTEXT *sapi_context = init_sapi_ctx();
 
@@ -379,16 +394,18 @@ read_cred(xtt_daa_credential_lrsw *cred_out)
                      cred_handle_g,
                      sapi_context);
     if (0 != ret) {
-        return ret;
+        goto cleanup;
     }
+cleanup:
+    cleanup_sapi_ctx(sapi_context);
 
-    return 0;
+    return ret;
 }
 
 int
 read_gpk(xtt_daa_group_pub_key_lrsw *gpk_out)
 {
-    int ret;
+    int ret = 0;
     
     TSS2_SYS_CONTEXT *sapi_context = init_sapi_ctx();
 
@@ -397,8 +414,10 @@ read_gpk(xtt_daa_group_pub_key_lrsw *gpk_out)
                      gpk_handle_g,
                      sapi_context);
     if (0 != ret) {
-        return ret;
+        goto cleanup;
     }
+cleanup:
+    cleanup_sapi_ctx(sapi_context);
 
-    return 0;
+    return ret;
 }
