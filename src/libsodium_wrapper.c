@@ -18,7 +18,7 @@
 
 #include <xtt/crypto_wrapper.h>
 #include <xtt/crypto_types.h>
-#include <xtt/error_codes.h>
+#include <xtt/return_codes.h>
 
 #include <sodium.h>
 
@@ -46,7 +46,7 @@ int xtt_crypto_initialize_crypto()
 
     if ((rand_fd = open("/dev/random", O_RDONLY)) != -1) {
         if (ioctl(rand_fd, RNDGETENTCNT, &ent_count) == 0 && ent_count < 160) {
-            return XTT_ERROR_INSUFFICIENT_ENTROPY;
+            return XTT_RETURN_INSUFFICIENT_ENTROPY;
         }
 
         (void) close(rand_fd);
@@ -56,7 +56,7 @@ int xtt_crypto_initialize_crypto()
 
     init_ret = sodium_init();
     if (init_ret == -1) {
-        return XTT_ERROR_BAD_INIT;
+        return XTT_RETURN_BAD_INIT;
     } else {    /* Can also include init_ret == 1, indicating libsodium already initialized */
         return 0;
     }
@@ -94,7 +94,7 @@ int xtt_crypto_do_x25519_diffie_hellman(unsigned char* shared_secret,
                                my_sk->data,
                                other_pk->data);
     if (sodium_is_zero(shared_secret, crypto_scalarmult_BYTES))
-        return XTT_ERROR_DIFFIE_HELLMAN;
+        return XTT_RETURN_DIFFIE_HELLMAN;
 
     return rc;
 }
@@ -255,7 +255,7 @@ int xtt_crypto_aead_chacha_encrypt(unsigned char* ciphertext,
         *ciphertext_len = ciphertext_len_long;
         return ret;
     } else {
-        return XTT_ERROR_UINT32_OVERFLOW;
+        return XTT_RETURN_UINT32_OVERFLOW;
     }
 }
 
@@ -283,7 +283,7 @@ int xtt_crypto_aead_chacha_decrypt(unsigned char* decrypted,
         *decrypted_len = decrypted_len_long;
         return ret;
     } else {
-        return XTT_ERROR_UINT32_OVERFLOW;
+        return XTT_RETURN_UINT32_OVERFLOW;
     }
 }
 
@@ -311,7 +311,7 @@ int xtt_crypto_aead_aes256_encrypt(unsigned char* ciphertext,
         *ciphertext_len = ciphertext_len_long;
         return ret;
     } else {
-        return XTT_ERROR_UINT32_OVERFLOW;
+        return XTT_RETURN_UINT32_OVERFLOW;
     }
 }
 
@@ -339,6 +339,6 @@ int xtt_crypto_aead_aes256_decrypt(unsigned char* decrypted,
         *decrypted_len = decrypted_len_long;
         return ret;
     } else {
-        return XTT_ERROR_UINT32_OVERFLOW;
+        return XTT_RETURN_UINT32_OVERFLOW;
     }
 }

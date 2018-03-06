@@ -25,15 +25,15 @@ extern "C" {
 #endif
 
 #include <xtt/crypto_types.h>
-#include <xtt/error_codes.h>
+#include <xtt/return_codes.h>
 
 #define XTT_SERVER_CERTIFICATE_ED25519_LENGTH 136
 
 struct xtt_server_certificate_raw_type;
 
-xtt_error_code
+xtt_return_code_type
 generate_server_certificate_ed25519(unsigned char *cert_out,
-                                    xtt_client_id *servers_id,
+                                    xtt_identity_type *servers_id,
                                     xtt_ed25519_pub_key *servers_pub_key,
                                     xtt_certificate_expiry *expiry,
                                     xtt_certificate_root_id *roots_id,

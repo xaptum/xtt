@@ -114,20 +114,32 @@ int verify_root_ed25519(const unsigned char *signature,
                         const struct xtt_server_certificate_raw_type *certificate,
                         const struct xtt_server_root_certificate_context *self);
 
+#ifdef USE_TPM
 int sign_lrswTPM(unsigned char *signature_out,
                  const unsigned char *msg,
                  uint16_t msg_len,
-                 struct xtt_daa_context *self);
+                 struct xtt_client_group_context *self);
+#endif
 
 int sign_lrsw(unsigned char *signature_out,
               const unsigned char *msg,
               uint16_t msg_len,
-              struct xtt_daa_context *self);
+              struct xtt_client_group_context *self);
 
-int verify_lrswTPM(unsigned char *signature,
-                   unsigned char *msg,
-                   uint16_t msg_len,
-                   struct xtt_daa_group_public_key_context *self);
+int verify_lrsw(unsigned char *signature,
+                unsigned char *msg,
+                uint16_t msg_len,
+                struct xtt_group_public_key_context *self);
+
+int copy_pseudonym_lrsw(unsigned char *out,
+                        uint16_t *out_length,
+                        unsigned char *serialized_signature_in);
+
+int copy_in_pseudonym_server_lrsw(struct xtt_server_handshake_context *self,
+                                  unsigned char *signature_in);
+
+int copy_in_pseudonym_client_lrsw(struct xtt_client_handshake_context *self,
+                                  unsigned char *signature_in);
 
 #ifdef __cplusplus
 }

@@ -82,11 +82,53 @@ Set the `CMAKE_INSTALL_PREFIX` variable when configuring the build to
 modify the installation location.
 
 
-## Using the Library
+## Usage
 ```
 #include <xtt.h>
 ```
-TODO: Add simple client and server examples here
+TODO: Add simple client and server source code
+
+### Example Programs
+If the `-DBUILD_EXAMPLES=ON` CMake option is used during building,
+example client and server executables will be built and placed
+in the `${CMAKE_BINARY_DIR}/bin` directory.
+Example configuration data is also provided in the `examples/data`
+directory.
+
+#### Server
+To run the example server, first copy the necessary example data
+into the working directory:
+```bash
+cp ${xtt_root_directory}/examples/data/server/* .
+```
+
+The server executable takes the TCP port to use as parameter:
+```bash
+xtt_server 4444
+```
+
+The server will then listen on that port for incoming identity-provisioning
+requests, service them sequentially (the server is single-threaded),
+and output the agreed-upon identity information exchanged with the client.
+
+#### Client
+To run the example client, first copy the necessary example data
+into the working directory:
+```bash
+cp ${xtt_root_directory}/examples/data/client/* .
+```
+
+The client executable takes the `xtt_suite_spec` to use
+(run the executable with no arguments to see what the options are)
+and the IP and port of the server as parameters:
+```bash
+xtt_client 1 127.0.0.1 4444
+```
+(a suite_spec value of `1` indicates `XTT_X25519_LRSW_ED25519_CHACHA20POLY1305_SHA512`).
+
+The client will then initiate an identity-provisioning handshake with the server
+listening on the given IP and port,
+and output the agreed-upon identity information exchanged with that server.
 
 # License
 Copyright 2018 Xaptum, Inc.

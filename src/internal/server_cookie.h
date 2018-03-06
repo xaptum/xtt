@@ -22,18 +22,18 @@
 
 #include <xtt/context.h>
 #include <xtt/crypto_types.h>
-#include <xtt/error_codes.h>
+#include <xtt/return_codes.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-xtt_error_code
+xtt_return_code_type
 build_server_cookie(xtt_server_cookie *cookie,
                     struct xtt_handshake_context *handshake_ctx,
                     struct xtt_server_cookie_context *cookie_ctx);
 
-xtt_error_code
+xtt_return_code_type
 validate_server_cookie(xtt_server_cookie *cookie,
                        struct xtt_handshake_context *handshake_ctx,
                        struct xtt_server_cookie_context *cookie_ctx);

@@ -24,14 +24,14 @@
 #include <assert.h>
 
 static
-xtt_error_code
+xtt_return_code_type
 generate_handshake_key_hash(unsigned char *hash_out,
                             struct xtt_handshake_context *handshake_ctx,
                             const unsigned char *client_init,
                             const unsigned char *server_initandattest_uptocookie,
                             const xtt_server_cookie *server_cookie);
 
-xtt_error_code
+xtt_return_code_type
 derive_handshake_keys(struct xtt_handshake_context *handshake_ctx,
                       const unsigned char *client_init,
                       const unsigned char *server_initandattest_uptocookie,
@@ -39,7 +39,7 @@ derive_handshake_keys(struct xtt_handshake_context *handshake_ctx,
                       const unsigned char *others_pub_key,
                       int is_client)
 {
-    xtt_error_code rc;
+    xtt_return_code_type rc;
 
     // 1) Create HandshakeKeyHash.
     rc = generate_handshake_key_hash(handshake_ctx->hash_out_buffer,
@@ -47,7 +47,7 @@ derive_handshake_keys(struct xtt_handshake_context *handshake_ctx,
                                      client_init,
                                      server_initandattest_uptocookie,
                                      server_cookie);
-    if (XTT_ERROR_SUCCESS != rc)
+    if (XTT_RETURN_SUCCESS != rc)
         return rc;
 
     // 3) Run Diffie-Hellman
@@ -55,7 +55,7 @@ derive_handshake_keys(struct xtt_handshake_context *handshake_ctx,
                                                  others_pub_key,
                                                  handshake_ctx);
     if (0 != dh_rc)
-        return XTT_ERROR_DIFFIE_HELLMAN;
+        return XTT_RETURN_DIFFIE_HELLMAN;
 
     // 4) Create handshake_secret: prf_key -> prf<hash_size>(shared_secret)
     int prf_rc = handshake_ctx->prf(handshake_ctx->handshake_secret,
@@ -65,7 +65,7 @@ derive_handshake_keys(struct xtt_handshake_context *handshake_ctx,
                                     handshake_ctx->prf_key,
                                     handshake_ctx->hash_length);
     if (0 != prf_rc)
-        return XTT_ERROR_CRYPTO;
+        return XTT_RETURN_CRYPTO;
 
     // 5) Create keys and iv's
     memcpy(handshake_ctx->hash_buffer, handshake_ctx->hash_out_buffer, handshake_ctx->hash_length);
@@ -89,7 +89,7 @@ derive_handshake_keys(struct xtt_handshake_context *handshake_ctx,
                                     handshake_ctx->hash_length + client_handshake_context_string_length,
                                     handshake_ctx->handshake_secret,
                                     handshake_ctx->hash_length);
-        if (XTT_ERROR_SUCCESS != prf_rc)
+        if (XTT_RETURN_SUCCESS != prf_rc)
             return prf_rc;
     }
 
@@ -110,7 +110,7 @@ derive_handshake_keys(struct xtt_handshake_context *handshake_ctx,
                                     handshake_ctx->hash_length + client_handshake_context_iv_string_length,
                                     handshake_ctx->handshake_secret,
                                     handshake_ctx->hash_length);
-        if (XTT_ERROR_SUCCESS != prf_rc)
+        if (XTT_RETURN_SUCCESS != prf_rc)
             return prf_rc;
     }
 
@@ -153,7 +153,7 @@ derive_handshake_keys(struct xtt_handshake_context *handshake_ctx,
 //     }
 // }
 // }
-        if (XTT_ERROR_SUCCESS != prf_rc)
+        if (XTT_RETURN_SUCCESS != prf_rc)
             return prf_rc;
     }
 
@@ -174,14 +174,14 @@ derive_handshake_keys(struct xtt_handshake_context *handshake_ctx,
                                     handshake_ctx->hash_length + server_handshake_context_iv_string_length,
                                     handshake_ctx->handshake_secret,
                                     handshake_ctx->hash_length);
-        if (XTT_ERROR_SUCCESS != prf_rc)
+        if (XTT_RETURN_SUCCESS != prf_rc)
             return prf_rc;
     }
 
-    return XTT_ERROR_SUCCESS;
+    return XTT_RETURN_SUCCESS;
 }
 
-xtt_error_code
+xtt_return_code_type
 generate_handshake_key_hash(unsigned char *hash_out,
                             struct xtt_handshake_context *handshake_ctx,
                             const unsigned char *client_init,
@@ -220,7 +220,7 @@ generate_handshake_key_hash(unsigned char *hash_out,
                                       handshake_ctx->hash_buffer,
                                       inner_hash_input_length + sizeof(inner_hash_input_length));
     if (0 != hash_rc)
-        return XTT_ERROR_CRYPTO;
+        return XTT_RETURN_CRYPTO;
 
     // 2) Create HandshakeKeyHash: hash_ext(inner-hash || server_cookie)
     uint16_t outer_hash_input_length = inner_hash_length + sizeof(xtt_server_cookie);
@@ -247,7 +247,7 @@ generate_handshake_key_hash(unsigned char *hash_out,
                                   handshake_ctx->hash_buffer,
                                   outer_hash_input_length + sizeof(outer_hash_input_length));
     if (0 != hash_rc)
-        return XTT_ERROR_CRYPTO;
+        return XTT_RETURN_CRYPTO;
 
-    return XTT_ERROR_SUCCESS;
+    return XTT_RETURN_SUCCESS;
 }

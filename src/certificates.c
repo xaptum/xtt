@@ -23,9 +23,9 @@
 #include <assert.h>
 #include <string.h>
 
-xtt_error_code
+xtt_return_code_type
 generate_server_certificate_ed25519(unsigned char *cert_out,
-                                    xtt_client_id *servers_id,
+                                    xtt_identity_type *servers_id,
                                     xtt_ed25519_pub_key *servers_pub_key,
                                     xtt_certificate_expiry *expiry,
                                     xtt_certificate_root_id *roots_id,
@@ -35,7 +35,7 @@ generate_server_certificate_ed25519(unsigned char *cert_out,
 
     memcpy(xtt_server_certificate_access_id(cert_ptr),
            servers_id->data,
-           sizeof(xtt_client_id));
+           sizeof(xtt_identity_type));
 
     memcpy(xtt_server_certificate_access_expiry(cert_ptr),
            expiry->data,
@@ -56,9 +56,9 @@ generate_server_certificate_ed25519(unsigned char *cert_out,
                                      xtt_server_certificate_length_uptosignature_fromsignaturetype(XTT_SERVER_SIGNATURE_TYPE_ED25519),
                                      roots_priv_key);
     if (0 != rc)
-        return XTT_ERROR_CRYPTO;
+        return XTT_RETURN_CRYPTO;
 
-    return XTT_ERROR_SUCCESS;
+    return XTT_RETURN_SUCCESS;
 }
 
 uint16_t
@@ -66,7 +66,7 @@ xtt_server_certificate_length_fromsignaturetype(xtt_server_signature_type type)
 {
     switch (type) {
         case XTT_SERVER_SIGNATURE_TYPE_ED25519:
-            return sizeof(xtt_client_id)
+            return sizeof(xtt_identity_type)
                        + sizeof(xtt_certificate_expiry)
                        + sizeof(xtt_certificate_root_id)
                        + sizeof(xtt_ed25519_pub_key)
@@ -97,7 +97,7 @@ xtt_server_certificate_length_uptosignature_fromsignaturetype(xtt_server_signatu
 {
     switch (type) {
         case XTT_SERVER_SIGNATURE_TYPE_ED25519:
-            return sizeof(xtt_client_id)
+            return sizeof(xtt_identity_type)
                        + sizeof(xtt_certificate_expiry)
                        + sizeof(xtt_certificate_root_id)
                        + sizeof(xtt_ed25519_pub_key);
@@ -132,14 +132,14 @@ unsigned char*
 xtt_server_certificate_access_expiry(const struct xtt_server_certificate_raw_type *certificate)
 {
     return (unsigned char*)(certificate)
-                            + sizeof(xtt_client_id);
+                            + sizeof(xtt_identity_type);
 }
 
 unsigned char*
 xtt_server_certificate_access_rootid(const struct xtt_server_certificate_raw_type *certificate)
 {
     return (unsigned char*)(certificate)
-                            + sizeof(xtt_client_id)
+                            + sizeof(xtt_identity_type)
                             + sizeof(xtt_certificate_expiry);
 }
 
@@ -147,7 +147,7 @@ unsigned char*
 xtt_server_certificate_access_pubkey(const struct xtt_server_certificate_raw_type *certificate)
 {
     return (unsigned char*)(certificate)
-                            + sizeof(xtt_client_id)
+                            + sizeof(xtt_identity_type)
                             + sizeof(xtt_certificate_expiry)
                             + sizeof(xtt_certificate_root_id);
 }
@@ -159,7 +159,7 @@ xtt_server_certificate_access_rootsignature_fromsignaturetype(const struct xtt_s
     switch (type) {
         case XTT_SERVER_SIGNATURE_TYPE_ED25519:
             return (unsigned char*)(certificate)
-                                    + sizeof(xtt_client_id)
+                                    + sizeof(xtt_identity_type)
                                     + sizeof(xtt_certificate_expiry)
                                     + sizeof(xtt_certificate_root_id)
                                     + sizeof(xtt_ed25519_pub_key);

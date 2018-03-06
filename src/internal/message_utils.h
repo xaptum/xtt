@@ -27,6 +27,8 @@
 extern "C" {
 #endif
 
+extern const uint16_t xtt_common_header_length;
+
 /* NOTE: These methods take a const pointer to the underlying message buffer,
  * yet return non-const pointers into that buffer.
  * So, beware. */

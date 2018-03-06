@@ -21,9 +21,13 @@
 #pragma once
 
 #include <xtt/crypto_types.h>
-#include <xtt/error_codes.h>
+#include <xtt/return_codes.h>
 #include <xtt/certificates.h>
 #include <xtt/daa_wrapper.h>
+
+#ifdef USE_TPM
+#include <tss2/tss2_sys.h>
+#endif
 
 #ifndef SESSION_CONTEXT_BUFFER_SIZE
 #define SESSION_CONTEXT_BUFFER_SIZE 2048
@@ -38,6 +42,10 @@
 #define MAX_BASENAME_LENGTH 64
 #endif
 
+#ifndef MAX_TPM_PASSWORD_LENGTH
+#define MAX_TPM_PASSWORD_LENGTH 64
+#endif
+
 #ifndef HASH_BUFFER_SIZE
 #define HASH_BUFFER_SIZE 1024
 #endif
@@ -45,6 +53,36 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+typedef enum {
+    XTT_CLIENT_HANDSHAKE_STATE_START,
+    XTT_CLIENT_HANDSHAKE_STATE_SENDING_CLIENTINIT,
+    XTT_CLIENT_HANDSHAKE_STATE_READING_SERVERATTESTHEADER,
+    XTT_CLIENT_HANDSHAKE_STATE_READING_SERVERATTEST,
+    XTT_CLIENT_HANDSHAKE_STATE_PREPARSING_SERVERATTEST,
+    XTT_CLIENT_HANDSHAKE_STATE_BUILDING_IDCLIENTATTEST,
+    XTT_CLIENT_HANDSHAKE_STATE_SENDING_IDCLIENTATTEST,
+    XTT_CLIENT_HANDSHAKE_STATE_READING_IDSERVERFINISHEDHEADER,
+    XTT_CLIENT_HANDSHAKE_STATE_READING_IDSERVERFINISHED,
+    XTT_CLIENT_HANDSHAKE_STATE_PARSING_IDSERVERFINISHED,
+    XTT_CLIENT_HANDSHAKE_STATE_FINISHED,
+    XTT_CLIENT_HANDSHAKE_STATE_ERROR,
+} xtt_client_handshake_state;
+
+typedef enum {
+    XTT_SERVER_HANDSHAKE_STATE_START,
+    XTT_SERVER_HANDSHAKE_STATE_READING_CLIENTINITHEADER,
+    XTT_SERVER_HANDSHAKE_STATE_READING_CLIENTINIT,
+    XTT_SERVER_HANDSHAKE_STATE_PARSING_CLIENTINIT_AND_BUILDING_SERVERATTEST,
+    XTT_SERVER_HANDSHAKE_STATE_SENDING_SERVERATTEST,
+    XTT_SERVER_HANDSHAKE_STATE_READING_CLIENTATTESTHEADER,
+    XTT_SERVER_HANDSHAKE_STATE_READING_IDCLIENTATTEST,
+    XTT_SERVER_HANDSHAKE_STATE_PREPARSING_IDCLIENTATTEST,
+    XTT_SERVER_HANDSHAKE_STATE_BUILDING_IDSERVERFINISHED,
+    XTT_SERVER_HANDSHAKE_STATE_SENDING_IDSERVERFINISHED,
+    XTT_SERVER_HANDSHAKE_STATE_FINISHED,
+    XTT_SERVER_HANDSHAKE_STATE_ERROR,
+} xtt_server_handshake_state;
 
 struct xtt_handshake_context {
     void (*copy_dh_pubkey)(unsigned char* out,
@@ -85,6 +123,13 @@ struct xtt_handshake_context {
 
     xtt_suite_spec suite_spec;
     xtt_version version;
+
+    unsigned char *in_buffer_start;
+    unsigned char *in_message_start;
+    unsigned char *in_end;
+    unsigned char *out_buffer_start;
+    unsigned char *out_message_start;
+    unsigned char *out_end;
 
     uint16_t longterm_key_length;
     uint16_t longterm_key_signature_length;
@@ -158,7 +203,6 @@ struct xtt_handshake_context {
     // TODO: properly size this
     unsigned char clientattest_buffer[1024];
     unsigned char buffer[HANDSHAKE_CONTEXT_BUFFER_SIZE];
-    /* TODO: Add a state? (so we're sure where in a handshake a given ctx is) */
 };
 
 struct xtt_server_handshake_context {
@@ -173,9 +217,20 @@ struct xtt_server_handshake_context {
                                             uint16_t msg_len,
                                             const unsigned char *client_longterm_key);
 
+    int (*copy_in_clients_pseudonym)(struct xtt_server_handshake_context *self,
+                                     unsigned char *signature_in);
+
+    xtt_server_handshake_state state;
+
+    xtt_identity_type clients_identity;
+
     union {
         xtt_ed25519_pub_key ed25519;
     } clients_longterm_key;
+
+    union {
+        xtt_daa_pseudonym_lrsw lrsw;
+    } clients_pseudonym;
 };
 
 struct xtt_client_handshake_context {
@@ -196,6 +251,17 @@ struct xtt_client_handshake_context {
                          const unsigned char *msg,
                          uint16_t msg_len,
                          const struct xtt_client_handshake_context *self);
+
+    int (*copy_in_my_pseudonym)(struct xtt_client_handshake_context *self,
+                                unsigned char *signature_in);
+
+    xtt_client_handshake_state state;
+
+    xtt_identity_type identity;
+
+    union {
+        xtt_daa_pseudonym_lrsw lrsw;
+    } pseudonym;
 
     union {
         xtt_ed25519_pub_key ed25519;
@@ -235,11 +301,11 @@ struct xtt_server_root_certificate_context {
     } public_key;
 };
 
-struct xtt_daa_group_public_key_context {
+struct xtt_group_public_key_context {
     int (*verify_signature)(unsigned char *signature,
                             unsigned char *msg,
                             uint16_t msg_len,
-                            struct xtt_daa_group_public_key_context *self);
+                            struct xtt_group_public_key_context *self);
     unsigned char basename[MAX_BASENAME_LENGTH];
     uint16_t basename_length;
 
@@ -248,79 +314,120 @@ struct xtt_daa_group_public_key_context {
     } gpk;
 };
 
-struct xtt_daa_context {
+struct xtt_client_group_context {
     int (*sign)(unsigned char *signature_out,
                 const unsigned char *msg,
                 uint16_t msg_len,
-                struct xtt_daa_context *self);
-    xtt_daa_group_id gid;
-    union {
-        xtt_daa_priv_key_lrsw lrsw;
-    } priv_key;   // If NOT using a TPM
+                struct xtt_client_group_context *self);
+    xtt_group_id gid;
     union {
         xtt_daa_credential_lrsw lrsw;
     } cred;
     unsigned char basename[MAX_BASENAME_LENGTH];
     uint16_t basename_length;
-    struct xtt_daa_tpm_context *tpm_context; // If using a TPM
+
+#ifdef USE_TPM
+    // If using a TPM:
+    TPM_HANDLE key_handle;
+    char key_password[MAX_TPM_PASSWORD_LENGTH];
+    uint16_t key_password_length;
+    TSS2_TCTI_CONTEXT *tcti_context;
+#endif
+
+    // If NOT using a TPM:
+    union {
+        xtt_daa_priv_key_lrsw lrsw;
+    } priv_key;
 };
 
-xtt_error_code
-xtt_initialize_server_handshake_context(struct xtt_server_handshake_context* ctx_out,
-                                        xtt_version version,
-                                        xtt_suite_spec suite_spec);
-
-xtt_error_code
+xtt_return_code_type
 xtt_initialize_client_handshake_context(struct xtt_client_handshake_context* ctx_out,
+                                        unsigned char *in_buffer,
+                                        unsigned char *out_buffer,
                                         xtt_version version,
                                         xtt_suite_spec suite_spec);
 
-xtt_error_code
+xtt_return_code_type
+xtt_initialize_server_handshake_context(struct xtt_server_handshake_context* ctx_out,
+                                        unsigned char *in_buffer,
+                                        unsigned char *out_buffer);
+
+xtt_return_code_type
 xtt_initialize_server_cookie_context(struct xtt_server_cookie_context* ctx);
 
-xtt_error_code
+xtt_return_code_type
 xtt_initialize_server_certificate_context_ed25519(struct xtt_server_certificate_context *ctx_out,
                                                   const unsigned char *serialized_certificate,
                                                   xtt_ed25519_priv_key *private_key);
 
-xtt_error_code
+xtt_return_code_type
 xtt_initialize_server_root_certificate_context_ed25519(struct xtt_server_root_certificate_context *cert_out,
                                                        xtt_certificate_root_id *id,
                                                        xtt_ed25519_pub_key *public_key);
 
-xtt_error_code
-xtt_initialize_daa_group_public_key_context_lrsw(struct xtt_daa_group_public_key_context *ctx_out,
+xtt_return_code_type
+xtt_initialize_group_public_key_context_lrsw(struct xtt_group_public_key_context *ctx_out,
                                                  const unsigned char *basename,
                                                  uint16_t basename_length,
                                                  xtt_daa_group_pub_key_lrsw *gpk);
 
-xtt_error_code
-xtt_initialize_daa_context_lrswTPM(struct xtt_daa_context *ctx_out,
-                                   xtt_daa_group_id *gid,
-                                   xtt_daa_credential_lrsw *cred,
-                                   const unsigned char *basename,
-                                   uint16_t basename_length,
-                                   struct xtt_daa_tpm_context *tpm_context);
+#ifdef USE_TPM
+xtt_return_code_type
+xtt_initialize_client_group_context_lrswTPM(struct xtt_client_group_context *ctx_out,
+                                            xtt_group_id *gid,
+                                            xtt_daa_credential_lrsw *cred,
+                                            const unsigned char *basename,
+                                            uint16_t basename_length,
+                                            TPM_HANDLE key_handle,
+                                            const char *key_password,
+                                            uint16_t key_password_length,
+                                            TSS2_TCTI_CONTEXT *tcti_context);
+#endif
 
-xtt_error_code
-xtt_initialize_daa_context_lrsw(struct xtt_daa_context *ctx_out,
-                                xtt_daa_group_id *gid,
+xtt_return_code_type
+xtt_initialize_client_group_context_lrsw(struct xtt_client_group_context *ctx_out,
+                                xtt_group_id *gid,
                                 xtt_daa_priv_key_lrsw *priv_key,
                                 xtt_daa_credential_lrsw *cred,
                                 const unsigned char *basename,
                                 uint16_t basename_length);
 
-xtt_error_code
+xtt_return_code_type
+xtt_get_suite_spec(xtt_suite_spec *suite_spec_out,
+                   const struct xtt_server_handshake_context *handshake_context);
+
+xtt_return_code_type
 xtt_get_clients_longterm_key_ed25519(xtt_ed25519_pub_key *longterm_key_out,
                                      const struct xtt_server_handshake_context *handshake_context);
 
-xtt_error_code
+xtt_return_code_type
+xtt_get_clients_identity(xtt_identity_type *client_id_out,
+                          const struct xtt_server_handshake_context *handshake_context);
+
+xtt_return_code_type
+xtt_get_clients_pseudonym_lrsw(xtt_daa_pseudonym_lrsw *pseudonym_out,
+                               const struct xtt_server_handshake_context *handshake_context);
+
+xtt_return_code_type
 xtt_get_my_longterm_key_ed25519(xtt_ed25519_pub_key *longterm_key_out,
                                 const struct xtt_client_handshake_context *handshake_context);
 
-xtt_error_code
+xtt_return_code_type
 xtt_get_my_longterm_private_key_ed25519(xtt_ed25519_priv_key *longterm_key_priv_out,
                                         const struct xtt_client_handshake_context *handshake_context);
+
+xtt_return_code_type
+xtt_get_my_identity(xtt_identity_type *client_id_out,
+                     const struct xtt_client_handshake_context *handshake_context);
+
+xtt_return_code_type
+xtt_setup_server_handshake_context(struct xtt_server_handshake_context* ctx_out,
+                                   xtt_version version,
+                                   xtt_suite_spec suite_spec);
+
+xtt_return_code_type
+xtt_get_my_pseudonym_lrsw(xtt_daa_pseudonym_lrsw *pseudonym_out,
+                          const struct xtt_client_handshake_context *handshake_context);
 
 #ifdef __cplusplus
 }
