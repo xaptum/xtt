@@ -25,7 +25,7 @@
 #include <xtt/crypto_wrapper.h>
 #include <xtt/crypto_types.h>
 #include <xtt/daa_wrapper.h>
-#include <xtt/error_codes.h>
+#include <xtt/return_codes.h>
 #include <xtt/messages.h>
 
 #endif

@@ -16,12 +16,12 @@
  *
  *****************************************************************************/
 
-#include <xtt/error_codes.h>
-
 #include "message_utils.h"
 #include "byte_utils.h"
 
 #include <assert.h>
+
+const uint16_t xtt_common_header_length = 4;  // Type(1) + Length(2) + Version(1)
 
 xtt_msg_type_raw*
 xtt_access_msg_type(const unsigned char* msg_start)
@@ -375,8 +375,8 @@ uint16_t xtt_identityclientattest_encrypted_part_length(xtt_version version,
                 case XTT_X25519_LRSW_ED25519_AES256GCM_BLAKE2B:
                     return sizeof(xtt_ed25519_pub_key)
                            + sizeof(xtt_ed25519_signature)
-                           + sizeof(xtt_daa_group_id)
-                           + sizeof(xtt_client_id)
+                           + sizeof(xtt_group_id)
+                           + sizeof(xtt_identity_type)
                            + sizeof(xtt_daa_signature_lrsw);
             }
     }
@@ -426,8 +426,8 @@ xtt_identityclientattest_uptofirstsignature_length(xtt_version version,
                            + sizeof(xtt_suite_spec_raw)
                            + sizeof(xtt_server_cookie)
                            + sizeof(xtt_ed25519_pub_key)
-                           + sizeof(xtt_daa_group_id)
-                           + sizeof(xtt_client_id);
+                           + sizeof(xtt_group_id)
+                           + sizeof(xtt_identity_type);
             }
     }
 
@@ -447,8 +447,8 @@ xtt_identityclientattest_encrypted_part_uptofirstsignature_length(xtt_version ve
                 case XTT_X25519_LRSW_ED25519_AES256GCM_SHA512:
                 case XTT_X25519_LRSW_ED25519_AES256GCM_BLAKE2B:
                     return sizeof(xtt_ed25519_pub_key)
-                           + sizeof(xtt_daa_group_id)
-                           + sizeof(xtt_client_id);
+                           + sizeof(xtt_group_id)
+                           + sizeof(xtt_identity_type);
             }
     }
 
@@ -537,7 +537,7 @@ xtt_encrypted_identityclientattest_access_id(const unsigned char *encrypted_star
                 case XTT_X25519_LRSW_ED25519_AES256GCM_BLAKE2B:
                     return (unsigned char*)(encrypted_start
                                             + sizeof(xtt_ed25519_pub_key)
-                                            + sizeof(xtt_daa_group_id));
+                                            + sizeof(xtt_group_id));
             }
     }
 
@@ -559,8 +559,8 @@ xtt_encrypted_identityclientattest_access_longtermsignature(const unsigned char 
                 case XTT_X25519_LRSW_ED25519_AES256GCM_BLAKE2B:
                     return (unsigned char*)(encrypted_start
                                             + sizeof(xtt_ed25519_pub_key)
-                                            + sizeof(xtt_daa_group_id)
-                                            + sizeof(xtt_client_id));
+                                            + sizeof(xtt_group_id)
+                                            + sizeof(xtt_identity_type));
             }
     }
 
@@ -582,8 +582,8 @@ xtt_encrypted_identityclientattest_access_daasignature(const unsigned char *encr
                 case XTT_X25519_LRSW_ED25519_AES256GCM_BLAKE2B:
                     return (unsigned char*)(encrypted_start
                                             + sizeof(xtt_ed25519_pub_key)
-                                            + sizeof(xtt_daa_group_id)
-                                            + sizeof(xtt_client_id)
+                                            + sizeof(xtt_group_id)
+                                            + sizeof(xtt_identity_type)
                                             + sizeof(xtt_ed25519_signature));
             }
     }
@@ -616,7 +616,7 @@ uint16_t xtt_identityserverfinished_encrypted_part_length(xtt_version version,
                 case XTT_X25519_LRSW_ED25519_CHACHA20POLY1305_BLAKE2B:
                 case XTT_X25519_LRSW_ED25519_AES256GCM_SHA512:
                 case XTT_X25519_LRSW_ED25519_AES256GCM_BLAKE2B:
-                    return sizeof(xtt_client_id)
+                    return sizeof(xtt_identity_type)
                            + sizeof(xtt_ed25519_pub_key);
             }
     }
@@ -686,7 +686,7 @@ xtt_encrypted_identityserverfinished_access_longtermkey(const unsigned char *enc
     switch (version) {
         case XTT_VERSION_ONE:
             return (unsigned char*)(encrypted_start
-                                    + sizeof(xtt_client_id));
+                                    + sizeof(xtt_identity_type));
     }
 
     assert(0);

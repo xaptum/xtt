@@ -67,18 +67,18 @@ typedef uint16_t xtt_length;
 typedef struct {unsigned char data[32];} xtt_signing_nonce;
 typedef struct {unsigned char data[8];} xtt_session_id_seed;
 typedef struct {unsigned char data[16];} xtt_session_id;
-typedef struct {unsigned char data[16];} xtt_client_id;
-extern const xtt_client_id xtt_null_client_id;
+typedef struct {unsigned char data[16];} xtt_identity_type;
+extern const xtt_identity_type xtt_null_identity;
 typedef struct {unsigned char data[130];} xtt_server_cookie;
 
-/* DAA */
-typedef struct {unsigned char data[32];} xtt_daa_group_id;
-extern const xtt_daa_group_id xtt_null_daa_group_id;
+/* Client group signatures */
+typedef struct {unsigned char data[32];} xtt_group_id;
 
 typedef struct {unsigned char data[260];} xtt_daa_credential_lrsw;
 typedef struct {unsigned char data[32];} xtt_daa_priv_key_lrsw;
 typedef struct {unsigned char data[258];} xtt_daa_group_pub_key_lrsw;
 typedef struct {unsigned char data[389];} xtt_daa_signature_lrsw;
+typedef struct {unsigned char data[65];} xtt_daa_pseudonym_lrsw;
 
 /* Diffie-Hellman */
 typedef struct {unsigned char data[32];} xtt_x25519_pub_key;

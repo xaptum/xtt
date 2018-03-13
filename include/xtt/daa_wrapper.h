@@ -21,13 +21,17 @@
 #pragma once
 
 #include <xtt/crypto_types.h>
+#include <xtt/return_codes.h>
+
+#ifdef USE_TPM
+#include <tss2/tss2_sys.h>
+#endif
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-struct xtt_daa_tpm_context;
-
+#ifdef USE_TPM
 int
 xtt_daa_sign_lrswTPM(unsigned char *signature_out,
                      const unsigned char *msg,
@@ -35,7 +39,11 @@ xtt_daa_sign_lrswTPM(unsigned char *signature_out,
                      const unsigned char *basename,
                      uint16_t basename_len,
                      xtt_daa_credential_lrsw *cred,
-                     struct xtt_daa_tpm_context *global_context);
+                     TPM_HANDLE key_handle,
+                     const char *key_password,
+                     uint16_t key_password_length,
+                     TSS2_TCTI_CONTEXT *tcti_context);
+#endif
 
 int
 xtt_daa_sign_lrsw(unsigned char *signature_out,
@@ -47,12 +55,17 @@ xtt_daa_sign_lrsw(unsigned char *signature_out,
                   xtt_daa_priv_key_lrsw *priv_key);
 
 int
-xtt_daa_verify_lrswTPM(unsigned char* signature,
-                       unsigned char* msg,
-                       uint16_t msg_len,
-                       unsigned char *basename,
-                       uint16_t basename_len,
-                       xtt_daa_group_pub_key_lrsw* gpk);
+xtt_daa_verify_lrsw(unsigned char* signature,
+                    unsigned char* msg,
+                    uint16_t msg_len,
+                    unsigned char *basename,
+                    uint16_t basename_len,
+                    xtt_daa_group_pub_key_lrsw* gpk);
+
+xtt_return_code_type
+xtt_daa_access_pseudonym_in_serialized(unsigned char **raw_pseudonym,
+                                       uint16_t *raw_pseudonym_length, 
+                                       unsigned char *serialized_signature_in);
 
 #ifdef __cplusplus
 }

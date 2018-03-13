@@ -19,7 +19,6 @@
 #include <xtt/crypto_wrapper.h>
 #include <xtt/daa_wrapper.h>
 #include <xtt/crypto_types.h>
-#include <xtt/error_codes.h>
 
 #include <ecdaa.h>
 
@@ -33,7 +32,10 @@ xtt_daa_sign_lrswTPM(unsigned char *signature_out,
                      const unsigned char *basename,
                      uint16_t basename_len,
                      xtt_daa_credential_lrsw *cred,
-                     struct xtt_daa_tpm_context *tpm_context)
+                     TPM_HANDLE key_handle,
+                     const char *key_password,
+                     uint16_t key_password_length,
+                     TSS2_TCTI_CONTEXT *tcti_context)
 {
     int ret;
 
@@ -52,6 +54,17 @@ xtt_daa_sign_lrswTPM(unsigned char *signature_out,
         return ret;
     }
 
+    // 3) Create the ecdaa_tpm_context
+    struct ecdaa_tpm_context ecdaa_tpm_context;
+    ret = ecdaa_tpm_context_init(&ecdaa_tpm_context,
+                                 key_handle,
+                                 key_password,
+                                 key_password_length,
+                                 tcti_context);
+    if (0 != ret) {
+        return ret;
+    }
+
     // 3) Create signature.
     struct ecdaa_signature_FP256BN sig;
     ret = ecdaa_signature_TPM_sign(&sig,
@@ -61,7 +74,7 @@ xtt_daa_sign_lrswTPM(unsigned char *signature_out,
                                    basename_len,
                                    &ecdaa_cred,
                                    &prng,
-                                   (struct ecdaa_tpm_context*)tpm_context);
+                                   &ecdaa_tpm_context);
     if (0 != ret) {
         return -1;
     }
@@ -129,12 +142,12 @@ xtt_daa_sign_lrsw(unsigned char *signature_out,
 }
 
 int
-xtt_daa_verify_lrswTPM(unsigned char *signature,
-                       unsigned char* msg,
-                       uint16_t msg_len,
-                       unsigned char *basename,
-                       uint16_t basename_len,
-                       xtt_daa_group_pub_key_lrsw* gpk)
+xtt_daa_verify_lrsw(unsigned char *signature,
+                    unsigned char* msg,
+                    uint16_t msg_len,
+                    unsigned char *basename,
+                    uint16_t basename_len,
+                    xtt_daa_group_pub_key_lrsw* gpk)
 {
     // 1) Deserialize signature.
     struct ecdaa_signature_FP256BN ecdaa_sig;
@@ -169,4 +182,21 @@ xtt_daa_verify_lrswTPM(unsigned char *signature,
         return verify_ret;
 
     return 0;
+}
+
+xtt_return_code_type
+xtt_daa_access_pseudonym_in_serialized(unsigned char **raw_pseudonym,
+                                       uint16_t *raw_pseudonym_length, 
+                                       unsigned char *serialized_signature_in)
+{
+    uint32_t raw_pseudonym_length_32;
+    ecdaa_signature_FP256BN_access_pseudonym_in_serialized(raw_pseudonym,
+                                                           &raw_pseudonym_length_32, 
+                                                           serialized_signature_in);
+    if (raw_pseudonym_length_32 <= UINT16_MAX) {
+        *raw_pseudonym_length = raw_pseudonym_length_32;
+        return XTT_RETURN_SUCCESS;
+    } else {
+        return XTT_RETURN_UINT16_OVERFLOW;
+    }
 }

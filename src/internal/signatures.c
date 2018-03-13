@@ -28,7 +28,7 @@
 #include <stdio.h>
 
 static
-xtt_error_code
+xtt_return_code_type
 generate_server_sig_hash(unsigned char *hash_out,
                          const unsigned char *client_init,
                          const unsigned char *server_initandattest_unencrypted_part,
@@ -36,7 +36,7 @@ generate_server_sig_hash(unsigned char *hash_out,
                          struct xtt_handshake_context *handshake_ctx);
 
 static
-xtt_error_code
+xtt_return_code_type
 generate_client_sig_hash(unsigned char *hash_out,
                          const unsigned char *server_cookie,
                          const struct xtt_server_certificate_raw_type *certificate,
@@ -47,10 +47,10 @@ generate_client_sig_hash(unsigned char *hash_out,
                          struct xtt_handshake_context *handshake_ctx);
 
 static
-xtt_error_code
+xtt_return_code_type
 is_expiry_passed(const xtt_certificate_expiry *expiry);
 
-xtt_error_code
+xtt_return_code_type
 generate_server_signature(unsigned char* signature_out,
                           const unsigned char *client_init,
                           const unsigned char *server_initandattest_unencrypted_part,
@@ -58,27 +58,27 @@ generate_server_signature(unsigned char* signature_out,
                           struct xtt_handshake_context *handshake_ctx,
                           const struct xtt_server_certificate_context *certificate_ctx)
 {
-    xtt_error_code rc;
+    xtt_return_code_type rc;
 
     rc = generate_server_sig_hash(handshake_ctx->hash_out_buffer,
                                   client_init,
                                   server_initandattest_unencrypted_part,
                                   server_initandattest_encryptedpart_uptosignature,
                                   handshake_ctx);
-    if (XTT_ERROR_SUCCESS != rc)
+    if (XTT_RETURN_SUCCESS != rc)
         return rc;
 
     rc = certificate_ctx->sign(signature_out,
                                handshake_ctx->hash_out_buffer,
                                handshake_ctx->hash_length,
                                certificate_ctx);
-    if (XTT_ERROR_SUCCESS != rc)
+    if (XTT_RETURN_SUCCESS != rc)
         return rc;
 
-    return XTT_ERROR_SUCCESS;
+    return XTT_RETURN_SUCCESS;
 }
 
-xtt_error_code
+xtt_return_code_type
 generate_daa_signature(unsigned char *signature_out,
                        const unsigned char *server_cookie,
                        const struct xtt_server_certificate_raw_type *certificate,
@@ -86,9 +86,9 @@ generate_daa_signature(unsigned char *signature_out,
                        const unsigned char *identityclientattest_unencrypted_part,
                        const unsigned char *identityclientattest_encryptedpart_uptosignature,
                        struct xtt_handshake_context *handshake_ctx,
-                       struct xtt_daa_context *daa_ctx)
+                       struct xtt_client_group_context *group_ctx)
 {
-    xtt_error_code rc;
+    xtt_return_code_type rc;
 
     rc = generate_client_sig_hash(handshake_ctx->hash_out_buffer,
                                   server_cookie,
@@ -98,30 +98,30 @@ generate_daa_signature(unsigned char *signature_out,
                                   identityclientattest_encryptedpart_uptosignature,
                                   1,
                                   handshake_ctx);
-    if (XTT_ERROR_SUCCESS != rc)
+    if (XTT_RETURN_SUCCESS != rc)
         return rc;
 
-    rc = daa_ctx->sign(signature_out,
+    rc = group_ctx->sign(signature_out,
                        handshake_ctx->hash_out_buffer,
                        handshake_ctx->hash_length,
-                       daa_ctx);
-    if (XTT_ERROR_SUCCESS != rc)
+                       group_ctx);
+    if (XTT_RETURN_SUCCESS != rc)
         return rc;
 
-    return XTT_ERROR_SUCCESS;
+    return XTT_RETURN_SUCCESS;
 }
 
-xtt_error_code
+xtt_return_code_type
 verify_daa_signature(unsigned char *signature,
                      const unsigned char *server_cookie,
                      const unsigned char *server_signature,
                      const unsigned char *identityclientattest_unencrypted_part,
                      const unsigned char *identityclientattest_encryptedpart_uptosignature,
-                     struct xtt_daa_group_public_key_context* daa_group_pub_key_ctx,
+                     struct xtt_group_public_key_context* group_pub_key_ctx,
                      struct xtt_server_certificate_context *server_certificate_ctx,
                      struct xtt_handshake_context *handshake_ctx)
 {
-    xtt_error_code rc;
+    xtt_return_code_type rc;
 
     rc = generate_client_sig_hash(handshake_ctx->hash_out_buffer,
                                   server_cookie,
@@ -131,20 +131,20 @@ verify_daa_signature(unsigned char *signature,
                                   identityclientattest_encryptedpart_uptosignature,
                                   1,
                                   handshake_ctx);
-    if (XTT_ERROR_SUCCESS != rc)
+    if (XTT_RETURN_SUCCESS != rc)
         return rc;
 
-    rc = daa_group_pub_key_ctx->verify_signature(signature,
+    rc = group_pub_key_ctx->verify_signature(signature,
                                                  handshake_ctx->hash_out_buffer,
                                                  handshake_ctx->hash_length,
-                                                 daa_group_pub_key_ctx);
-    if (XTT_ERROR_SUCCESS != rc)
+                                                 group_pub_key_ctx);
+    if (XTT_RETURN_SUCCESS != rc)
         return rc;
 
-    return XTT_ERROR_SUCCESS;
+    return XTT_RETURN_SUCCESS;
 }
 
-xtt_error_code
+xtt_return_code_type
 generate_client_longterm_signature(unsigned char *signature_out,
                                    const unsigned char *server_cookie,
                                    const struct xtt_server_certificate_raw_type *certificate,
@@ -153,7 +153,7 @@ generate_client_longterm_signature(unsigned char *signature_out,
                                    const unsigned char *identityclientattest_encryptedpart_uptosignature,
                                    struct xtt_client_handshake_context *handshake_ctx)
 {
-    xtt_error_code rc;
+    xtt_return_code_type rc;
 
     rc = generate_client_sig_hash(handshake_ctx->base.hash_out_buffer,
                                   server_cookie,
@@ -163,20 +163,20 @@ generate_client_longterm_signature(unsigned char *signature_out,
                                   identityclientattest_encryptedpart_uptosignature,
                                   0,
                                   &handshake_ctx->base);
-    if (XTT_ERROR_SUCCESS != rc)
+    if (XTT_RETURN_SUCCESS != rc)
         return rc;
 
     rc = handshake_ctx->longterm_sign(signature_out,
                                       handshake_ctx->base.hash_out_buffer,
                                       handshake_ctx->base.hash_length,
                                       handshake_ctx);
-    if (XTT_ERROR_SUCCESS != rc)
+    if (XTT_RETURN_SUCCESS != rc)
         return rc;
 
-    return XTT_ERROR_SUCCESS;
+    return XTT_RETURN_SUCCESS;
 }
 
-xtt_error_code
+xtt_return_code_type
 verify_client_longterm_signature(unsigned char *signature,
                                  const unsigned char *server_cookie,
                                  const unsigned char *server_signature,
@@ -185,7 +185,7 @@ verify_client_longterm_signature(unsigned char *signature,
                                  struct xtt_server_certificate_context *server_certificate_ctx,
                                  struct xtt_server_handshake_context *handshake_ctx)
 {
-    xtt_error_code rc;
+    xtt_return_code_type rc;
 
     rc = generate_client_sig_hash(handshake_ctx->base.hash_out_buffer,
                                   server_cookie,
@@ -195,7 +195,7 @@ verify_client_longterm_signature(unsigned char *signature,
                                   identityclientattest_encryptedpart_uptosignature,
                                   0,
                                   &handshake_ctx->base);
-    if (XTT_ERROR_SUCCESS != rc)
+    if (XTT_RETURN_SUCCESS != rc)
         return rc;
 
     unsigned char *client_longterm_key = xtt_encrypted_identityclientattest_access_longtermkey(identityclientattest_encryptedpart_uptosignature,
@@ -204,34 +204,34 @@ verify_client_longterm_signature(unsigned char *signature,
                                                          handshake_ctx->base.hash_out_buffer,
                                                          handshake_ctx->base.hash_length,
                                                          client_longterm_key);
-    if (XTT_ERROR_SUCCESS != rc)
+    if (XTT_RETURN_SUCCESS != rc)
         return rc;
 
-    return XTT_ERROR_SUCCESS;
+    return XTT_RETURN_SUCCESS;
 }
 
-xtt_error_code
+xtt_return_code_type
 verify_server_signature(const unsigned char *signature,
-                        const xtt_client_id* intended_server_client_id,
+                        const xtt_identity_type* intended_server_identity,
                         const struct xtt_server_root_certificate_context* root_server_certificate,
                         const unsigned char *client_init,
                         const unsigned char *server_initandattest_unencrypted_part,
                         const unsigned char *server_initandattest_encryptedpart_uptosignature,
                         struct xtt_client_handshake_context *handshake_ctx)
 {
-    xtt_error_code rc;
+    xtt_return_code_type rc;
 
     // 1) Check that the certificate is for the correct server ClientID.
     if (0 != xtt_crypto_memcmp(xtt_server_certificate_access_id(xtt_encrypted_serverinitandattest_access_certificate(server_initandattest_encryptedpart_uptosignature,
                                                                                                                      handshake_ctx->base.version)),
-                               intended_server_client_id->data,
-                               sizeof(xtt_client_id)))
-        return XTT_ERROR_BAD_CERTIFICATE;
+                               intended_server_identity->data,
+                               sizeof(xtt_identity_type)))
+        return XTT_RETURN_BAD_CERTIFICATE;
 
     // 2) Check that cert isn't expired.
     rc = is_expiry_passed((xtt_certificate_expiry*)xtt_server_certificate_access_expiry(xtt_encrypted_serverinitandattest_access_certificate(server_initandattest_encryptedpart_uptosignature,
                                                                                                                                              handshake_ctx->base.version)));
-    if (XTT_ERROR_SUCCESS != rc)
+    if (XTT_RETURN_SUCCESS != rc)
         return rc;
 
     // 3) Check that our root cert does in fact have the id claimed by the server cert.
@@ -239,7 +239,7 @@ verify_server_signature(const unsigned char *signature,
         = (xtt_certificate_root_id*)xtt_server_certificate_access_rootid(xtt_encrypted_serverinitandattest_access_certificate(server_initandattest_encryptedpart_uptosignature,
                                                                                                   handshake_ctx->base.version));
     if (0 != xtt_crypto_memcmp(root_server_certificate->id.data, claimed_root->data, sizeof(xtt_certificate_root_id)))
-        return XTT_ERROR_BAD_CERTIFICATE;
+        return XTT_RETURN_BAD_CERTIFICATE;
 
     // 4) Check that the root signature in the server cert verifies using that root cert.
     struct xtt_server_certificate_raw_type *certificate = xtt_encrypted_serverinitandattest_access_certificate(server_initandattest_encryptedpart_uptosignature,
@@ -248,7 +248,7 @@ verify_server_signature(const unsigned char *signature,
                                                                                                handshake_ctx->base.suite_spec),
                                                    certificate,
                                                    root_server_certificate);
-    if (XTT_ERROR_SUCCESS != rc)
+    if (XTT_RETURN_SUCCESS != rc)
         return rc;
 
     // 5) Check that the server signature verifies using the server cert.
@@ -257,20 +257,20 @@ verify_server_signature(const unsigned char *signature,
                                   server_initandattest_unencrypted_part,
                                   server_initandattest_encryptedpart_uptosignature,
                                   &handshake_ctx->base);
-    if (XTT_ERROR_SUCCESS != rc)
+    if (XTT_RETURN_SUCCESS != rc)
         return rc;
     rc = handshake_ctx->verify_server_signature(signature,
                                                 handshake_ctx->base.hash_out_buffer,
                                                 handshake_ctx->base.hash_length,
                                                 xtt_server_certificate_access_pubkey(xtt_encrypted_serverinitandattest_access_certificate(server_initandattest_encryptedpart_uptosignature,
                                                                                                             handshake_ctx->base.version)));
-    if (XTT_ERROR_SUCCESS != rc)
+    if (XTT_RETURN_SUCCESS != rc)
         return rc;
 
-    return XTT_ERROR_SUCCESS;
+    return XTT_RETURN_SUCCESS;
 }
 
-xtt_error_code
+xtt_return_code_type
 generate_server_sig_hash(unsigned char *hash_out,
                          const unsigned char *client_init,
                          const unsigned char *server_initandattest_unencrypted_part,
@@ -318,12 +318,12 @@ generate_server_sig_hash(unsigned char *hash_out,
                                             handshake_ctx->hash_buffer,
                                             inner_hash_input_length + sizeof(inner_hash_input_length));
     if (0 != hash_ret)
-        return XTT_ERROR_CRYPTO;
+        return XTT_RETURN_CRYPTO;
 
-    return XTT_ERROR_SUCCESS;
+    return XTT_RETURN_SUCCESS;
 }
 
-xtt_error_code
+xtt_return_code_type
 is_expiry_passed(const xtt_certificate_expiry *expiry)
 {
     time_t now_timet = time(NULL);
@@ -331,25 +331,25 @@ is_expiry_passed(const xtt_certificate_expiry *expiry)
 
     int year, month, day;
     if (3 != sscanf(expiry->data, "%4d%2d%2d", &year, &month, &day))
-        return XTT_ERROR_BAD_EXPIRY;
+        return XTT_RETURN_BAD_EXPIRY;
 
     if ((year-1900) < now->tm_year) {
-        return XTT_ERROR_BAD_EXPIRY;
+        return XTT_RETURN_BAD_EXPIRY;
     } else if ((year-1900) == now->tm_year) {
         if ((month-1) < now->tm_mon) {
-            return XTT_ERROR_BAD_EXPIRY;
+            return XTT_RETURN_BAD_EXPIRY;
         } else if ((month-1) == now->tm_mon) {
             if (day <= now->tm_mday) {
-                return XTT_ERROR_BAD_EXPIRY;
+                return XTT_RETURN_BAD_EXPIRY;
             }
         }
     }
 
-    return XTT_ERROR_SUCCESS;
+    return XTT_RETURN_SUCCESS;
 }
 
 static
-xtt_error_code
+xtt_return_code_type
 generate_client_sig_hash(unsigned char *hash_out,
                          const unsigned char *server_cookie,
                          const struct xtt_server_certificate_raw_type *certificate,
@@ -418,7 +418,7 @@ generate_client_sig_hash(unsigned char *hash_out,
                                            handshake_ctx->hash_buffer,
                                            outer_hash_input_length + sizeof(outer_hash_input_length));
     if (0 != hash_rc)
-        return XTT_ERROR_CRYPTO;
+        return XTT_RETURN_CRYPTO;
 
-    return XTT_ERROR_SUCCESS;
+    return XTT_RETURN_SUCCESS;
 }

@@ -264,9 +264,9 @@ int verify_server_signature_ed25519(const unsigned char *signature,
     int ret = xtt_crypto_verify_ed25519(signature, msg, msg_len, (xtt_ed25519_pub_key*)server_public_key);
 
     if (0 != ret) {
-        return XTT_ERROR_BAD_SIGNATURE;
+        return XTT_RETURN_BAD_SIGNATURE;
     } else {
-        return XTT_ERROR_SUCCESS;
+        return XTT_RETURN_SUCCESS;
     }
 }
 
@@ -302,16 +302,17 @@ int verify_root_ed25519(const unsigned char *signature,
                                         &self->public_key.ed25519);
 
     if (0 != ret) {
-        return XTT_ERROR_BAD_SIGNATURE;
+        return XTT_RETURN_BAD_SIGNATURE;
     } else {
-        return XTT_ERROR_SUCCESS;
+        return XTT_RETURN_SUCCESS;
     }
 }
 
+#ifdef USE_TPM
 int sign_lrswTPM(unsigned char *signature_out,
                  const unsigned char *msg,
                  uint16_t msg_len,
-                 struct xtt_daa_context *self)
+                 struct xtt_client_group_context *self)
 {
     int rc = xtt_daa_sign_lrswTPM(signature_out,
                                   msg,
@@ -319,18 +320,22 @@ int sign_lrswTPM(unsigned char *signature_out,
                                   self->basename,
                                   self->basename_length,
                                   &self->cred.lrsw,
-                                  self->tpm_context);
+                                  self->key_handle,
+                                  self->key_password,
+                                  self->key_password_length,
+                                  self->tcti_context);
 
     if (0 != rc)
-        return XTT_ERROR_CRYPTO;
+        return XTT_RETURN_CRYPTO;
 
-    return XTT_ERROR_SUCCESS;
+    return XTT_RETURN_SUCCESS;
 }
+#endif
 
 int sign_lrsw(unsigned char *signature_out,
               const unsigned char *msg,
               uint16_t msg_len,
-              struct xtt_daa_context *self)
+              struct xtt_client_group_context *self)
 {
     int rc = xtt_daa_sign_lrsw(signature_out,
                                msg,
@@ -341,28 +346,68 @@ int sign_lrsw(unsigned char *signature_out,
                                &self->priv_key.lrsw);
 
     if (0 != rc)
-        return XTT_ERROR_CRYPTO;
+        return XTT_RETURN_CRYPTO;
 
-    return XTT_ERROR_SUCCESS;
+    return XTT_RETURN_SUCCESS;
 }
 
-int verify_lrswTPM(unsigned char *signature,
-                   unsigned char *msg,
-                   uint16_t msg_len,
-                   struct xtt_daa_group_public_key_context *self)
+int verify_lrsw(unsigned char *signature,
+                unsigned char *msg,
+                uint16_t msg_len,
+                struct xtt_group_public_key_context *self)
 {
-    int ret = xtt_daa_verify_lrswTPM(signature,
-                                     msg,
-                                     msg_len,
-                                     self->basename,
-                                     self->basename_length,
-                                     &self->gpk.lrsw);
+    int ret = xtt_daa_verify_lrsw(signature,
+                                  msg,
+                                  msg_len,
+                                  self->basename,
+                                  self->basename_length,
+                                  &self->gpk.lrsw);
 
     if (0 != ret) {
-        return XTT_ERROR_BAD_SIGNATURE;
+        return XTT_RETURN_BAD_SIGNATURE;
     } else {
-        return XTT_ERROR_SUCCESS;
+        return XTT_RETURN_SUCCESS;
     }
+}
+
+int copy_pseudonym_lrsw(unsigned char *out,
+                        uint16_t *out_length,
+                        unsigned char *serialized_signature_in)
+{
+    unsigned char *raw_pseudonym;
+    xtt_return_code_type rc;
+    rc = xtt_daa_access_pseudonym_in_serialized(&raw_pseudonym,
+                                                out_length, 
+                                                serialized_signature_in);
+    if (XTT_RETURN_SUCCESS != rc) {
+        return -1;
+    }
+
+    assert(*out_length == sizeof(xtt_daa_pseudonym_lrsw));
+
+    memcpy(out,
+           raw_pseudonym,
+           *out_length);
+
+    return 0;
+}
+
+int copy_in_pseudonym_server_lrsw(struct xtt_server_handshake_context *self,
+                                  unsigned char *signature_in)
+{
+    uint16_t out_length_ignore;
+    return copy_pseudonym_lrsw(self->clients_pseudonym.lrsw.data,
+                               &out_length_ignore,
+                               signature_in);
+}
+
+int copy_in_pseudonym_client_lrsw(struct xtt_client_handshake_context *self,
+                                  unsigned char *signature_in)
+{
+    uint16_t out_length_ignore;
+    return copy_pseudonym_lrsw(self->pseudonym.lrsw.data,
+                               &out_length_ignore,
+                               signature_in);
 }
 
 void prepare_nonce(unsigned char* nonce,

@@ -68,7 +68,7 @@ void generate_server_certificates(unsigned char *cert_serialized_out,
 
 int main()
 {
-    xtt_error_code rc;
+    xtt_return_code_type rc;
     unsigned char server_to_client[1024];
     unsigned char client_to_server[1024];
 
@@ -102,7 +102,7 @@ int main()
     // 4) Create server's cookie context
     struct xtt_server_cookie_context cookie_ctx;
     rc = xtt_initialize_server_cookie_context(&cookie_ctx);
-    EXPECT_EQ(XTT_ERROR_SUCCESS, rc);
+    EXPECT_EQ(XTT_RETURN_SUCCESS, rc);
 
     // 8) Get GPK from TPM.
     xtt_daa_group_pub_key_lrsw gpk;
@@ -136,7 +136,7 @@ int main()
                                             (unsigned char*)basename,
                                             basename_len,
                                             (struct xtt_daa_tpm_context*)&tpm_ctx);
-    EXPECT_EQ(XTT_ERROR_SUCCESS, rc);
+    EXPECT_EQ(XTT_RETURN_SUCCESS, rc);
     //////////////////////////////
 
     // 1) Create client's handshake context
@@ -144,14 +144,14 @@ int main()
     rc = xtt_initialize_client_handshake_context(&client_handshake_ctx,
                                                  version,
                                                  suite_spec);
-    EXPECT_EQ(XTT_ERROR_SUCCESS, rc);
+    EXPECT_EQ(XTT_RETURN_SUCCESS, rc);
 
     // 2) Send ClientInit
     uint16_t client_init_send_length;
     rc = xtt_build_client_init(client_to_server,
                                &client_init_send_length,
                                &client_handshake_ctx);
-    EXPECT_EQ(XTT_ERROR_SUCCESS, rc);
+    EXPECT_EQ(XTT_RETURN_SUCCESS, rc);
     EXPECT_EQ(xtt_clientinit_length(version, suite_spec), client_init_send_length);
     EXPECT_EQ(xtt_get_message_type(client_to_server), XTT_CLIENTINIT_MSG);
     EXPECT_EQ(xtt_get_message_length(client_to_server), client_init_send_length);
@@ -165,7 +165,7 @@ int main()
                                           client_to_server,
                                           &cert_ctx,
                                           &cookie_ctx);
-    EXPECT_EQ(XTT_ERROR_SUCCESS, rc);
+    EXPECT_EQ(XTT_RETURN_SUCCESS, rc);
     EXPECT_EQ(xtt_get_message_type(server_to_client), XTT_SERVERINITANDATTEST_MSG);
     EXPECT_EQ(xtt_get_message_length(server_to_client), server_initandattest_send_length);
 
@@ -174,7 +174,7 @@ int main()
     rc = xtt_preparse_serverinitandattest(&claimed_root_id,
                                           server_to_client,
                                           &client_handshake_ctx);
-    EXPECT_EQ(XTT_ERROR_SUCCESS, rc);
+    EXPECT_EQ(XTT_RETURN_SUCCESS, rc);
     EXPECT_EQ(0, memcmp(claimed_root_id.data, root_certificate.id.data, sizeof(xtt_certificate_root_id)));
 
     // 5) Send Identity_ClientAttest
@@ -187,7 +187,7 @@ int main()
                                           &server_id,
                                           &daa_ctx,
                                           &client_handshake_ctx);
-    EXPECT_EQ(XTT_ERROR_SUCCESS, rc);
+    EXPECT_EQ(XTT_RETURN_SUCCESS, rc);
     EXPECT_EQ(xtt_get_message_type(client_to_server), XTT_ID_CLIENTATTEST_MSG);
     EXPECT_EQ(xtt_get_message_length(client_to_server), identity_clientattest_length);
 
@@ -199,7 +199,7 @@ int main()
                                      client_to_server,
                                      &cookie_ctx,
                                      &server_handshake_ctx);
-    EXPECT_EQ(XTT_ERROR_SUCCESS, rc);
+    EXPECT_EQ(XTT_RETURN_SUCCESS, rc);
     EXPECT_EQ(0, memcmp(claimed_gid.data, gid.data, sizeof(xtt_daa_group_id)));
     EXPECT_EQ(0, memcmp(requested_client_id.data, my_client_id.data, sizeof(xtt_client_id)));
 
@@ -219,7 +219,7 @@ int main()
                                             &gpk_ctx,
                                             &cert_ctx,
                                             &server_handshake_ctx);
-    EXPECT_EQ(XTT_ERROR_SUCCESS, rc);
+    EXPECT_EQ(XTT_RETURN_SUCCESS, rc);
     EXPECT_EQ(0, memcmp(server_handshake_ctx.clients_longterm_key.ed25519.data,
                         client_handshake_ctx.longterm_key.ed25519.data,
                         server_handshake_ctx.base.longterm_key_length));
@@ -230,7 +230,7 @@ int main()
     rc = xtt_parse_identity_server_finished(&my_client_id,
                                             server_to_client,
                                             &client_handshake_ctx);
-    EXPECT_EQ(XTT_ERROR_SUCCESS, rc);
+    EXPECT_EQ(XTT_RETURN_SUCCESS, rc);
 
     // 13) Ensure client and server have consistent views of client's id and longterm_key
     EXPECT_EQ(0, memcmp(my_client_id.data, requested_client_id.data, sizeof(xtt_client_id))); 

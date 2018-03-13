@@ -1,6 +1,6 @@
 /******************************************************************************
  *
- * Copyright 2018 Xaptum, Inc.
+ * Copyright 2017 Xaptum, Inc.
  * 
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -16,29 +16,35 @@
  *
  *****************************************************************************/
 
-#ifndef XTT_INTERNAL_KEY_DERIVATION_H
-#define XTT_INTERNAL_KEY_DERIVATION_H
-#pragma once
+#include <stdint.h>
+#include <stdio.h>
 
-#include <xtt/context.h>
-#include <xtt/crypto_types.h>
-#include <xtt/return_codes.h>
+static int read_file_into_buffer(unsigned char *buffer, size_t bytes_to_read, const char *filename) {
+    FILE *ptr;
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+    ptr = fopen(filename, "rb");
+    if (NULL == ptr)
+        return -1;
 
-xtt_return_code_type
-derive_handshake_keys(struct xtt_handshake_context *handshake_ctx,
-                      const unsigned char *client_init,
-                      const unsigned char *server_initandattest_uptocookie,
-                      const xtt_server_cookie *server_cookie,
-                      const unsigned char *others_pub_key,
-                      int is_client);
+    size_t bytes_read = fread(buffer, 1, bytes_to_read, ptr);
 
-#ifdef __cplusplus
+    (void)fclose(ptr);
+
+    return (int)bytes_read;
 }
-#endif
 
-#endif
+static int write_buffer_to_file(const char *filename, unsigned char *buffer, size_t bytes_to_write)
+{
+    FILE *ptr;
 
+    ptr = fopen(filename, "wb");
+    if (NULL == ptr)
+        return -1;
+
+    size_t bytes_written = fwrite(buffer, 1, bytes_to_write, ptr);
+
+    (void)fclose(ptr);
+
+
+    return (int)bytes_written;
+}

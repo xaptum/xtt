@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.0 FATAL_ERROR)
 
 project(xtt
-        VERSION "0.1.2"
+        VERSION "0.2.0"
         )
 set(PROJECT_VERSION_PACKAGE_REVISION 1)
 
@@ -15,7 +15,8 @@ include(CTest)
 
 option(USE_LIBSODIUM "use libsodium for aead-related crypto" ON)
 option(USE_WOLFCRYPT "use wolfCrypt for aead-related crypto" OFF)
-option(USE_ECDAA_TPM "use ECDAA with TPM-support for daa-related crypto" ON)
+option(USE_ECDAA "use ECDAA for daa-related crypto" ON)
+option(USE_TPM "use a TPM" ON)
 
 option(BUILD_SHARED_LIBS "Build as a shared library" ON)
 option(BUILD_STATIC_LIBS "Build as a static library" OFF)
@@ -29,13 +30,20 @@ else()
         MESSAGE(FATAL_ERROR "Must choose either USE_LIBSODIUM or USE_WOLFCRYPT")
 endif()
 
-if(USE_ECDAA_TPM)
+if(USE_TPM)
+        add_definitions(-DUSE_TPM)
+        find_package(XaptumTPM REQUIRED QUIET)
+        set(ECDAA_ENABLE_TPM ON CACHE BOOL "" FORCE)
+else()
+        set(ECDAA_ENABLE_TPM OFF CACHE BOOL "" FORCE)
+endif()
+
+if(USE_ECDAA)
         set(DAA_LIB_SRCS ecdaa_wrapper.c)
         find_package(AMCL REQUIRED QUIET)
-        find_package(XaptumTPM REQUIRED QUIET)
         find_package(ECDAA REQUIRED QUIET)
 else()
-        MESSAGE(FATAL_ERROR "Only ECDAA_TPM is currently supported")
+        MESSAGE(FATAL_ERROR "Only ECDAA is currently supported for DAA signatures")
 endif()
 
 # If not building as a shared library, force build as a static.  This
@@ -139,4 +147,11 @@ if(BUILD_STATIC_LIBS)
   )
 endif()
 
-add_subdirectory(test)
+################################################################################
+# Examples
+################################################################################
+if(BUILD_EXAMPLES)
+        add_subdirectory(examples)
+endif()
+
+# add_subdirectory(test)

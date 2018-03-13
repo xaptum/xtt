@@ -18,8 +18,6 @@
 
 #include <xtt/crypto_types.h>
 
-const xtt_client_id xtt_null_client_id = {{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}};
-
-const xtt_daa_group_id xtt_null_daa_group_id = {{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}};
+const xtt_identity_type xtt_null_identity = {{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}};
 
 const xtt_certificate_root_id xtt_null_server_root_id = {{0}};

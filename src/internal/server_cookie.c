@@ -21,7 +21,7 @@
 
 #include <xtt/crypto_wrapper.h>
 
-xtt_error_code
+xtt_return_code_type
 build_server_cookie(xtt_server_cookie *cookie,
                     struct xtt_handshake_context *handshake_ctx,
                     struct xtt_server_cookie_context *cookie_ctx)
@@ -36,10 +36,10 @@ build_server_cookie(xtt_server_cookie *cookie,
     // Save cookie to context
     handshake_ctx->server_cookie = *cookie;
 
-    return XTT_ERROR_SUCCESS;
+    return XTT_RETURN_SUCCESS;
 }
 
-xtt_error_code
+xtt_return_code_type
 validate_server_cookie(xtt_server_cookie *cookie,
                        struct xtt_handshake_context *handshake_ctx,
                        struct xtt_server_cookie_context *cookie_ctx)
