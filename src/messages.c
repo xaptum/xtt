@@ -32,6 +32,16 @@
 #include <assert.h>
 #include <stdio.h>
 
+uint16_t max_handshake_server_message_length(void)
+{
+    return MAX_HANDSHAKE_SERVER_MESSAGE_LENGTH;
+}
+
+uint16_t max_handshake_client_message_length(void)
+{
+    return MAX_HANDSHAKE_CLIENT_MESSAGE_LENGTH;
+}
+
 static
 xtt_return_code_type
 parse_message_header(uint16_t *length_out,

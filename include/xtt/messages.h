@@ -28,6 +28,12 @@
 extern "C" {
 #endif
 
+#define MAX_HANDSHAKE_SERVER_MESSAGE_LENGTH 384 // ServerInitAndAttest
+uint16_t max_handshake_server_message_length(void);
+
+#define MAX_HANDSHAKE_CLIENT_MESSAGE_LENGTH 685 // Identity_ClientAttest
+uint16_t max_handshake_client_message_length(void);
+
 /*
  * Retrieve the length of a received message.
  *
