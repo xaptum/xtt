@@ -253,10 +253,10 @@ do_handshake(int client_sock,
     xtt_return_code_type rc;
 
     // 1) Initialize handshake context
-    unsigned char in_buffer[1024];
-    unsigned char out_buffer[1024];
+    unsigned char in_buffer[MAX_HANDSHAKE_CLIENT_MESSAGE_LENGTH];
+    unsigned char out_buffer[MAX_HANDSHAKE_SERVER_MESSAGE_LENGTH];
     struct xtt_server_handshake_context ctx;
-    rc = xtt_initialize_server_handshake_context(&ctx, in_buffer, out_buffer);
+    rc = xtt_initialize_server_handshake_context(&ctx, in_buffer, sizeof(in_buffer), out_buffer, sizeof(out_buffer));
     if (XTT_RETURN_SUCCESS != rc) {
         fprintf(stderr, "Error initializing server handshake context: %d\n", rc);
         return;

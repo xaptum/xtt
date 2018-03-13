@@ -343,14 +343,18 @@ struct xtt_client_group_context {
 xtt_return_code_type
 xtt_initialize_client_handshake_context(struct xtt_client_handshake_context* ctx_out,
                                         unsigned char *in_buffer,
+                                        uint16_t in_buffer_size,
                                         unsigned char *out_buffer,
+                                        uint16_t out_buffer_size,
                                         xtt_version version,
                                         xtt_suite_spec suite_spec);
 
 xtt_return_code_type
 xtt_initialize_server_handshake_context(struct xtt_server_handshake_context* ctx_out,
                                         unsigned char *in_buffer,
-                                        unsigned char *out_buffer);
+                                        uint16_t in_buffer_size,
+                                        unsigned char *out_buffer,
+                                        uint16_t out_buffer_size);
 
 xtt_return_code_type
 xtt_initialize_server_cookie_context(struct xtt_server_cookie_context* ctx);

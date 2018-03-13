@@ -20,6 +20,7 @@
 #include <xtt/crypto_wrapper.h>
 #include <xtt/daa_wrapper.h>
 #include <xtt/return_codes.h>
+#include <xtt/messages.h>
 
 #include "internal/crypto_utils.h"
 #include "internal/message_utils.h"
@@ -32,10 +33,15 @@
 xtt_return_code_type
 xtt_initialize_server_handshake_context(struct xtt_server_handshake_context* ctx_out,
                                         unsigned char *in_buffer,
-                                        unsigned char *out_buffer)
+                                        uint16_t in_buffer_size,
+                                        unsigned char *out_buffer,
+                                        uint16_t out_buffer_size)
 {
     if (ctx_out == NULL)
         return XTT_RETURN_NULL_BUFFER;
+
+    if (MAX_HANDSHAKE_CLIENT_MESSAGE_LENGTH > in_buffer_size || MAX_HANDSHAKE_SERVER_MESSAGE_LENGTH > out_buffer_size)
+        return XTT_RETURN_CONTEXT_BUFFER_OVERFLOW;
 
     ctx_out->state = XTT_SERVER_HANDSHAKE_STATE_START;
 
@@ -236,12 +242,17 @@ xtt_setup_server_handshake_context(struct xtt_server_handshake_context* ctx_out,
 xtt_return_code_type
 xtt_initialize_client_handshake_context(struct xtt_client_handshake_context* ctx_out,
                                         unsigned char *in_buffer,
+                                        uint16_t in_buffer_size,
                                         unsigned char *out_buffer,
+                                        uint16_t out_buffer_size,
                                         xtt_version version,
                                         xtt_suite_spec suite_spec)
 {
     if (ctx_out == NULL)
         return XTT_RETURN_NULL_BUFFER;
+
+    if (MAX_HANDSHAKE_SERVER_MESSAGE_LENGTH > in_buffer_size || MAX_HANDSHAKE_CLIENT_MESSAGE_LENGTH > out_buffer_size)
+        return XTT_RETURN_CONTEXT_BUFFER_OVERFLOW;
 
     if (XTT_VERSION_ONE != version)
         return XTT_RETURN_UNKNOWN_VERSION;
