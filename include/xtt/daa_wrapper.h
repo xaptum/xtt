@@ -23,10 +23,6 @@
 #include <xtt/crypto_types.h>
 #include <xtt/return_codes.h>
 
-#ifndef MAX_TPM_HOSTNAME_LENGTH
-#define MAX_TPM_HOSTNAME_LENGTH 64
-#endif
-
 #ifdef USE_TPM
 #include <tss2/tss2_sys.h>
 #endif
