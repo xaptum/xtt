@@ -35,9 +35,11 @@
 unsigned char tcti_context_buffer_g[128];
 #endif
 
-uint32_t key_handle_g = 0x81000000;
-uint32_t gpk_handle_g = 0x1600000;
-uint32_t cred_handle_g = 0x1600001;
+uint32_t key_handle_g = 0x81800000;
+uint32_t gpk_handle_g = 0x1400000;
+uint32_t cred_handle_g = 0x1400001;
+uint32_t root_id_handle_g = 0x1400003;
+uint32_t root_pubkey_handle_g = 0x1400004;
 const char *tpm_hostname_g = "localhost";
 const char *tpm_port_g = "2321";
 const char *tpm_password = NULL;
@@ -69,7 +71,7 @@ int connect_to_server(const char *ip, unsigned short port);
 int initialize_ids(xtt_identity_type *requested_client_id,
                    xtt_identity_type *intended_server_id);
 
-int initialize_certs();
+int initialize_certs(int use_tpm);
 
 int initialize_daa(struct xtt_client_group_context *group_ctx, int use_tpm);
 
@@ -122,7 +124,7 @@ int main(int argc, char *argv[])
         fprintf(stderr, "Error initializing DAA context\n");
         goto finish;
     }
-    int init_certs_ret = initialize_certs();
+    int init_certs_ret = initialize_certs(use_tpm);
     if (0 != init_certs_ret) {
         fprintf(stderr, "Error initializing server/root certificate contexts\n");
         goto finish;
@@ -377,24 +379,55 @@ int initialize_daa(struct xtt_client_group_context *group_ctx, int use_tpm)
     return 0;
 }
 
-int initialize_certs()
+int initialize_certs(int use_tpm)
 {
     (void)write_buffer_to_file;
     xtt_return_code_type rc;
     int read_ret;
 
+#ifdef USE_TPM
+    // We assume initialize_daa() has already been called, so TCTI has been initialized
+    TSS2_TCTI_CONTEXT *tcti_context = (TSS2_TCTI_CONTEXT*)tcti_context_buffer_g;
+#endif
+
     // 1) Read root cert stuff in from file
     xtt_certificate_root_id root_id;
-    read_ret = read_file_into_buffer(root_id.data, sizeof(xtt_certificate_root_id), root_id_file);
-    if (sizeof(xtt_certificate_root_id) != read_ret) {
-        fprintf(stderr, "Error reading root's id from file\n");
-        return -1;
-    }
     xtt_ed25519_pub_key root_public_key;
-    read_ret = read_file_into_buffer(root_public_key.data, sizeof(xtt_ed25519_pub_key), root_pubkey_file);
-    if (sizeof(xtt_ed25519_pub_key) != read_ret) {
-        fprintf(stderr, "Error reading root's public key from file\n");
+    if (use_tpm) {
+#ifdef USE_TPM
+        int nvram_ret;
+        nvram_ret = read_nvram(root_id.data,
+                               sizeof(xtt_certificate_root_id),
+                               root_id_handle_g,
+                               tcti_context);
+        if (0 != nvram_ret) {
+            fprintf(stderr, "Error reading root ID from TPM NVRAM");
+            return -1;
+        }
+
+        nvram_ret = read_nvram(root_public_key.data,
+                               sizeof(xtt_ed25519_pub_key),
+                               root_pubkey_handle_g,
+                               tcti_context);
+        if (0 != nvram_ret) {
+            fprintf(stderr, "Error reading root's public key from TPM NVRAM");
+            return -1;
+        }
+#else
+        fprintf(stderr, "Attempted to use a TPM, but not built with TPM enabled!\n");
         return -1;
+#endif
+    } else {
+        read_ret = read_file_into_buffer(root_id.data, sizeof(xtt_certificate_root_id), root_id_file);
+        if (sizeof(xtt_certificate_root_id) != read_ret) {
+            fprintf(stderr, "Error reading root's id from file\n");
+            return -1;
+        }
+        read_ret = read_file_into_buffer(root_public_key.data, sizeof(xtt_ed25519_pub_key), root_pubkey_file);
+        if (sizeof(xtt_ed25519_pub_key) != read_ret) {
+            fprintf(stderr, "Error reading root's public key from file\n");
+            return -1;
+        }
     }
 
     // 2) Initialize root_certificate_db
@@ -669,15 +702,13 @@ read_nvram(unsigned char *out,
 
     uint16_t data_offset = 0;
 
-    uint32_t auth_handle = TPM_RH_OWNER;
-
     while (size > 0) {
         uint16_t bytes_to_read = size;
 
         TPM2B_MAX_NV_BUFFER nv_data = {.size=0};
 
         ret = Tss2_Sys_NV_Read(sapi_context,
-                               auth_handle,
+                               index,
                                index,
                                &sessionsData,
                                bytes_to_read,
