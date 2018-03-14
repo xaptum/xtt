@@ -397,6 +397,10 @@ xtt_initialize_client_group_context_lrsw(struct xtt_client_group_context *ctx_ou
                                 uint16_t basename_length);
 
 xtt_return_code_type
+xtt_get_version(xtt_version *version_out,
+                const struct xtt_server_handshake_context *handshake_context);
+
+xtt_return_code_type
 xtt_get_suite_spec(xtt_suite_spec *suite_spec_out,
                    const struct xtt_server_handshake_context *handshake_context);
 
