@@ -52,6 +52,14 @@ xtt_initialize_server_handshake_context(struct xtt_server_handshake_context* ctx
     ctx_out->base.out_message_start = ctx_out->base.out_buffer_start;
     ctx_out->base.out_end = ctx_out->base.out_buffer_start;
 
+    ctx_out->base.hash_out_buffer = (unsigned char*)&ctx_out->base.hash_out_buffer_raw;
+    ctx_out->base.inner_hash = (unsigned char*)&ctx_out->base.inner_hash_raw;
+
+    ctx_out->base.shared_secret_buffer = (unsigned char*)&ctx_out->base.shared_secret_raw;
+    ctx_out->base.handshake_secret = (unsigned char*)&ctx_out->base.handshake_secret_raw;
+    ctx_out->base.prf_key = (unsigned char*)&ctx_out->base.prf_key_raw;
+    memset(ctx_out->base.prf_key, 0, sizeof(ctx_out->base.prf_key_raw));
+
     return XTT_RETURN_SUCCESS;
 }
 
@@ -75,14 +83,6 @@ xtt_setup_server_handshake_context(struct xtt_server_handshake_context* ctx_out,
 
     switch (suite_spec) {
         case XTT_X25519_LRSW_ED25519_CHACHA20POLY1305_SHA512:
-            ctx_out->base.hash_out_buffer = (unsigned char*)&ctx_out->base.hash_out_buffer_raw;
-            ctx_out->base.inner_hash = (unsigned char*)&ctx_out->base.inner_hash_raw;
-
-            ctx_out->base.shared_secret_buffer = (unsigned char*)&ctx_out->base.shared_secret_raw;
-            ctx_out->base.handshake_secret = (unsigned char*)&ctx_out->base.handshake_secret_raw;
-            ctx_out->base.prf_key = (unsigned char*)&ctx_out->base.prf_key_raw;
-            memset(ctx_out->base.prf_key, 0, sizeof(ctx_out->base.prf_key_raw));
-
             ctx_out->base.copy_dh_pubkey = copy_dh_pubkey_x25519;
 
             ctx_out->base.do_diffie_hellman = do_diffie_hellman_x25519;
@@ -115,14 +115,6 @@ xtt_setup_server_handshake_context(struct xtt_server_handshake_context* ctx_out,
 
             return XTT_RETURN_SUCCESS;
         case XTT_X25519_LRSW_ED25519_CHACHA20POLY1305_BLAKE2B:
-            ctx_out->base.hash_out_buffer = (unsigned char*)&ctx_out->base.hash_out_buffer_raw;
-            ctx_out->base.inner_hash = (unsigned char*)&ctx_out->base.inner_hash_raw;
-
-            ctx_out->base.shared_secret_buffer = (unsigned char*)&ctx_out->base.shared_secret_raw;
-            ctx_out->base.handshake_secret = (unsigned char*)&ctx_out->base.handshake_secret_raw;
-            ctx_out->base.prf_key = (unsigned char*)&ctx_out->base.prf_key_raw;
-            memset(ctx_out->base.prf_key, 0, sizeof(ctx_out->base.prf_key_raw));
-
             ctx_out->base.copy_dh_pubkey = copy_dh_pubkey_x25519;
 
             ctx_out->base.do_diffie_hellman = do_diffie_hellman_x25519;
@@ -155,14 +147,6 @@ xtt_setup_server_handshake_context(struct xtt_server_handshake_context* ctx_out,
 
             return XTT_RETURN_SUCCESS;
         case XTT_X25519_LRSW_ED25519_AES256GCM_SHA512:
-            ctx_out->base.hash_out_buffer = (unsigned char*)&ctx_out->base.hash_out_buffer_raw;
-            ctx_out->base.inner_hash = (unsigned char*)&ctx_out->base.inner_hash_raw;
-
-            ctx_out->base.shared_secret_buffer = (unsigned char*)&ctx_out->base.shared_secret_raw;
-            ctx_out->base.handshake_secret = (unsigned char*)&ctx_out->base.handshake_secret_raw;
-            ctx_out->base.prf_key = (unsigned char*)&ctx_out->base.prf_key_raw;
-            memset(ctx_out->base.prf_key, 0, sizeof(ctx_out->base.prf_key_raw));
-
             ctx_out->base.copy_dh_pubkey = copy_dh_pubkey_x25519;
 
             ctx_out->base.do_diffie_hellman = do_diffie_hellman_x25519;
@@ -195,14 +179,6 @@ xtt_setup_server_handshake_context(struct xtt_server_handshake_context* ctx_out,
 
             return XTT_RETURN_SUCCESS;
         case XTT_X25519_LRSW_ED25519_AES256GCM_BLAKE2B:
-            ctx_out->base.hash_out_buffer = (unsigned char*)&ctx_out->base.hash_out_buffer_raw;
-            ctx_out->base.inner_hash = (unsigned char*)&ctx_out->base.inner_hash_raw;
-
-            ctx_out->base.shared_secret_buffer = (unsigned char*)&ctx_out->base.shared_secret_raw;
-            ctx_out->base.handshake_secret = (unsigned char*)&ctx_out->base.handshake_secret_raw;
-            ctx_out->base.prf_key = (unsigned char*)&ctx_out->base.prf_key_raw;
-            memset(ctx_out->base.prf_key, 0, sizeof(ctx_out->base.prf_key_raw));
-
             ctx_out->base.copy_dh_pubkey = copy_dh_pubkey_x25519;
 
             ctx_out->base.do_diffie_hellman = do_diffie_hellman_x25519;
@@ -270,21 +246,20 @@ xtt_initialize_client_handshake_context(struct xtt_client_handshake_context* ctx
     ctx_out->base.out_message_start = ctx_out->base.out_buffer_start;
     ctx_out->base.out_end = ctx_out->base.out_buffer_start;
 
+    ctx_out->base.hash_out_buffer = (unsigned char*)&ctx_out->base.hash_out_buffer_raw;
+    ctx_out->base.inner_hash = (unsigned char*)&ctx_out->base.inner_hash_raw;
+
+    ctx_out->base.shared_secret_buffer = (unsigned char*)&ctx_out->base.shared_secret_raw;
+    ctx_out->base.handshake_secret = (unsigned char*)&ctx_out->base.handshake_secret_raw;
+    ctx_out->base.prf_key = (unsigned char*)&ctx_out->base.prf_key_raw;
+    memset(ctx_out->base.prf_key, 0, sizeof(ctx_out->base.prf_key_raw));
+
     switch (suite_spec) {
         case XTT_X25519_LRSW_ED25519_CHACHA20POLY1305_SHA512:
-            ctx_out->base.hash_out_buffer = (unsigned char*)&ctx_out->base.hash_out_buffer_raw;
-            ctx_out->base.inner_hash = (unsigned char*)&ctx_out->base.inner_hash_raw;
-
-            ctx_out->base.shared_secret_buffer = (unsigned char*)&ctx_out->base.shared_secret_raw;
-            ctx_out->base.handshake_secret = (unsigned char*)&ctx_out->base.handshake_secret_raw;
-            ctx_out->base.prf_key = (unsigned char*)&ctx_out->base.prf_key_raw;
-            memset(ctx_out->base.prf_key, 0, sizeof(ctx_out->base.prf_key_raw));
-
             ctx_out->base.copy_dh_pubkey = copy_dh_pubkey_x25519;
 
             ctx_out->base.do_diffie_hellman = do_diffie_hellman_x25519;
             ctx_out->base.prf = xtt_crypto_prf_sha512;
-
 
             ctx_out->base.encrypt = encrypt_chacha;
             ctx_out->base.decrypt = decrypt_chacha;
@@ -320,19 +295,10 @@ xtt_initialize_client_handshake_context(struct xtt_client_handshake_context* ctx
 
             return XTT_RETURN_SUCCESS;
         case XTT_X25519_LRSW_ED25519_CHACHA20POLY1305_BLAKE2B:
-            ctx_out->base.hash_out_buffer = (unsigned char*)&ctx_out->base.hash_out_buffer_raw;
-            ctx_out->base.inner_hash = (unsigned char*)&ctx_out->base.inner_hash_raw;
-
-            ctx_out->base.shared_secret_buffer = (unsigned char*)&ctx_out->base.shared_secret_raw;
-            ctx_out->base.handshake_secret = (unsigned char*)&ctx_out->base.handshake_secret_raw;
-            ctx_out->base.prf_key = (unsigned char*)&ctx_out->base.prf_key_raw;
-            memset(ctx_out->base.prf_key, 0, sizeof(ctx_out->base.prf_key_raw));
-
             ctx_out->base.copy_dh_pubkey = copy_dh_pubkey_x25519;
 
             ctx_out->base.do_diffie_hellman = do_diffie_hellman_x25519;
             ctx_out->base.prf = xtt_crypto_prf_blake2b;
-
 
             ctx_out->base.encrypt = encrypt_chacha;
             ctx_out->base.decrypt = decrypt_chacha;
@@ -368,14 +334,6 @@ xtt_initialize_client_handshake_context(struct xtt_client_handshake_context* ctx
 
             return XTT_RETURN_SUCCESS;
         case XTT_X25519_LRSW_ED25519_AES256GCM_SHA512:
-            ctx_out->base.hash_out_buffer = (unsigned char*)&ctx_out->base.hash_out_buffer_raw;
-            ctx_out->base.inner_hash = (unsigned char*)&ctx_out->base.inner_hash_raw;
-
-            ctx_out->base.shared_secret_buffer = (unsigned char*)&ctx_out->base.shared_secret_raw;
-            ctx_out->base.handshake_secret = (unsigned char*)&ctx_out->base.handshake_secret_raw;
-            ctx_out->base.prf_key = (unsigned char*)&ctx_out->base.prf_key_raw;
-            memset(ctx_out->base.prf_key, 0, sizeof(ctx_out->base.prf_key_raw));
-
             ctx_out->base.copy_dh_pubkey = copy_dh_pubkey_x25519;
 
             ctx_out->base.do_diffie_hellman = do_diffie_hellman_x25519;
@@ -416,14 +374,6 @@ xtt_initialize_client_handshake_context(struct xtt_client_handshake_context* ctx
 
             return XTT_RETURN_SUCCESS;
         case XTT_X25519_LRSW_ED25519_AES256GCM_BLAKE2B:
-            ctx_out->base.hash_out_buffer = (unsigned char*)&ctx_out->base.hash_out_buffer_raw;
-            ctx_out->base.inner_hash = (unsigned char*)&ctx_out->base.inner_hash_raw;
-
-            ctx_out->base.shared_secret_buffer = (unsigned char*)&ctx_out->base.shared_secret_raw;
-            ctx_out->base.handshake_secret = (unsigned char*)&ctx_out->base.handshake_secret_raw;
-            ctx_out->base.prf_key = (unsigned char*)&ctx_out->base.prf_key_raw;
-            memset(ctx_out->base.prf_key, 0, sizeof(ctx_out->base.prf_key_raw));
-
             ctx_out->base.copy_dh_pubkey = copy_dh_pubkey_x25519;
 
             ctx_out->base.do_diffie_hellman = do_diffie_hellman_x25519;
@@ -601,9 +551,14 @@ xtt_return_code_type
 xtt_get_version(xtt_version *version_out,
                 const struct xtt_server_handshake_context *handshake_context)
 {
-    *version_out = handshake_context->base.version;
+    switch (handshake_context->base.version) {
+        case XTT_VERSION_ONE:
+            *version_out = handshake_context->base.version;
+            return XTT_RETURN_SUCCESS;
+        default:
+            return XTT_RETURN_UNKNOWN_VERSION;
+    }
 
-    return XTT_RETURN_SUCCESS;
 }
 
 xtt_return_code_type

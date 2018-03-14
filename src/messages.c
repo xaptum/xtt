@@ -122,8 +122,9 @@ xtt_handshake_client_handle_io(uint16_t bytes_written,
 
                 if (bytes_io_performed_for_this_message >= xtt_common_header_length) {
                     uint16_t message_length;
-                    if (XTT_RETURN_SUCCESS != parse_message_header(&message_length, &ctx->base)) {
-                        return XTT_RETURN_RECEIVED_ERROR_MSG;
+                    xtt_return_code_type rc = parse_message_header(&message_length, &ctx->base);
+                    if (XTT_RETURN_SUCCESS != rc) {
+                        return rc;
                     }
                     if (message_length != xtt_serverinitandattest_total_length(ctx->base.version, ctx->base.suite_spec)) {
                         return XTT_RETURN_INCORRECT_LENGTH;
@@ -207,8 +208,9 @@ xtt_handshake_client_handle_io(uint16_t bytes_written,
 
                 if (bytes_io_performed_for_this_message >= xtt_common_header_length) {
                     uint16_t message_length;
-                    if (XTT_RETURN_SUCCESS != parse_message_header(&message_length, &ctx->base)) {
-                        return XTT_RETURN_RECEIVED_ERROR_MSG;
+                    xtt_return_code_type rc = parse_message_header(&message_length, &ctx->base);
+                    if (XTT_RETURN_SUCCESS != rc) {
+                        return rc;
                     }
                     if (message_length != xtt_identityserverfinished_total_length(ctx->base.version, ctx->base.suite_spec)) {
                         return XTT_RETURN_INCORRECT_LENGTH;
@@ -267,8 +269,9 @@ xtt_handshake_server_handle_io(uint16_t bytes_written,
 
                 if (bytes_io_performed_for_this_message >= xtt_common_header_length) {
                     uint16_t message_length;
-                    if (XTT_RETURN_SUCCESS != parse_message_header(&message_length, &ctx->base)) {
-                        return XTT_RETURN_RECEIVED_ERROR_MSG;
+                    xtt_return_code_type rc = parse_message_header(&message_length, &ctx->base);
+                    if (XTT_RETURN_SUCCESS != rc) {
+                        return rc;
                     }
 
                     if (bytes_io_performed_for_this_message >= message_length) {
@@ -277,6 +280,22 @@ xtt_handshake_server_handle_io(uint16_t bytes_written,
                         // Prepare the output buffer pointers
                         ctx->base.out_message_start = ctx->base.out_buffer_start;
                         ctx->base.out_end = ctx->base.out_buffer_start;
+
+                        // Set the version and suite_spec in our context,
+                        // now that we can find them in the ClientInit header
+                        ctx->base.version = *xtt_access_version(ctx->base.in_message_start);
+                        xtt_version version_ignore;
+                        rc = xtt_get_version(&version_ignore, ctx);
+                        if (XTT_RETURN_SUCCESS != rc)
+                            return rc;
+                        xtt_suite_spec_raw claimed_suite_spec_raw;
+                        bigendian_to_short(xtt_clientinit_access_suite_spec(ctx->base.in_message_start, ctx->base.version),
+                                           &claimed_suite_spec_raw);
+                        ctx->base.suite_spec = claimed_suite_spec_raw;
+                        xtt_suite_spec suite_spec_ignore;
+                        rc = xtt_get_suite_spec(&suite_spec_ignore, ctx);
+                        if (XTT_RETURN_SUCCESS != rc)
+                            return rc;
 
                         return XTT_RETURN_WANT_BUILDSERVERATTEST;
                     } else {
@@ -299,8 +318,9 @@ xtt_handshake_server_handle_io(uint16_t bytes_written,
                 // Re-read message length
                 // (since we don't yet know version and suite_spec, and thus can't calculate it).
                 uint16_t message_length;
-                if (XTT_RETURN_SUCCESS != parse_message_header(&message_length, &ctx->base)) {
-                    return XTT_RETURN_RECEIVED_ERROR_MSG;
+                xtt_return_code_type rc = parse_message_header(&message_length, &ctx->base);
+                if (XTT_RETURN_SUCCESS != rc) {
+                    return rc;
                 }
 
                 if (bytes_io_performed_for_this_message >= message_length) {
@@ -309,6 +329,22 @@ xtt_handshake_server_handle_io(uint16_t bytes_written,
                     // Prepare the output buffer pointers
                     ctx->base.out_message_start = ctx->base.out_buffer_start;
                     ctx->base.out_end = ctx->base.out_buffer_start;
+
+                    // Set the version and suite_spec in our context,
+                    // now that we can find them in the ClientInit header
+                    ctx->base.version = *xtt_access_version(ctx->base.in_message_start);
+                    xtt_version version_ignore;
+                    rc = xtt_get_version(&version_ignore, ctx);
+                    if (XTT_RETURN_SUCCESS != rc)
+                        return rc;
+                    xtt_suite_spec_raw claimed_suite_spec_raw;
+                    bigendian_to_short(xtt_clientinit_access_suite_spec(ctx->base.in_message_start, ctx->base.version),
+                                       &claimed_suite_spec_raw);
+                    ctx->base.suite_spec = claimed_suite_spec_raw;
+                    xtt_suite_spec suite_spec_ignore;
+                    rc = xtt_get_suite_spec(&suite_spec_ignore, ctx);
+                    if (XTT_RETURN_SUCCESS != rc)
+                        return rc;
 
                     return XTT_RETURN_WANT_BUILDSERVERATTEST;
                 } else {
@@ -359,8 +395,9 @@ xtt_handshake_server_handle_io(uint16_t bytes_written,
                 if (bytes_io_performed_for_this_message >= xtt_common_header_length) {
                     // TODO: Get the *actual* type of the client_attest (id vs session) and proceed accordingly
                     uint16_t message_length;
-                    if (XTT_RETURN_SUCCESS != parse_message_header(&message_length, &ctx->base)) {
-                        return XTT_RETURN_RECEIVED_ERROR_MSG;
+                    xtt_return_code_type rc = parse_message_header(&message_length, &ctx->base);
+                    if (XTT_RETURN_SUCCESS != rc) {
+                        return rc;
                     }
                     if (message_length != xtt_identityclientattest_total_length(ctx->base.version, ctx->base.suite_spec)) {
                         return XTT_RETURN_INCORRECT_LENGTH;
@@ -1304,13 +1341,29 @@ xtt_return_code_type
 parse_message_header(uint16_t *length_out,
                      struct xtt_handshake_context *ctx)
 {
-    if (XTT_ERROR_MSG == *xtt_access_msg_type(ctx->in_message_start)) {
-        return XTT_RETURN_RECEIVED_ERROR_MSG;
+    xtt_msg_type msg_type = *xtt_access_msg_type(ctx->in_message_start);
+    switch (msg_type) {
+        case XTT_CLIENTINIT_MSG:
+        case XTT_SERVERINITANDATTEST_MSG:
+        case XTT_ID_CLIENTATTEST_MSG:
+        case XTT_ID_SERVERFINISHED_MSG:
+        case XTT_SESSION_CLIENTATTEST_NOPAYLOAD_MSG:
+        case XTT_SESSION_CLIENTATTEST_PAYLOAD_MSG:
+        case XTT_SESSION_SERVERFINISHED_MSG:
+        case XTT_RECORD_REGULAR_MSG:
+            *length_out = xtt_get_message_length(ctx->in_message_start);
+
+            if (MAX_HANDSHAKE_SERVER_MESSAGE_LENGTH < *length_out && MAX_HANDSHAKE_CLIENT_MESSAGE_LENGTH < *length_out ) {
+                return XTT_RETURN_INCORRECT_LENGTH;
+            }
+
+            return XTT_RETURN_SUCCESS;
+
+        case XTT_ERROR_MSG:
+            return XTT_RETURN_RECEIVED_ERROR_MSG;
+        default:
+            return XTT_RETURN_INCORRECT_TYPE;
     }
-
-    *length_out = xtt_get_message_length(ctx->in_message_start);
-
-    return XTT_RETURN_SUCCESS;
 }
 
 xtt_return_code_type
