@@ -78,7 +78,7 @@ xtt_handshake_client_start(uint16_t *io_bytes_requested,
                            struct xtt_client_handshake_context* ctx);
                       
 xtt_return_code_type
-xtt_handshake_server_handle_clientinit(uint16_t *io_bytes_requested,
+xtt_handshake_server_handle_connect(uint16_t *io_bytes_requested,
                                        unsigned char **io_ptr,
                                        struct xtt_server_handshake_context* ctx);
 

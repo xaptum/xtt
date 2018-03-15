@@ -267,9 +267,9 @@ do_handshake(int client_sock,
     xtt_identity_type requested_client_id;
     xtt_group_id claimed_group_id;
     unsigned char *io_ptr = NULL;
-    rc = xtt_handshake_server_handle_clientinit(&bytes_requested,
-                                                &io_ptr,
-                                                &ctx);
+    rc = xtt_handshake_server_handle_connect(&bytes_requested,
+                                             &io_ptr,
+                                             &ctx);
 
     while (XTT_RETURN_HANDSHAKE_FINISHED != rc) {
         switch (rc) {
