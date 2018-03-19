@@ -78,6 +78,7 @@ typedef enum {
     XTT_SERVER_HANDSHAKE_STATE_READING_CLIENTATTESTHEADER,
     XTT_SERVER_HANDSHAKE_STATE_READING_IDCLIENTATTEST,
     XTT_SERVER_HANDSHAKE_STATE_PREPARSING_IDCLIENTATTEST,
+    XTT_SERVER_HANDSHAKE_STATE_VERIFYING_GROUPSIGNATURE,
     XTT_SERVER_HANDSHAKE_STATE_BUILDING_IDSERVERFINISHED,
     XTT_SERVER_HANDSHAKE_STATE_SENDING_IDSERVERFINISHED,
     XTT_SERVER_HANDSHAKE_STATE_FINISHED,
@@ -395,6 +396,10 @@ xtt_initialize_client_group_context_lrsw(struct xtt_client_group_context *ctx_ou
                                 xtt_daa_credential_lrsw *cred,
                                 const unsigned char *basename,
                                 uint16_t basename_length);
+
+xtt_return_code_type
+xtt_get_version(xtt_version *version_out,
+                const struct xtt_server_handshake_context *handshake_context);
 
 xtt_return_code_type
 xtt_get_suite_spec(xtt_suite_spec *suite_spec_out,

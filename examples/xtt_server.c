@@ -267,9 +267,9 @@ do_handshake(int client_sock,
     xtt_identity_type requested_client_id;
     xtt_group_id claimed_group_id;
     unsigned char *io_ptr = NULL;
-    rc = xtt_handshake_server_handle_clientinit(&bytes_requested,
-                                                &io_ptr,
-                                                &ctx);
+    rc = xtt_handshake_server_handle_connect(&bytes_requested,
+                                             &io_ptr,
+                                             &ctx);
 
     while (XTT_RETURN_HANDSHAKE_FINISHED != rc) {
         switch (rc) {
@@ -337,7 +337,7 @@ do_handshake(int client_sock,
 
                     break;
                 }
-            case XTT_RETURN_WANT_BUILDIDSERVERFINISHED:
+            case XTT_RETURN_WANT_VERIFYGROUPSIGNATURE:
                 {
                     printf("Looking up GPK from claimed GID...\n");
                     struct xtt_group_public_key_context* gpk_ctx;
@@ -352,6 +352,18 @@ do_handshake(int client_sock,
                         return;
                     }
 
+                    printf("Verifying group signature...\n");
+                    rc = xtt_handshake_server_verify_groupsignature(&bytes_requested,
+                                                                    &io_ptr,
+                                                                    gpk_ctx,
+                                                                    cert_ctx,
+                                                                    &ctx);
+
+                    break;
+                }
+
+            case XTT_RETURN_WANT_BUILDIDSERVERFINISHED:
+                {
                     printf("Assigning the client an ID...\n");
                     xtt_daa_pseudonym_lrsw clients_pseudonym;
                     if (XTT_RETURN_SUCCESS != xtt_get_clients_pseudonym_lrsw(&clients_pseudonym, &ctx)) {
@@ -374,8 +386,6 @@ do_handshake(int client_sock,
                     rc = xtt_handshake_server_build_idserverfinished(&bytes_requested,
                                                                      &io_ptr,
                                                                      &assigned_client_id,
-                                                                     gpk_ctx,
-                                                                     cert_ctx,
                                                                      &ctx);
 
                     break;

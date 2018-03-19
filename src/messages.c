@@ -122,8 +122,9 @@ xtt_handshake_client_handle_io(uint16_t bytes_written,
 
                 if (bytes_io_performed_for_this_message >= xtt_common_header_length) {
                     uint16_t message_length;
-                    if (XTT_RETURN_SUCCESS != parse_message_header(&message_length, &ctx->base)) {
-                        return XTT_RETURN_RECEIVED_ERROR_MSG;
+                    xtt_return_code_type rc = parse_message_header(&message_length, &ctx->base);
+                    if (XTT_RETURN_SUCCESS != rc) {
+                        return rc;
                     }
                     if (message_length != xtt_serverinitandattest_total_length(ctx->base.version, ctx->base.suite_spec)) {
                         return XTT_RETURN_INCORRECT_LENGTH;
@@ -207,8 +208,9 @@ xtt_handshake_client_handle_io(uint16_t bytes_written,
 
                 if (bytes_io_performed_for_this_message >= xtt_common_header_length) {
                     uint16_t message_length;
-                    if (XTT_RETURN_SUCCESS != parse_message_header(&message_length, &ctx->base)) {
-                        return XTT_RETURN_RECEIVED_ERROR_MSG;
+                    xtt_return_code_type rc = parse_message_header(&message_length, &ctx->base);
+                    if (XTT_RETURN_SUCCESS != rc) {
+                        return rc;
                     }
                     if (message_length != xtt_identityserverfinished_total_length(ctx->base.version, ctx->base.suite_spec)) {
                         return XTT_RETURN_INCORRECT_LENGTH;
@@ -267,8 +269,9 @@ xtt_handshake_server_handle_io(uint16_t bytes_written,
 
                 if (bytes_io_performed_for_this_message >= xtt_common_header_length) {
                     uint16_t message_length;
-                    if (XTT_RETURN_SUCCESS != parse_message_header(&message_length, &ctx->base)) {
-                        return XTT_RETURN_RECEIVED_ERROR_MSG;
+                    xtt_return_code_type rc = parse_message_header(&message_length, &ctx->base);
+                    if (XTT_RETURN_SUCCESS != rc) {
+                        return rc;
                     }
 
                     if (bytes_io_performed_for_this_message >= message_length) {
@@ -277,6 +280,22 @@ xtt_handshake_server_handle_io(uint16_t bytes_written,
                         // Prepare the output buffer pointers
                         ctx->base.out_message_start = ctx->base.out_buffer_start;
                         ctx->base.out_end = ctx->base.out_buffer_start;
+
+                        // Set the version and suite_spec in our context,
+                        // now that we can find them in the ClientInit header
+                        ctx->base.version = *xtt_access_version(ctx->base.in_message_start);
+                        xtt_version version_ignore;
+                        rc = xtt_get_version(&version_ignore, ctx);
+                        if (XTT_RETURN_SUCCESS != rc)
+                            return rc;
+                        xtt_suite_spec_raw claimed_suite_spec_raw;
+                        bigendian_to_short(xtt_clientinit_access_suite_spec(ctx->base.in_message_start, ctx->base.version),
+                                           &claimed_suite_spec_raw);
+                        ctx->base.suite_spec = claimed_suite_spec_raw;
+                        xtt_suite_spec suite_spec_ignore;
+                        rc = xtt_get_suite_spec(&suite_spec_ignore, ctx);
+                        if (XTT_RETURN_SUCCESS != rc)
+                            return rc;
 
                         return XTT_RETURN_WANT_BUILDSERVERATTEST;
                     } else {
@@ -299,8 +318,9 @@ xtt_handshake_server_handle_io(uint16_t bytes_written,
                 // Re-read message length
                 // (since we don't yet know version and suite_spec, and thus can't calculate it).
                 uint16_t message_length;
-                if (XTT_RETURN_SUCCESS != parse_message_header(&message_length, &ctx->base)) {
-                    return XTT_RETURN_RECEIVED_ERROR_MSG;
+                xtt_return_code_type rc = parse_message_header(&message_length, &ctx->base);
+                if (XTT_RETURN_SUCCESS != rc) {
+                    return rc;
                 }
 
                 if (bytes_io_performed_for_this_message >= message_length) {
@@ -309,6 +329,22 @@ xtt_handshake_server_handle_io(uint16_t bytes_written,
                     // Prepare the output buffer pointers
                     ctx->base.out_message_start = ctx->base.out_buffer_start;
                     ctx->base.out_end = ctx->base.out_buffer_start;
+
+                    // Set the version and suite_spec in our context,
+                    // now that we can find them in the ClientInit header
+                    ctx->base.version = *xtt_access_version(ctx->base.in_message_start);
+                    xtt_version version_ignore;
+                    rc = xtt_get_version(&version_ignore, ctx);
+                    if (XTT_RETURN_SUCCESS != rc)
+                        return rc;
+                    xtt_suite_spec_raw claimed_suite_spec_raw;
+                    bigendian_to_short(xtt_clientinit_access_suite_spec(ctx->base.in_message_start, ctx->base.version),
+                                       &claimed_suite_spec_raw);
+                    ctx->base.suite_spec = claimed_suite_spec_raw;
+                    xtt_suite_spec suite_spec_ignore;
+                    rc = xtt_get_suite_spec(&suite_spec_ignore, ctx);
+                    if (XTT_RETURN_SUCCESS != rc)
+                        return rc;
 
                     return XTT_RETURN_WANT_BUILDSERVERATTEST;
                 } else {
@@ -359,8 +395,9 @@ xtt_handshake_server_handle_io(uint16_t bytes_written,
                 if (bytes_io_performed_for_this_message >= xtt_common_header_length) {
                     // TODO: Get the *actual* type of the client_attest (id vs session) and proceed accordingly
                     uint16_t message_length;
-                    if (XTT_RETURN_SUCCESS != parse_message_header(&message_length, &ctx->base)) {
-                        return XTT_RETURN_RECEIVED_ERROR_MSG;
+                    xtt_return_code_type rc = parse_message_header(&message_length, &ctx->base);
+                    if (XTT_RETURN_SUCCESS != rc) {
+                        return rc;
                     }
                     if (message_length != xtt_identityclientattest_total_length(ctx->base.version, ctx->base.suite_spec)) {
                         return XTT_RETURN_INCORRECT_LENGTH;
@@ -501,9 +538,9 @@ finish:
 }
 
 xtt_return_code_type
-xtt_handshake_server_handle_clientinit(uint16_t *io_bytes_requested,
-                                       unsigned char **io_ptr,
-                                       struct xtt_server_handshake_context* ctx)
+xtt_handshake_server_handle_connect(uint16_t *io_bytes_requested,
+                                    unsigned char **io_ptr,
+                                    struct xtt_server_handshake_context* ctx)
 {
     xtt_return_code_type rc = XTT_RETURN_SUCCESS;
 
@@ -1063,6 +1100,61 @@ finish:
                sizeof(xtt_identity_type));
 
         // 11) Advance state
+        handshake_ctx->state = XTT_SERVER_HANDSHAKE_STATE_VERIFYING_GROUPSIGNATURE;
+
+        return XTT_RETURN_WANT_VERIFYGROUPSIGNATURE;
+    } else {
+        (void)build_error_msg(handshake_ctx->base.out_message_start, io_bytes_requested, handshake_ctx->base.version);
+
+        *io_ptr = handshake_ctx->base.out_message_start;
+
+        handshake_ctx->state = XTT_SERVER_HANDSHAKE_STATE_ERROR;
+
+        return rc;
+    }
+}
+
+xtt_return_code_type
+xtt_handshake_server_verify_groupsignature(uint16_t *io_bytes_requested,
+                                           unsigned char **io_ptr,
+                                           struct xtt_group_public_key_context* group_pub_key_ctx,
+                                           struct xtt_server_certificate_context *certificate_ctx,
+                                           struct xtt_server_handshake_context* handshake_ctx)
+{
+    xtt_return_code_type rc;
+
+    // 0i) Ensure we've read enough
+    uint16_t bytes_io_performed_for_this_message = handshake_ctx->base.in_end - handshake_ctx->base.in_message_start;
+    uint16_t message_length = xtt_identityclientattest_total_length(handshake_ctx->base.version, handshake_ctx->base.suite_spec);
+    if (bytes_io_performed_for_this_message < message_length) {
+        *io_ptr = handshake_ctx->base.in_end;
+        *io_bytes_requested = message_length - bytes_io_performed_for_this_message;
+        return XTT_RETURN_WANT_READ;
+    }
+
+    // 0ii) Ensure we're in the correct state
+    if (XTT_SERVER_HANDSHAKE_STATE_VERIFYING_GROUPSIGNATURE != handshake_ctx->state) {
+        rc = XTT_RETURN_BAD_HANDSHAKE_ORDER;
+        goto finish;
+    }
+
+    // 1) Verify DAA Signature
+    rc = verify_daa_signature(xtt_encrypted_identityclientattest_access_daasignature(handshake_ctx->base.clientattest_buffer,
+                                                                                     handshake_ctx->base.version,
+                                                                                     handshake_ctx->base.suite_spec),
+                              (unsigned char*)&handshake_ctx->base.server_cookie,
+                              handshake_ctx->base.server_signature_buffer,
+                              handshake_ctx->base.in_message_start,
+                              handshake_ctx->base.clientattest_buffer,
+                              group_pub_key_ctx,
+                              certificate_ctx,
+                              &handshake_ctx->base);
+    if (XTT_RETURN_SUCCESS != rc)
+        goto finish;
+
+finish:
+    if (XTT_RETURN_SUCCESS == rc) {
+        // 2) Advance state
         handshake_ctx->state = XTT_SERVER_HANDSHAKE_STATE_BUILDING_IDSERVERFINISHED;
 
         return XTT_RETURN_WANT_BUILDIDSERVERFINISHED;
@@ -1081,8 +1173,6 @@ xtt_return_code_type
 xtt_handshake_server_build_idserverfinished(uint16_t *io_bytes_requested,
                                             unsigned char **io_ptr,
                                             xtt_identity_type *client_id,
-                                            struct xtt_group_public_key_context* group_pub_key_ctx,
-                                            struct xtt_server_certificate_context *certificate_ctx,
                                             struct xtt_server_handshake_context* handshake_ctx)
 {
     xtt_return_code_type rc;
@@ -1102,53 +1192,39 @@ xtt_handshake_server_build_idserverfinished(uint16_t *io_bytes_requested,
         goto finish;
     }
 
-    // 1) Verify DAA Signature
-    rc = verify_daa_signature(xtt_encrypted_identityclientattest_access_daasignature(handshake_ctx->base.clientattest_buffer,
-                                                                                     handshake_ctx->base.version,
-                                                                                     handshake_ctx->base.suite_spec),
-                              (unsigned char*)&handshake_ctx->base.server_cookie,
-                              handshake_ctx->base.server_signature_buffer,
-                              handshake_ctx->base.in_message_start,
-                              handshake_ctx->base.clientattest_buffer,
-                              group_pub_key_ctx,
-                              certificate_ctx,
-                              &handshake_ctx->base);
-    if (XTT_RETURN_SUCCESS != rc)
-        goto finish;
-
-    // 4) Set message type.
+    // 1) Set message type.
     *xtt_access_msg_type(handshake_ctx->base.out_message_start) = XTT_ID_SERVERFINISHED_MSG;
 
-    // 5) Set length.
+    // 2) Set length.
     short_to_bigendian(xtt_identityserverfinished_total_length(handshake_ctx->base.version,
                                                                handshake_ctx->base.suite_spec),
                        xtt_access_length(handshake_ctx->base.out_message_start));
 
-    // 6) Set version.
+    // 3) Set version.
     *xtt_access_version(handshake_ctx->base.out_message_start) = handshake_ctx->base.version;
 
-    // 7) Set suite spec.
+    // 4) Set suite spec.
     short_to_bigendian(handshake_ctx->base.suite_spec,
                        xtt_identityserverfinished_access_suite_spec(handshake_ctx->base.out_message_start, handshake_ctx->base.version));
 
-    // 8) Set the client's id.
+    // 5) Set the client's id.
     memcpy(xtt_encrypted_identityserverfinished_access_id(handshake_ctx->base.buffer,
                                                           handshake_ctx->base.version),
            client_id->data,
            sizeof(xtt_identity_type));
-    // 8i) Also save the client's id to our context
+    // 5i) Also save the client's id to our context
     memcpy(handshake_ctx->clients_identity.data,
            client_id->data,
            sizeof(xtt_identity_type));
 
-    // 9) Set the longterm_key (echo)
+    // 6) Set the longterm_key (echo)
     memcpy(xtt_encrypted_identityserverfinished_access_longtermkey(handshake_ctx->base.buffer,
                                                                    handshake_ctx->base.version),
            xtt_encrypted_identityclientattest_access_longtermkey(handshake_ctx->base.clientattest_buffer,
                                                                  handshake_ctx->base.version),
            handshake_ctx->base.longterm_key_length);
 
-    // 10) AEAD encrypt the message
+    // 7) AEAD encrypt the message
     uint16_t encrypted_len;
     rc = handshake_ctx->base.encrypt(handshake_ctx->base.out_message_start + xtt_identityserverfinished_unencrypted_part_length(handshake_ctx->base.version),
                                      &encrypted_len,
@@ -1163,15 +1239,15 @@ xtt_handshake_server_build_idserverfinished(uint16_t *io_bytes_requested,
 
 finish:
     if (XTT_RETURN_SUCCESS == rc) {
-        // 11) Report ServerFinished message length.
+        // 8) Report ServerFinished message length.
         *io_bytes_requested = xtt_identityserverfinished_unencrypted_part_length(handshake_ctx->base.version)
                         + encrypted_len;
         assert(xtt_identityserverfinished_total_length(handshake_ctx->base.version, handshake_ctx->base.suite_spec) == *io_bytes_requested);
 
-        // 12) Set io_ptr.
+        // 9) Set io_ptr.
         *io_ptr = handshake_ctx->base.out_message_start;
 
-        // 13) Advance state
+        // 10) Advance state
         handshake_ctx->state = XTT_SERVER_HANDSHAKE_STATE_SENDING_IDSERVERFINISHED;
 
         return XTT_RETURN_WANT_WRITE;
@@ -1304,13 +1380,29 @@ xtt_return_code_type
 parse_message_header(uint16_t *length_out,
                      struct xtt_handshake_context *ctx)
 {
-    if (XTT_ERROR_MSG == *xtt_access_msg_type(ctx->in_message_start)) {
-        return XTT_RETURN_RECEIVED_ERROR_MSG;
+    xtt_msg_type msg_type = *xtt_access_msg_type(ctx->in_message_start);
+    switch (msg_type) {
+        case XTT_CLIENTINIT_MSG:
+        case XTT_SERVERINITANDATTEST_MSG:
+        case XTT_ID_CLIENTATTEST_MSG:
+        case XTT_ID_SERVERFINISHED_MSG:
+        case XTT_SESSION_CLIENTATTEST_NOPAYLOAD_MSG:
+        case XTT_SESSION_CLIENTATTEST_PAYLOAD_MSG:
+        case XTT_SESSION_SERVERFINISHED_MSG:
+        case XTT_RECORD_REGULAR_MSG:
+            *length_out = xtt_get_message_length(ctx->in_message_start);
+
+            if (MAX_HANDSHAKE_SERVER_MESSAGE_LENGTH < *length_out && MAX_HANDSHAKE_CLIENT_MESSAGE_LENGTH < *length_out ) {
+                return XTT_RETURN_INCORRECT_LENGTH;
+            }
+
+            return XTT_RETURN_SUCCESS;
+
+        case XTT_ERROR_MSG:
+            return XTT_RETURN_RECEIVED_ERROR_MSG;
+        default:
+            return XTT_RETURN_INCORRECT_TYPE;
     }
-
-    *length_out = xtt_get_message_length(ctx->in_message_start);
-
-    return XTT_RETURN_SUCCESS;
 }
 
 xtt_return_code_type
