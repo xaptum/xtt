@@ -172,8 +172,10 @@ finish:
     if (socket > 0)
         close(socket);
 #ifdef USE_TPM
-    if (use_tpm && 0==init_daa_ret)
-        tss2_tcti_finalize((TSS2_TCTI_CONTEXT*)tcti_context_buffer_g);
+    if (use_tpm && 0==init_daa_ret) {
+        TSS2_TCTI_CONTEXT *tcti_context = (TSS2_TCTI_CONTEXT*)tcti_context_buffer_g;
+        tss2_tcti_finalize(tcti_context);
+    }
 #endif
     if (XTT_RETURN_SUCCESS == rc) {
         return 0;
@@ -284,8 +286,7 @@ int initialize_daa(struct xtt_client_group_context *group_ctx, int use_tpm)
 #ifdef USE_TPM
     TSS2_TCTI_CONTEXT *tcti_context;
     if (use_tpm) {
-        size_t tcti_context_size = tss2_tcti_getsize_socket();
-        assert(tcti_context_size < sizeof(tcti_context_buffer_g));
+        assert(tss2_tcti_getsize_socket() < sizeof(tcti_context_buffer_g));
         tcti_context = (TSS2_TCTI_CONTEXT*)tcti_context_buffer_g;
         int tcti_ret = tss2_tcti_init_socket(tpm_hostname_g, tpm_port_g, tcti_context);
         if (TSS2_RC_SUCCESS != tcti_ret) {
