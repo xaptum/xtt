@@ -148,6 +148,12 @@ if(BUILD_STATIC_LIBS)
 endif()
 
 ################################################################################
+# Headers
+################################################################################
+install(FILES include/xtt.h DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
+install(DIRECTORY include/xtt DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
+
+################################################################################
 # Examples
 ################################################################################
 if(BUILD_EXAMPLES)
