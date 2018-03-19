@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.0 FATAL_ERROR)
 
 project(xtt
-        VERSION "0.4.0"
+        VERSION "0.4.1"
         )
 set(PROJECT_VERSION_PACKAGE_REVISION 1)
 
@@ -146,6 +146,12 @@ if(BUILD_STATIC_LIBS)
           ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}"
   )
 endif()
+
+################################################################################
+# Headers
+################################################################################
+install(FILES include/xtt.h DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
+install(DIRECTORY include/xtt DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
 
 ################################################################################
 # Examples
