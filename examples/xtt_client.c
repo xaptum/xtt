@@ -55,6 +55,8 @@ const char *daa_secretkey_file = "daa_secretkey.bin";
 const char *basename_file = "basename.bin";
 const char *root_id_file = "root_id.bin";
 const char *root_pubkey_file = "root_pub.bin";
+const char *longterm_public_key_out_file = "longterm_pub.bin";
+const char *longterm_private_key_out_file = "longterm_priv.bin";
 
 // We have a toy "database" of server certificates
 typedef struct {
@@ -637,6 +639,22 @@ int report_results(xtt_identity_type *requested_client_id,
         } else {
             printf("}\n");
         }
+    }
+    int write_ret = write_buffer_to_file(longterm_public_key_out_file, my_longterm_key.data, sizeof(my_longterm_key));
+    if (sizeof(my_longterm_key) != write_ret) {
+        fprintf(stderr, "Error writing longterm public key to file");
+        return 1;
+    }
+    
+    xtt_ed25519_priv_key my_longterm_private_key;
+    if (XTT_RETURN_SUCCESS != xtt_get_my_longterm_private_key_ed25519(&my_longterm_private_key, ctx)) {
+        printf("Error getting my longterm private key!\n");
+        return 1;
+    }
+    write_ret = write_buffer_to_file(longterm_private_key_out_file, my_longterm_private_key.data, sizeof(my_longterm_private_key));
+    if (sizeof(my_longterm_private_key) != write_ret) {
+        fprintf(stderr, "Error writing longterm private key to file");
+        return 1;
     }
 
     xtt_daa_pseudonym_lrsw my_pseudonym;
