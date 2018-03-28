@@ -32,11 +32,15 @@ endif()
 
 if(USE_TPM)
         add_definitions(-DUSE_TPM)
+        set(USE_TPM_DEFINE "#define USE_TPM")
         find_package(XaptumTPM REQUIRED QUIET)
         set(ECDAA_ENABLE_TPM ON CACHE BOOL "" FORCE)
 else()
         set(ECDAA_ENABLE_TPM OFF CACHE BOOL "" FORCE)
 endif()
+
+configure_file(${PROJECT_SOURCE_DIR}/include/xtt/context.h.in ${CMAKE_BINARY_DIR}/include/xtt/context.h)
+configure_file(${PROJECT_SOURCE_DIR}/include/xtt/daa_wrapper.h.in ${CMAKE_BINARY_DIR}/include/xtt/daa_wrapper.h)
 
 if(USE_ECDAA)
         set(DAA_LIB_SRCS ecdaa_wrapper.c)
@@ -95,6 +99,7 @@ if(BUILD_SHARED_LIBS)
   
   target_include_directories(xtt PUBLIC
     $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
+    $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/include>
     $<BUILD_INTERFACE:${ECDAA_INCLUDE_DIRS}>
     $<BUILD_INTERFACE:${AMCL_INCLUDE_DIRS}>
     $<BUILD_INTERFACE:${XAPTUM_TPM_INCLUDE_DIRS}>
@@ -129,6 +134,7 @@ if(BUILD_STATIC_LIBS)
 
   target_include_directories(xtt_static PUBLIC
     $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
+    $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/include>
     $<BUILD_INTERFACE:${ECDAA_INCLUDE_DIRS}>
     $<BUILD_INTERFACE:${AMCL_INCLUDE_DIRS}>
     $<BUILD_INTERFACE:${XAPTUM_TPM_INCLUDE_DIRS}>
@@ -151,7 +157,8 @@ endif()
 # Headers
 ################################################################################
 install(FILES include/xtt.h DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
-install(DIRECTORY include/xtt DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
+install(DIRECTORY include/xtt DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}" FILES_MATCHING PATTERN "*.h")
+install(DIRECTORY ${CMAKE_BINARY_DIR}/include/xtt DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
 
 ################################################################################
 # Examples
