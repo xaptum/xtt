@@ -20,6 +20,10 @@
 #define XTT_CONTEXT_H
 #pragma once
 
+#ifndef USE_TPM
+@USE_TPM_DEFINE@
+#endif
+
 #include <xtt/crypto_types.h>
 #include <xtt/return_codes.h>
 #include <xtt/certificates.h>
@@ -327,6 +331,11 @@ struct xtt_client_group_context {
     unsigned char basename[MAX_BASENAME_LENGTH];
     uint16_t basename_length;
 
+    // If NOT using a TPM:
+    union {
+        xtt_daa_priv_key_lrsw lrsw;
+    } priv_key;
+
 #ifdef USE_TPM
     // If using a TPM:
     TPM_HANDLE key_handle;
@@ -334,11 +343,6 @@ struct xtt_client_group_context {
     uint16_t key_password_length;
     TSS2_TCTI_CONTEXT *tcti_context;
 #endif
-
-    // If NOT using a TPM:
-    union {
-        xtt_daa_priv_key_lrsw lrsw;
-    } priv_key;
 };
 
 xtt_return_code_type
