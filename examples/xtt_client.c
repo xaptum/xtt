@@ -36,10 +36,10 @@ unsigned char tcti_context_buffer_g[128];
 #endif
 
 uint32_t key_handle_g = 0x81800000;
-uint32_t gpk_handle_g = 0x1400000;
-uint32_t cred_handle_g = 0x1400001;
-uint32_t root_id_handle_g = 0x1400003;
-uint32_t root_pubkey_handle_g = 0x1400004;
+uint32_t gpk_handle_g = 0x1410000;
+uint32_t cred_handle_g = 0x1410001;
+uint32_t root_id_handle_g = 0x1410003;
+uint32_t root_pubkey_handle_g = 0x1410004;
 const char *tpm_hostname_g = "localhost";
 const char *tpm_port_g = "2321";
 const char *tpm_password = NULL;
