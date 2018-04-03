@@ -100,6 +100,12 @@ int report_results(xtt_identity_type *requested_client_id,
 
 int main(int argc, char *argv[])
 {
+    int init_ret = xtt_crypto_initialize_crypto();
+    if (0 != init_ret) {
+        fprintf(stderr, "Error initializing cryptography library: %d\n", init_ret);
+        return 1;
+    }
+
     xtt_return_code_type rc = XTT_RETURN_SUCCESS;
     int init_daa_ret = -1;
     int socket = -1;

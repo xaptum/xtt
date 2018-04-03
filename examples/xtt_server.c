@@ -76,6 +76,13 @@ void report_results(struct xtt_server_handshake_context *ctx);
 
 int main(int argc, char *argv[])
 {
+    // 0) Initialize crypto primitives library
+    int init_ret = xtt_crypto_initialize_crypto();
+    if (0 != init_ret) {
+        fprintf(stderr, "Error initializing cryptography library: %d\n", init_ret);
+        return 1;
+    }
+
     // 0) Parse the command line args
     unsigned short server_port;
     parse_cmd_args(argc, argv, &server_port);
