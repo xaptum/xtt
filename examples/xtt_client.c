@@ -55,7 +55,7 @@ const char *daa_secretkey_file = "daa_secretkey.bin";
 const char *basename_file = "basename.bin";
 const char *root_id_file = "root_id.bin";
 const char *root_pubkey_file = "root_pub.bin";
-const char *assigned_client_id_out_file = "assigned_identity.bin";
+const char *assigned_client_id_out_file = "assigned_identity.txt";
 const char *longterm_public_key_out_file = "longterm_pub.bin";
 const char *longterm_private_key_out_file = "longterm_priv.bin";
 
@@ -614,9 +614,11 @@ int report_results(xtt_identity_type *requested_client_id,
         printf("Error getting my assigned client id!\n");
         return 1;
     }
+    FILE *id_file_ptr = fopen(assigned_client_id_out_file, "w");
     printf("Server assigned me id: {");
     for (size_t i=0; i < sizeof(xtt_identity_type); ++i) {
         printf("%#02X", my_assigned_id.data[i]);
+        fprintf(id_file_ptr, "%02X", my_assigned_id.data[i]);
         if (i < (sizeof(xtt_identity_type)-1)) {
             printf(", ");
         } else {
@@ -633,11 +635,6 @@ int report_results(xtt_identity_type *requested_client_id,
                 printf("}\n");
             }
         }
-    }
-    write_ret = write_buffer_to_file(assigned_client_id_out_file, my_assigned_id.data, sizeof(my_assigned_id));
-    if (sizeof(my_assigned_id) != write_ret) {
-        fprintf(stderr, "Error writing assigned identity to file");
-        return 1;
     }
 
     xtt_ed25519_pub_key my_longterm_key;
