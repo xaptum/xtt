@@ -8,7 +8,6 @@ set(PROJECT_VERSION_PACKAGE_REVISION 1)
 set(XTT_VERSION ${PROJECT_VERSION})
 set(XTT_SOVERSION ${PROJECT_VERSION_MAJOR})
 
-list(APPEND CMAKE_MODULE_PATH CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/cmake)
 
 include(GNUInstallDirs)
 include(CTest)
@@ -18,7 +17,7 @@ option(USE_TPM "use a TPM" ON)
 option(BUILD_SHARED_LIBS "Build as a shared library" ON)
 option(BUILD_STATIC_LIBS "Build as a static library" OFF)
 
-find_package(ecdaa 0.8.1 REQUIRED QUIET)
+find_package(ecdaa 0.8.4 REQUIRED QUIET)
 # TODO: Currently, the ecdaa package will find sodium for us
 # find_package(sodium 1.0.11 REQUIRED QUIET)
 
@@ -162,13 +161,6 @@ write_basic_package_version_file(
 configure_package_config_file(${CMAKE_CURRENT_SOURCE_DIR}/xtt-config.cmake.in
   ${CMAKE_CURRENT_BINARY_DIR}/xtt-config.cmake
   INSTALL_DESTINATION ${INSTALL_CONFIGDIR}
-)
-
-install(FILES
-  cmake/Findsodium.cmake
-  ${CMAKE_CURRENT_BINARY_DIR}/xtt-config.cmake
-  ${CMAKE_CURRENT_BINARY_DIR}/xtt-config-version.cmake
-  DESTINATION ${INSTALL_CONFIGDIR}
 )
 
 ################################################################################
