@@ -18,16 +18,13 @@ compiler: gcc
 
 env:
   global:
+    - INSTALL_PREFIX=${TRAVIS_BUILD_DIR}/usr
+    - CMAKE_PREFIX_PATH=${INSTALL_PREFIX}
     - LIBSODIUM_DIR=${TRAVIS_BUILD_DIR}/libsodium
     - AMCL_DIR=${TRAVIS_BUILD_DIR}/milagro-crypto-c/install
-    - ECDAA_CURVES=FP256BN
-    - CFLAGS=-I${LIBSODIUM_DIR}/include/
-    - LDFLAGS=-L${LIBSODIUM_DIR}/lib/
-    - LD_LIBRARY_PATH=${LIBSODIUM_DIR}/lib/
     - XAPTUM_TPM_DIR=${TRAVIS_BUILD_DIR}/xaptum-tpm/
-    - AMCL_DIR=${TRAVIS_BUILD_DIR}/milagro-crypto-c/install
+    - ECDAA_CURVES=FP256BN
     - ECDAA_DIR=${TRAVIS_BUILD_DIR}/ecdaa
-    - IBM_TPM_DIR=${TRAVIS_BUILD_DIR}/ibm-tpm-simulator
 
 jobs:
   include:
@@ -38,7 +35,7 @@ jobs:
       - .travis/install-libsodium.sh ${LIBSODIUM_DIR}
       - .travis/install-xaptum-tpm.sh ${XAPTUM_TPM_DIR}
       - .travis/install-amcl.sh ${AMCL_DIR} ${ECDAA_CURVES}
-      - .travis/install-ecdaa.sh ${ECDAA_DIR} ${XAPTUM_TPM_DIR} ${AMCL_DIR}
+      - .travis/install-ecdaa.sh ${ECDAA_DIR}
       - cmake . -DCMAKE_BUILD_TYPE=Release
     script:
       - cmake --build . -- -j2
@@ -50,7 +47,7 @@ jobs:
       - .travis/install-libsodium.sh ${LIBSODIUM_DIR}
       - .travis/install-xaptum-tpm.sh ${XAPTUM_TPM_DIR}
       - .travis/install-amcl.sh ${AMCL_DIR} ${ECDAA_CURVES}
-      - .travis/install-ecdaa.sh ${ECDAA_DIR} ${XAPTUM_TPM_DIR} ${AMCL_DIR}
+      - .travis/install-ecdaa.sh ${ECDAA_DIR}
       - cmake . -DCMAKE_BUILD_TYPE=Debug
     script:
       - cmake --build . -- -j2
@@ -63,7 +60,7 @@ jobs:
       - .travis/install-libsodium.sh ${LIBSODIUM_DIR}
       - .travis/install-xaptum-tpm.sh ${XAPTUM_TPM_DIR}
       - .travis/install-amcl.sh ${AMCL_DIR} ${ECDAA_CURVES}
-      - .travis/install-ecdaa.sh ${ECDAA_DIR} ${XAPTUM_TPM_DIR} ${AMCL_DIR}
+      - .travis/install-ecdaa.sh ${ECDAA_DIR}
       - cmake . -DCMAKE_BUILD_TYPE=Release
     script:
       - cmake --build . -- -j2
@@ -77,7 +74,7 @@ jobs:
       - .travis/install-libsodium.sh ${LIBSODIUM_DIR}
       - .travis/install-xaptum-tpm.sh ${XAPTUM_TPM_DIR}
       - .travis/install-amcl.sh ${AMCL_DIR} ${ECDAA_CURVES}
-      - .travis/install-ecdaa.sh ${ECDAA_DIR} ${XAPTUM_TPM_DIR} ${AMCL_DIR}
+      - .travis/install-ecdaa.sh ${ECDAA_DIR}
       - cmake . -DCMAKE_BUILD_TYPE=RelWithSanitize
     script:
       - cmake --build . -- -j2

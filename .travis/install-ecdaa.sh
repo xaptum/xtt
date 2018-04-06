@@ -13,19 +13,20 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License
 
-if [[ $# -ne 3 ]]; then
-        echo "usage: $0 <absolute-path-to-ecdaa-installation-directory> <absolute-path-to-xaptum-tpm-installation-directory> <absolute-path-to-amcl-installation-directory>"
+set -e
+
+if [[ $# -ne 1 ]]; then
+        echo "usage: $0 <absolute-path-to-ecdaa-source-directory>"
         exit 1
 fi
 
-install_dir="$1"
-xaptum_tpm_dir="$2"
-amcl_dir="$3"
-git clone https://github.com/xaptum/ecdaa "${install_dir}" 
-pushd "${install_dir}" 
+source_dir="$1"
+git clone https://github.com/xaptum/ecdaa "${source_dir}" 
+pushd "${source_dir}" 
 mkdir -p build
 pushd build
-cmake .. -DXAPTUM_TPM_LOCAL_DIR=${xaptum_tpm_dir} -DAMCL_LOCAL_DIR=${amcl_dir}
+cmake .. -DCMAKE_INSTALL_PREFIX=${INSTALL_PREFIX} -DCMAKE_PREFIX_PATH=${local_install_dir}
 cmake --build .
+cmake --build . --target install
 popd
 popd

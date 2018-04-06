@@ -13,42 +13,23 @@ list(APPEND CMAKE_MODULE_PATH CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/cmake)
 include(GNUInstallDirs)
 include(CTest)
 
-option(USE_LIBSODIUM "use libsodium for aead-related crypto" ON)
-option(USE_WOLFCRYPT "use wolfCrypt for aead-related crypto" OFF)
-option(USE_ECDAA "use ECDAA for daa-related crypto" ON)
 option(USE_TPM "use a TPM" ON)
 
 option(BUILD_SHARED_LIBS "Build as a shared library" ON)
 option(BUILD_STATIC_LIBS "Build as a static library" OFF)
 
-if(USE_LIBSODIUM AND NOT USE_WOLFCRYPT)
-        set(CRYPTO_LIB_SRCS libsodium_wrapper.c)
-elseif(USE_WOLFCRYPT AND NOT USE_LIBSODIUM)
-        # set(CRYPTO_LIB_SRCS wolfcrypt_wrapper.c)
-        MESSAGE(FATAL_ERROR "WolfCrypt not currently supported")
-else()
-        MESSAGE(FATAL_ERROR "Must choose either USE_LIBSODIUM or USE_WOLFCRYPT")
-endif()
+find_package(ecdaa 0.8.1 REQUIRED QUIET)
+# TODO: Currently, the ecdaa package will find sodium for us
+# find_package(sodium 1.0.11 REQUIRED QUIET)
 
 if(USE_TPM)
         add_definitions(-DUSE_TPM)
         set(USE_TPM_DEFINE "#define USE_TPM")
-        find_package(XaptumTPM REQUIRED QUIET)
-        set(ECDAA_ENABLE_TPM ON CACHE BOOL "" FORCE)
-else()
-        set(ECDAA_ENABLE_TPM OFF CACHE BOOL "" FORCE)
+        find_package(xaptum-tpm 0.5.0 REQUIRED QUIET)
 endif()
 
 configure_file(${PROJECT_SOURCE_DIR}/include/xtt/context.h.in ${CMAKE_BINARY_DIR}/include/xtt/context.h)
 configure_file(${PROJECT_SOURCE_DIR}/include/xtt/daa_wrapper.h.in ${CMAKE_BINARY_DIR}/include/xtt/daa_wrapper.h)
-
-if(USE_ECDAA)
-        set(DAA_LIB_SRCS ecdaa_wrapper.c)
-        find_package(AMCL REQUIRED QUIET)
-        find_package(ECDAA REQUIRED QUIET)
-else()
-        MESSAGE(FATAL_ERROR "Only ECDAA is currently supported for DAA signatures")
-endif()
 
 # If not building as a shared library, force build as a static.  This
 # is to match the CMake default semantics of using
@@ -60,25 +41,14 @@ endif()
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Werror -Wall -Wextra -std=c99 -Wno-missing-field-initializers" CACHE STRING "" FORCE)
 set(CMAKE_C_FLAGS_RELWITHSANITIZE "${CMAKE_C_FLAGS_RELWITHSANITIZE} -O2 -g -fsanitize=address,undefined -fsanitize=unsigned-integer-overflow")
 
-if(XTT_SESSION_BUFFER_SIZE)
-        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DSESSION_CONTEXT_BUFFER_SIZE=${XTT_SESSION_BUFFER_SIZE}")
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DSESSION_CONTEXT_BUFFER_SIZE=${XTT_SESSION_BUFFER_SIZE}")
-endif()
-
-if(XTT_HANDSHAKE_BUFFER_SIZE)
-        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DHANDSHAKE_CONTEXT_BUFFER_SIZE=${XTT_HANDSHAKE_BUFFER_SIZE}")
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DHANDSHAKE_CONTEXT_BUFFER_SIZE=${XTT_HANDSHAKE_BUFFER_SIZE}")
-endif()
-
 set(XTT_SRCS
-        src/${CRYPTO_LIB_SRCS}
-        src/${DAA_LIB_SRCS}
+        src/libsodium_wrapper.c
+        src/ecdaa_wrapper.c
         src/certificates.c
         src/context.c
         src/crypto_types.c
         src/messages.c
         src/internal/byte_utils.c
-        # src/internal/hashes.c
         src/internal/key_derivation.c
         src/internal/crypto_utils.c
         src/internal/message_utils.c
@@ -100,20 +70,21 @@ if(BUILD_SHARED_LIBS)
   target_include_directories(xtt PUBLIC
     $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
     $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/include>
-    $<BUILD_INTERFACE:${ECDAA_INCLUDE_DIRS}>
-    $<BUILD_INTERFACE:${AMCL_INCLUDE_DIRS}>
-    $<BUILD_INTERFACE:${XAPTUM_TPM_INCLUDE_DIRS}>
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
   )
 
   target_link_libraries(xtt
           PRIVATE sodium 
-          ${ECDAA_LIBRARIES}
-          ${XAPTUM_TPM_LIBRARIES}
+          PRIVATE ecdaa::ecdaa
+          PRIVATE AMCL::AMCL
   )
 
+  if(USE_TPM)
+    target_link_libraries(xtt PUBLIC xaptum-tpm::xaptum-tpm)
+  endif()
+
   install(TARGETS xtt 
-          EXPORT ${CMAKE_PROJECT_NAME}Targets
+          EXPORT xtt-targets
           RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
           LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
           ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
@@ -135,18 +106,20 @@ if(BUILD_STATIC_LIBS)
   target_include_directories(xtt_static PUBLIC
     $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
     $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/include>
-    $<BUILD_INTERFACE:${ECDAA_INCLUDE_DIRS}>
-    $<BUILD_INTERFACE:${AMCL_INCLUDE_DIRS}>
-    $<BUILD_INTERFACE:${XAPTUM_TPM_INCLUDE_DIRS}>
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
   )
 
   target_link_libraries(xtt_static
           PRIVATE sodium 
+          PRIVATE ecdaa::ecdaa
+          PRIVATE AMCL::AMCL
   )
+  if(USE_TPM)
+    target_link_libraries(xtt_static PUBLIC xaptum-tpm::xaptum-tpm)
+  endif()
 
   install(TARGETS xtt_static
-          EXPORT ${CMAKE_PROJECT_NAME}Targets
+          EXPORT xtt-targets
           RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}"
           LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}"
           ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}"
@@ -161,10 +134,52 @@ install(DIRECTORY include/xtt DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}" FILES_MA
 install(DIRECTORY ${CMAKE_BINARY_DIR}/include/xtt DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
 
 ################################################################################
+# pkgconfig
+################################################################################
+configure_file(xtt.pc.in xtt.pc @ONLY)
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/xtt.pc
+        DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig
+)
+
+################################################################################
+# CMake export
+################################################################################
+set(INSTALL_CONFIGDIR ${CMAKE_INSTALL_LIBDIR}/cmake/xtt)
+
+install(EXPORT xtt-targets
+        FILE xtt-targets.cmake
+        NAMESPACE xtt::
+        DESTINATION ${INSTALL_CONFIGDIR}
+)
+
+include(CMakePackageConfigHelpers)
+write_basic_package_version_file(
+  ${CMAKE_CURRENT_BINARY_DIR}/xtt-config-version.cmake
+  VERSION ${XTT_VERSION}
+  COMPATIBILITY SameMajorVersion
+)
+
+configure_package_config_file(${CMAKE_CURRENT_SOURCE_DIR}/xtt-config.cmake.in
+  ${CMAKE_CURRENT_BINARY_DIR}/xtt-config.cmake
+  INSTALL_DESTINATION ${INSTALL_CONFIGDIR}
+)
+
+install(FILES
+  cmake/Findsodium.cmake
+  ${CMAKE_CURRENT_BINARY_DIR}/xtt-config.cmake
+  ${CMAKE_CURRENT_BINARY_DIR}/xtt-config-version.cmake
+  DESTINATION ${INSTALL_CONFIGDIR}
+)
+
+################################################################################
 # Examples
 ################################################################################
 if(BUILD_EXAMPLES)
         add_subdirectory(examples)
 endif()
 
+################################################################################
+# Tests
+################################################################################
+# Current disabled, while moving rapidly. TODO!!!
 # add_subdirectory(test)

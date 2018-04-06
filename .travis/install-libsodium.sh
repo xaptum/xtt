@@ -13,18 +13,22 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License
 
+set -e
+
 if [[ $# -ne 1 ]]; then
-        echo "usage: $0 <absolute-path-to-libsodium-installation-directory>"
+        echo "usage: $0 <absolute-path-to-libsodium-source-directory>"
         exit 1
 fi
 
-version=1.0.16
-install_dir="$1"
-mkdir -p ${install_dir}
-cd ${install_dir}
-wget https://download.libsodium.org/libsodium/releases/libsodium-${version}.tar.gz
+version=1.0.11
+source_dir="$1"
+mkdir -p ${source_dir}
+pushd ${source_dir}
+wget https://download.libsodium.org/libsodium/releases/old/libsodium-${version}.tar.gz
 tar xvfz libsodium-${version}.tar.gz
-cd libsodium-${version}
-./configure --prefix=$install_dir
+pushd libsodium-${version}
+./configure --prefix=${INSTALL_PREFIX}
 make
 make install
+popd
+popd

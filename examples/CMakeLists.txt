@@ -29,32 +29,10 @@ foreach(main_file ${XTT_EXAMPLES_MAIN_FILES})
 
         add_executable(${program_name} ${main_file})
 
-        target_include_directories(${program_name}
-                PRIVATE xtt
-                )
-
         if(BUILD_SHARED_LIBS)
-              target_link_libraries(${program_name}
-                      PRIVATE
-                      xtt
-                      sodium
-                      ${AMCL_LIBRARIES}
-                      ${ECDAA_LIBRARIES}
-                      )
-              if(USE_TPM)
-                      target_link_libraries(${program_name} PRIVATE ${XAPTUM_TPM_LIBRARIES})
-              endif()
+              target_link_libraries(${program_name} PRIVATE xtt sodium)
         else()
-              target_link_libraries(${program_name}
-                      PRIVATE
-                      xtt_static
-                      sodium
-                      ${AMCL_LIBRARIES}
-                      ${ECDAA_LIBRARIES}
-                      )
-              if(USE_TPM)
-                      target_link_libraries(${program_name} PRIVATE ${XAPTUM_TPM_LIBRARIES})
-              endif()
+              target_link_libraries(${program_name} PRIVATE xtt_static sodium)
         endif()
 
         set_target_properties(${program_name} PROPERTIES
