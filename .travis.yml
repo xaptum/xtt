@@ -36,7 +36,7 @@ jobs:
       - .travis/install-xaptum-tpm.sh ${XAPTUM_TPM_DIR}
       - .travis/install-amcl.sh ${AMCL_DIR} ${ECDAA_CURVES}
       - .travis/install-ecdaa.sh ${ECDAA_DIR}
-      - cmake . -DCMAKE_BUILD_TYPE=Release
+      - cmake . -DCMAKE_BUILD_TYPE=Release -DBUILD_EXAMPLES=ON
     script:
       - cmake --build . -- -j2
       - ctest -E tpm -VV
@@ -48,7 +48,7 @@ jobs:
       - .travis/install-xaptum-tpm.sh ${XAPTUM_TPM_DIR}
       - .travis/install-amcl.sh ${AMCL_DIR} ${ECDAA_CURVES}
       - .travis/install-ecdaa.sh ${ECDAA_DIR}
-      - cmake . -DCMAKE_BUILD_TYPE=Debug
+      - cmake . -DCMAKE_BUILD_TYPE=Debug -DBUILD_EXAMPLES=ON
     script:
       - cmake --build . -- -j2
       - ctest -E tpm -VV
@@ -61,7 +61,7 @@ jobs:
       - .travis/install-xaptum-tpm.sh ${XAPTUM_TPM_DIR}
       - .travis/install-amcl.sh ${AMCL_DIR} ${ECDAA_CURVES}
       - .travis/install-ecdaa.sh ${ECDAA_DIR}
-      - cmake . -DCMAKE_BUILD_TYPE=Release
+      - cmake . -DCMAKE_BUILD_TYPE=Release -DBUILD_EXAMPLES=ON
     script:
       - cmake --build . -- -j2
       - ctest -E tpm -VV
@@ -75,7 +75,7 @@ jobs:
       - .travis/install-xaptum-tpm.sh ${XAPTUM_TPM_DIR}
       - .travis/install-amcl.sh ${AMCL_DIR} ${ECDAA_CURVES}
       - .travis/install-ecdaa.sh ${ECDAA_DIR}
-      - cmake . -DCMAKE_BUILD_TYPE=RelWithSanitize
+      - cmake . -DCMAKE_BUILD_TYPE=RelWithSanitize -DBUILD_EXAMPLES=ON
     script:
       - cmake --build . -- -j2
       - ctest -E tpm -VV
