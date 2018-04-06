@@ -560,8 +560,11 @@ int do_handshake(int socket,
                 return -1;
             default:
                 printf("Encountered error during client handshake: %d\n", rc);
-                // Send error message
-                (void)write(socket, io_ptr, bytes_requested);
+                unsigned char err_buffer[16];
+                (void)build_error_msg(err_buffer, &bytes_requested, version_g);
+                int write_ret = write(socket, err_buffer, bytes_requested);
+                if (write_ret > 0) {
+                }
                 return -1;
         }
     }

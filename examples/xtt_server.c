@@ -405,9 +405,12 @@ do_handshake(int client_sock,
                 return;
             default:
                 fprintf(stderr, "Encountered error during server handshake: %d\n", rc);
-                // Send error message
-                (void)write(client_sock, io_ptr, bytes_requested);
-                close(client_sock);
+                unsigned char err_buffer[16];
+                (void)build_error_msg(err_buffer, &bytes_requested, version_g);
+                int write_ret = write(client_sock, err_buffer, bytes_requested);
+                if (write_ret > 0) {
+                    close(client_sock);
+                }
                 return;
         }
     }
