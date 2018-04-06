@@ -1,0 +1,44 @@
+get_filename_component(xtt_CMAKE_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
+
+set(USE_TPM @USE_TPM@)
+
+################################################################################
+# Find dependencies
+################################################################################
+include(CMakeFindDependencyMacro)
+list(APPEND CMAKE_MODULE_PATH ${xtt_CMAKE_DIR})
+
+find_dependency(ecdaa 0.8.1)
+find_dependency(sodium 1.0.11)  # TODO: Include this, or comment-out like in CMakeLists?
+if(USE_TPM)
+  find_dependency(xaptum-tpm 0.5.0)
+endif()
+
+list(REMOVE_AT CMAKE_MODULE_PATH -1)
+
+################################################################################
+# Include xtt targets
+################################################################################
+if(NOT TARGET xtt::xtt)
+    include("${xtt_CMAKE_DIR}/xtt-targets.cmake")
+endif()
+
+set(xtt_LIBRARIES xtt::xtt)
+
+################################################################################
+# Verify that required components were included in build
+################################################################################
+if(xtt_FIND_COMPONENTS)
+  foreach(comp ${xtt_FIND_COMPONENTS})
+    if(comp STREQUAL "tpm" AND USE_TPM)
+      set(xtt_tpm_FOUND 1)
+    elseif(comp STREQUAL "sodium")
+      set(xtt_sodium_FOUND 1)
+    else()
+      set(xtt_${comp}_FOUND 0)
+      if(xtt_FIND_REQUIRED_${comp})
+        message(FATAL_ERROR "xtt::${comp} not available.")
+      endif()
+    endif()
+  endforeach()
+endif()

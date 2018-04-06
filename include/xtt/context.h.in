@@ -33,14 +33,10 @@
 #include <tss2/tss2_sys.h>
 #endif
 
-#ifndef SESSION_CONTEXT_BUFFER_SIZE
 #define SESSION_CONTEXT_BUFFER_SIZE 2048
-#endif
 
 
-#ifndef HANDSHAKE_CONTEXT_BUFFER_SIZE
 #define HANDSHAKE_CONTEXT_BUFFER_SIZE 1024
-#endif
 
 #ifndef MAX_BASENAME_LENGTH
 #define MAX_BASENAME_LENGTH 64
@@ -50,9 +46,7 @@
 #define MAX_TPM_PASSWORD_LENGTH 64
 #endif
 
-#ifndef HASH_BUFFER_SIZE
 #define HASH_BUFFER_SIZE 1024
-#endif
 
 #ifdef __cplusplus
 extern "C" {
