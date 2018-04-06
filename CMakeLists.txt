@@ -3,7 +3,6 @@ cmake_minimum_required(VERSION 3.0 FATAL_ERROR)
 project(xtt
         VERSION "0.5.0"
         )
-set(PROJECT_VERSION_PACKAGE_REVISION 1)
 
 set(XTT_VERSION ${PROJECT_VERSION})
 set(XTT_SOVERSION ${PROJECT_VERSION_MAJOR})
