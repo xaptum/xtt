@@ -46,12 +46,14 @@ set(XTT_SRCS
         src/context.c
         src/crypto_types.c
         src/messages.c
+        src/asn1_utilities.c
         src/internal/byte_utils.c
         src/internal/key_derivation.c
         src/internal/crypto_utils.c
         src/internal/message_utils.c
         src/internal/server_cookie.c
         src/internal/signatures.c
+        src/internal/asn1.c
         )
 
 ################################################################################
@@ -174,3 +176,8 @@ endif()
 ################################################################################
 # Current disabled, while moving rapidly. TODO!!!
 # add_subdirectory(test)
+
+################################################################################
+# Util
+################################################################################
+add_subdirectory(util)
