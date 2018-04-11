@@ -198,6 +198,12 @@ int xtt_crypto_create_ed25519_key_pair(xtt_ed25519_pub_key *pub_key,
     return crypto_sign_ed25519_keypair(pub_key->data, priv_key->data);
 }
 
+int xtt_crypto_extract_ed25519_private_key(unsigned char *out,
+                                           xtt_ed25519_priv_key *priv_key)
+{
+    return crypto_sign_ed25519_sk_to_seed(out, priv_key->data);
+}
+
 int xtt_crypto_sign_ed25519(unsigned char* signature_out,
                             const unsigned char* msg,
                             uint16_t msg_len,
