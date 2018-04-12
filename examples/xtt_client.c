@@ -56,8 +56,8 @@ const char *basename_file = "basename.bin";
 const char *root_id_file = "root_id.bin";
 const char *root_pubkey_file = "root_pub.bin";
 const char *assigned_client_id_out_file = "assigned_identity.txt";
-const char *longterm_public_key_out_file = "longterm_pub.bin";
-const char *longterm_private_key_out_file = "longterm_priv.bin";
+const char *longterm_public_key_out_file = "longterm_certificate.asn1.bin";
+const char *longterm_private_key_out_file = "longterm_priv.asn1.bin";
 
 // We have a toy "database" of server certificates
 typedef struct {
@@ -612,22 +612,20 @@ int report_results(xtt_identity_type *requested_client_id,
 {
     int write_ret;
 
+    // Get assigned ID
     xtt_identity_type my_assigned_id;
     if (XTT_RETURN_SUCCESS != xtt_get_my_identity(&my_assigned_id, ctx)) {
         printf("Error getting my assigned client id!\n");
         return 1;
     }
-    FILE *id_file_ptr = fopen(assigned_client_id_out_file, "w");
-    printf("Server assigned me id: {");
-    for (size_t i=0; i < sizeof(xtt_identity_type); ++i) {
-        printf("%#02X", my_assigned_id.data[i]);
-        fprintf(id_file_ptr, "%02X", my_assigned_id.data[i]);
-        if (i < (sizeof(xtt_identity_type)-1)) {
-            printf(", ");
-        } else {
-            printf("}\n");
-        }
+    xtt_identity_string my_assigned_id_as_string;
+    int convert_ret = xtt_identity_to_string(&my_assigned_id, &my_assigned_id_as_string);
+    if (0 != convert_ret) {
+        fprintf(stderr, "Error converting assigned id to string\n");
+        return 1;
     }
+    printf("Server assigned me id: %s\n", my_assigned_id_as_string.data);
+    write_ret = write_buffer_to_file(assigned_client_id_out_file, (unsigned char*)my_assigned_id_as_string.data, sizeof(xtt_identity_string));
     if (0 != xtt_crypto_memcmp(xtt_null_identity.data, requested_client_id->data, sizeof(xtt_identity_type))) {
         printf("(I requested id: {");
         for (size_t i=0; i < sizeof(xtt_identity_type); ++i) {
@@ -640,6 +638,7 @@ int report_results(xtt_identity_type *requested_client_id,
         }
     }
 
+    // Get longterm keypair
     xtt_ed25519_pub_key my_longterm_key;
     if (XTT_RETURN_SUCCESS != xtt_get_my_longterm_key_ed25519(&my_longterm_key, ctx)) {
         printf("Error getting my longterm key!\n");
@@ -654,23 +653,35 @@ int report_results(xtt_identity_type *requested_client_id,
             printf("}\n");
         }
     }
-    write_ret = write_buffer_to_file(longterm_public_key_out_file, my_longterm_key.data, sizeof(my_longterm_key));
-    if (sizeof(my_longterm_key) != write_ret) {
-        fprintf(stderr, "Error writing longterm public key to file");
-        return 1;
-    }
-    
     xtt_ed25519_priv_key my_longterm_private_key;
     if (XTT_RETURN_SUCCESS != xtt_get_my_longterm_private_key_ed25519(&my_longterm_private_key, ctx)) {
         printf("Error getting my longterm private key!\n");
         return 1;
     }
-    write_ret = write_buffer_to_file(longterm_private_key_out_file, my_longterm_private_key.data, sizeof(my_longterm_private_key));
-    if (sizeof(my_longterm_private_key) != write_ret) {
-        fprintf(stderr, "Error writing longterm private key to file");
+
+    // Save longterm keypair as X509 certificate and ASN.1-encoded private key
+    unsigned char cert_buf[XTT_X509_CERTIFICATE_LENGTH];
+    if (0 != xtt_x509_from_ed25519_keypair(&my_longterm_key, &my_longterm_private_key, &my_assigned_id, cert_buf)) {
+        fprintf(stderr, "Error creating X509 certificate\n");
+        return 1;
+    }
+    write_ret = write_buffer_to_file(longterm_public_key_out_file, cert_buf, sizeof(cert_buf));
+    if (sizeof(cert_buf) != write_ret) {
+        fprintf(stderr, "Error writing longterm public key certificate to file\n");
+        return 1;
+    }
+    unsigned char asn1_priv_buf[XTT_ASN1_PRIVATE_KEY_LENGTH];
+    if (0 != xtt_asn1_from_ed25519_private_key(&my_longterm_private_key, asn1_priv_buf)) {
+        fprintf(stderr, "Error creating ASN.1 private key\n");
+        return 1;
+    }
+    write_ret = write_buffer_to_file(longterm_private_key_out_file, asn1_priv_buf, sizeof(asn1_priv_buf));
+    if (sizeof(asn1_priv_buf) != write_ret) {
+        fprintf(stderr, "Error writing longterm private key to ASN.1 file\n");
         return 1;
     }
 
+    // Get pseudonym
     xtt_daa_pseudonym_lrsw my_pseudonym;
     if (XTT_RETURN_SUCCESS != xtt_get_my_pseudonym_lrsw(&my_pseudonym, ctx)) {
         printf("Error getting my pseudonym!\n");
