@@ -11,29 +11,47 @@ TODO: Actually briefly summarize protocol justification and features.
 # Project Status
 [![Build Status](https://travis-ci.org/xaptum/xtt.svg?branch=master)](https://travis-ci.org/xaptum/xtt)
 
-## Requirements
-- cmake version >= 3.0
-- A C99-compliant compiler
-- libsodium >= 1.0.8
-- milagro-crypto-c >= 4.1.1
-- [ecdaa](https://github.com/xaptum/ecdaa) >= 0.7.0
-  - Requires header files (e.g. "dev" package)
-- [xaptum-tpm](https://github.com/xaptum/xaptum-tpm) >= 0.4.0
-  - Requires header files (e.g. "dev" package)
+## Installation
+
+`xtt` is available for the following distributions. It may also be
+built from source.
+
+### Homebrew (MacOS)
+
+``` bash
+# Tap the Xaptum Homebrew repository.
+brew tap xaptum/xaptum
+
+# Install the library.
+brew install xtt
+```
+
+## Installation from Source
+
+### Build Dependencies
+
+* CMake (version 3.0 or higher)
+* A C99-compliant compiler
+
+* [AMCL](https://github.com/milagro-crypto/milagro-crypto-c)
+  * Built with the support for the necessary curves
+* [ECDAA](https://github.com/xaptum/ecdaa) (version 0.8.4 or higher)
+* [libsodium](https://github.com/jedisct1/libsodium) (version 1.0.11 or higher)
+  * Not required if DISABLE_LIBSODIUM_RNG_SEED_FUNCTION is ON
+* [xaptum-tpm](https://github.com/xaptum/xaptum-tpm) (version 0.5.0 or higher)
+  * If building XTT with TPM support
 
 ## Building the Library
 
-`XTT` uses CMake as its build system.
-
 ```bash
-# Create the build directory
-mkdir build
+# Create a subdirectory to hold the build
+mkdir -p build
 cd build
 
-# Generate the Makefiles
+# Configure the build
 cmake .. -DCMAKE_BUILD_TYPE=RelWithDebInfo
 
-# Compile the code
+# Build the library
 cmake --build .
 
 # Run the tests
