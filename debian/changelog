@@ -1,4 +1,19 @@
-ecdaa (0.5.3) unstable; urgency=medium
+xtt (0.5.3-1) unstable; urgency=medium
+
+  [ Zane Beckwith ]
+  * Add utilities to convert bare Ed25519 keys to x509/ASN.1 cert/key.
+  * In xtt_client, dump longterm keys as cert/asn1, not binary
+  * Bump patch number
+
+  [ David R. Bild ]
+  * README: add install instructions for Homebrew
+
+  [ Zane Beckwith ]
+  * Install utility executables
+
+ -- Zane Beckwith <zanebeckwith@debian-vm>  Thu, 12 Apr 2018 17:35:48 -0500
+
+xtt (0.5.3) unstable; urgency=medium
 
   * Initial release.
 
