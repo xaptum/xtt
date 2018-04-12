@@ -1,0 +1,24 @@
+Source: xtt
+Section: admin
+Priority: optional
+Maintainer: Zane Beckwith <zane.beckwith@xaptum.com>
+Build-Depends: debhelper (>= 9), cmake (>= 3.0.2)
+Standards-Version: 3.9.6
+Homepage: https://github.com/xaptum/xtt
+
+Package: libxtt0
+Section: libs
+Architecture: any
+Pre-Depends: multiarch-support
+Depends: ${misc:Depends}, ${shlibs:Depends}
+Description: XTT security protocol for IoT transit
+ .
+ This package contains the library.  
+
+Package: libxtt-dev
+Section: libdevel
+Architecture: any
+Depends: ${misc:Depends}, libxtt0 (= ${binary:Version})
+Description: XTT security protocol for IoT transit
+ .
+ This package contains the development files.
