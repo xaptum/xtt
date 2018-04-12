@@ -14,14 +14,24 @@
 
 cmake_minimum_required(VERSION 3.0 FATAL_ERROR)
 
+################################################################################
+# xtt_generate_ed25519_keys
+################################################################################
 add_executable(xtt_generate_ed25519_keys xtt_generate_ed25519_keys.c)
+if(BUILD_SHARED_LIBS)
+      target_link_libraries(xtt_generate_ed25519_keys PRIVATE xtt)
+else()
+      target_link_libraries(xtt_generate_ed25519_keys PRIVATE xtt_static)
+endif()
+install(TARGETS xtt_generate_ed25519_keys DESTINATION ${CMAKE_INSTALL_BINDIR})
 
-target_link_libraries(xtt_generate_ed25519_keys
-        PRIVATE xtt 
-        )
-
+################################################################################
+# xtt_wrap_keys_as_ASN1
+################################################################################
 add_executable(xtt_wrap_keys_as_ASN1 xtt_wrap_keys_as_ASN1.c)
-
-target_link_libraries(xtt_wrap_keys_as_ASN1
-        PRIVATE xtt
-        )
+if(BUILD_SHARED_LIBS)
+      target_link_libraries(xtt_wrap_keys_as_ASN1 PRIVATE xtt)
+else()
+      target_link_libraries(xtt_wrap_keys_as_ASN1 PRIVATE xtt_static)
+endif()
+install(TARGETS xtt_wrap_keys_as_ASN1 DESTINATION ${CMAKE_INSTALL_BINDIR})
