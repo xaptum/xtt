@@ -13,12 +13,12 @@ Pre-Depends: multiarch-support
 Depends: ${misc:Depends}, ${shlibs:Depends}
 Description: XTT security protocol for IoT transit
  .
- This package contains the library.  
+ This package contains the library.
 
 Package: libxtt-dev
 Section: libdevel
 Architecture: any
-Depends: ${misc:Depends}, libxtt0 (= ${binary:Version})
+Depends: ${misc:Depends}, libxtt0 (= ${binary:Version}), libxaptum-tpm-dev (>= 0.5.0)
 Description: XTT security protocol for IoT transit
  .
  This package contains the development files.
