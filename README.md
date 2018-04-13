@@ -51,7 +51,7 @@ brew install xtt
 * [xaptum-tpm](https://github.com/xaptum/xaptum-tpm) (version 0.5.0 or higher)
   * If building XTT with TPM support
 
-## Building the Library
+### Building the Library
 
 ```bash
 # Create a subdirectory to hold the build
@@ -68,47 +68,28 @@ cmake --build .
 ctest -V
 ```
 
-In addition to the standard CMake options the following configuration
-options and variables are supported.
+### CMake Options
 
-### Static vs Shared Libary
-If `BUILD_SHARED_LIBS` is set, the shared library is built. If
-`BUILD_STATIC_LIBS` is set, the static library is built. If both are
-set, both libraries will be built.  If neither is set, the static
-library will be built.
+The following CMake configuration options are supported.
 
-### Static Library Name
-`STATIC_SUFFIX`, if defined, will be appended to the static library
-name.  For example,
+| Option                              | Values          | Default    | Description                                     |
+|-------------------------------------|-----------------|------------|-------------------------------------------------|
+| CMAKE_BUILD_TYPE                    | Release         |            | With full optimizations.                        |
+|                                     | Debug           |            | With debug symbols.                             |
+|                                     | RelWithDebInfo  |            | With full optimizations and debug symbols.      |
+| CMAKE_INSTALL_PREFIX                | <string>        | /usr/local | The directory to install the library in.        |
+| BUILD_EXAMPLES                      | ON, OFF         | OFF        | Build example programs                          |
+| BUILD_SHARED_LIBS                   | ON, OFF         | ON         | Build shared libraries.                         |
+| BUILD_STATIC_LIBS                   | ON, OFF         | OFF        | Build static libraries.                         |
+| BUILD_TESTING                       | ON, OFF         | ON         | Build the test suite.                           |
+| STATIC_SUFFIX                       | <string>        | <none>     | Appends a suffix to the static lib name.        |
 
-```bash
-cmake .. -DBUILD_STATIC_LIBS=ON -DSTATIC_SUFFIX=_static
-cmake --build .
-```
-
-will create a static library named `libxtt_static.a`.
-
-### Force Position Independent Code (-fPIC)
-Set the standard CMake variable `CMAKE_POSITION_INDEPENDENT_CODE` to
-`ON` to force compilation with `-fPIC` for static libraries.  The
-default is `OFF` for static libraries and `ON` for shared libraries.
-
-### Disable Building of Tests
-Set the standard CMake variable `BUILD_TESTING` to `OFF` to disable
-the building of tests.  The default value is `ON`.
-
-## Installation
-
-CMake creates a target for installation.
+### Installing
 
 ```bash
 cd build
 cmake --build . --target install
 ```
-
-Set the `CMAKE_INSTALL_PREFIX` variable when configuring the build to
-modify the installation location.
-
 
 ## Usage
 ```
