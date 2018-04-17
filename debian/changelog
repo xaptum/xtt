@@ -1,0 +1,28 @@
+xtt (0.5.3-2) unstable; urgency=medium
+
+  [ David R. Bild ]
+  * debian/jessie: make *-dev pkg depend on xaptum-tpm *-dev pkg
+
+ -- Zane Beckwith <zane.beckwith@xaptum.com>  Mon, 16 Apr 2018 22:15:35 +0000
+
+xtt (0.5.3-1) unstable; urgency=medium
+
+  [ Zane Beckwith ]
+  * Add utilities to convert bare Ed25519 keys to x509/ASN.1 cert/key.
+  * In xtt_client, dump longterm keys as cert/asn1, not binary
+  * Bump patch number
+
+  [ David R. Bild ]
+  * README: add install instructions for Homebrew
+
+  [ Zane Beckwith ]
+  * Install utility executables
+
+ -- Zane Beckwith <zane.beckwith@xaptum.com>  Thu, 12 Apr 2018 17:35:48 -0500
+
+xtt (0.5.3) unstable; urgency=medium
+
+  * Initial release.
+
+ -- Zane Beckwith <zane.beckwith@xaptum.com>  Thur, 12 Apr 2018 21:07:37 +0000
+
