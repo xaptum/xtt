@@ -3,7 +3,7 @@ xtt (0.5.3-2) unstable; urgency=medium
   [ David R. Bild ]
   * debian/jessie: make *-dev pkg depend on xaptum-tpm *-dev pkg
 
- -- Zane Beckwith <zane.beckwith@xaptum.com>  Mon, 16 Apr 2018 22:15:35 +0000
+ -- Zane Beckwith <zane.beckwith@xaptum.com>  Tue, 17 Apr 2018 15:31:48 +0000
 
 xtt (0.5.3-1) unstable; urgency=medium
 
