@@ -264,7 +264,7 @@ int verify_server_signature_ed25519(const unsigned char *signature,
     int ret = xtt_crypto_verify_ed25519(signature, msg, msg_len, (xtt_ed25519_pub_key*)server_public_key);
 
     if (0 != ret) {
-        return XTT_RETURN_BAD_SIGNATURE;
+        return XTT_RETURN_BAD_SERVER_SIGNATURE;
     } else {
         return XTT_RETURN_SUCCESS;
     }
@@ -302,7 +302,7 @@ int verify_root_ed25519(const unsigned char *signature,
                                         &self->public_key.ed25519);
 
     if (0 != ret) {
-        return XTT_RETURN_BAD_SIGNATURE;
+        return XTT_RETURN_BAD_ROOT_SIGNATURE;
     } else {
         return XTT_RETURN_SUCCESS;
     }
@@ -364,7 +364,7 @@ int verify_lrsw(unsigned char *signature,
                                   &self->gpk.lrsw);
 
     if (0 != ret) {
-        return XTT_RETURN_BAD_SIGNATURE;
+        return XTT_RETURN_BAD_CLIENT_SIGNATURE;
     } else {
         return XTT_RETURN_SUCCESS;
     }
