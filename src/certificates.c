@@ -24,12 +24,12 @@
 #include <string.h>
 
 xtt_return_code_type
-generate_server_certificate_ed25519(unsigned char *cert_out,
-                                    xtt_identity_type *servers_id,
-                                    xtt_ed25519_pub_key *servers_pub_key,
-                                    xtt_certificate_expiry *expiry,
-                                    xtt_certificate_root_id *roots_id,
-                                    xtt_ed25519_priv_key *roots_priv_key)
+xtt_generate_server_certificate_ed25519(unsigned char *cert_out,
+                                        xtt_identity_type *servers_id,
+                                        xtt_ed25519_pub_key *servers_pub_key,
+                                        xtt_certificate_expiry *expiry,
+                                        xtt_certificate_root_id *roots_id,
+                                        xtt_ed25519_priv_key *roots_priv_key)
 {
     struct xtt_server_certificate_raw_type *cert_ptr = (struct xtt_server_certificate_raw_type*)cert_out;
 
