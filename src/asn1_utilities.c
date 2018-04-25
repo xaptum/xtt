@@ -26,6 +26,16 @@
 #include <assert.h>
 #include <string.h>
 
+size_t xtt_x509_certificate_length(void)
+{
+    return XTT_X509_CERTIFICATE_LENGTH;
+}
+
+size_t xtt_asn1_private_key_length(void)
+{
+    return XTT_ASN1_PRIVATE_KEY_LENGTH;
+}
+
 int xtt_x509_from_ed25519_keypair(const xtt_ed25519_pub_key *pub_key_in,
                                   const xtt_ed25519_priv_key *priv_key_in,
                                   const xtt_identity_type *common_name,
