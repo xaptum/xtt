@@ -661,7 +661,7 @@ int report_results(xtt_identity_type *requested_client_id,
 
     // Save longterm keypair as X509 certificate and ASN.1-encoded private key
     unsigned char cert_buf[XTT_X509_CERTIFICATE_LENGTH];
-    if (0 != xtt_x509_from_ed25519_keypair(&my_longterm_key, &my_longterm_private_key, &my_assigned_id, cert_buf)) {
+    if (0 != xtt_x509_from_ed25519_keypair(&my_longterm_key, &my_longterm_private_key, &my_assigned_id, cert_buf, sizeof(cert_buf))) {
         fprintf(stderr, "Error creating X509 certificate\n");
         return 1;
     }
@@ -671,7 +671,7 @@ int report_results(xtt_identity_type *requested_client_id,
         return 1;
     }
     unsigned char asn1_priv_buf[XTT_ASN1_PRIVATE_KEY_LENGTH];
-    if (0 != xtt_asn1_from_ed25519_private_key(&my_longterm_private_key, asn1_priv_buf)) {
+    if (0 != xtt_asn1_from_ed25519_private_key(&my_longterm_private_key, asn1_priv_buf, sizeof(asn1_priv_buf))) {
         fprintf(stderr, "Error creating ASN.1 private key\n");
         return 1;
     }

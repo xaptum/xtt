@@ -37,10 +37,12 @@ size_t xtt_asn1_private_key_length(void);
 int xtt_x509_from_ed25519_keypair(const xtt_ed25519_pub_key *pub_key_in,
                                   const xtt_ed25519_priv_key *priv_key_in,
                                   const xtt_identity_type *common_name,
-                                  unsigned char *certificate_out);
+                                  unsigned char *certificate_out,
+                                  size_t certificate_out_length);
 
 int xtt_asn1_from_ed25519_private_key(const xtt_ed25519_priv_key *priv_key_in,
-                                      unsigned char *asn1_out);
+                                      unsigned char *asn1_out,
+                                      size_t asn1_out_length);
 
 #ifdef __cplusplus
 }
