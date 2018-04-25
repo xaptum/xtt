@@ -81,7 +81,7 @@ int main()
     memcpy(expiry.data, expiry_str, 8);
 
     unsigned char serialized_certificate[XTT_SERVER_CERTIFICATE_ED25519_LENGTH];
-    rc = generate_server_certificate_ed25519(serialized_certificate,
+    rc = xtt_generate_server_certificate_ed25519(serialized_certificate,
                                              &server_id,
                                              &public_key,
                                              &expiry,
