@@ -21,6 +21,7 @@
 #include <xtt/crypto_types.h>
 
 #include <ecdaa.h>
+#include <ecdaa-tpm.h>
 
 #include <assert.h>
 #include <string.h>
@@ -67,14 +68,14 @@ xtt_daa_sign_lrswTPM(unsigned char *signature_out,
 
     // 3) Create signature.
     struct ecdaa_signature_FP256BN sig;
-    ret = ecdaa_signature_TPM_sign(&sig,
-                                   msg,
-                                   msg_len,
-                                   basename,
-                                   basename_len,
-                                   &ecdaa_cred,
-                                   &prng,
-                                   &ecdaa_tpm_context);
+    ret = ecdaa_signature_TPM_FP256BN_sign(&sig,
+                                           msg,
+                                           msg_len,
+                                           basename,
+                                           basename_len,
+                                           &ecdaa_cred,
+                                           &prng,
+                                           &ecdaa_tpm_context);
     if (0 != ret) {
         return -1;
     }
