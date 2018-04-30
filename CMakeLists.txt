@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 3.0 FATAL_ERROR)
 
+list(APPEND CMAKE_MODULE_PATH CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/cmake)
+
 project(xtt
         VERSION "0.5.3"
         )
@@ -16,9 +18,8 @@ option(USE_TPM "use a TPM" ON)
 option(BUILD_SHARED_LIBS "Build as a shared library" ON)
 option(BUILD_STATIC_LIBS "Build as a static library" OFF)
 
-find_package(ecdaa 0.8.4 REQUIRED QUIET)
-# TODO: Currently, the ecdaa package will find sodium for us
-# find_package(sodium 1.0.11 REQUIRED QUIET)
+find_package(ecdaa 0.9.0 COMPONENTS tpm REQUIRED QUIET)
+find_package(sodium 1.0.11 REQUIRED QUIET)
 
 if(USE_TPM)
         add_definitions(-DUSE_TPM)
@@ -75,7 +76,7 @@ if(BUILD_SHARED_LIBS)
 
   target_link_libraries(xtt
           PRIVATE sodium 
-          PRIVATE ecdaa::ecdaa
+          PRIVATE ecdaa::ecdaa-tpm
           PRIVATE AMCL::AMCL
   )
 
@@ -111,7 +112,7 @@ if(BUILD_STATIC_LIBS)
 
   target_link_libraries(xtt_static
           PRIVATE sodium 
-          PRIVATE ecdaa::ecdaa
+          PRIVATE ecdaa::ecdaa-tpm
           PRIVATE AMCL::AMCL
   )
   if(USE_TPM)
