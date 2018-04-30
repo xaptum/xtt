@@ -40,14 +40,7 @@ xtt_daa_sign_lrswTPM(unsigned char *signature_out,
 {
     int ret;
 
-    // 1) Create a PRNG.
-    struct ecdaa_prng prng;
-    ret = ecdaa_prng_init(&prng);
-    if (0 != ret) {
-        return -1;
-    }
-
-    // 2) Deserialize credential.
+    // 1) Deserialize credential.
     struct ecdaa_credential_FP256BN ecdaa_cred;
     assert(sizeof(xtt_daa_credential_lrsw) == ecdaa_credential_FP256BN_length());
     ret = ecdaa_credential_FP256BN_deserialize(&ecdaa_cred, cred->data);
@@ -55,7 +48,7 @@ xtt_daa_sign_lrswTPM(unsigned char *signature_out,
         return ret;
     }
 
-    // 3) Create the ecdaa_tpm_context
+    // 2) Create the ecdaa_tpm_context
     struct ecdaa_tpm_context ecdaa_tpm_context;
     ret = ecdaa_tpm_context_init(&ecdaa_tpm_context,
                                  key_handle,
@@ -74,7 +67,7 @@ xtt_daa_sign_lrswTPM(unsigned char *signature_out,
                                            basename,
                                            basename_len,
                                            &ecdaa_cred,
-                                           &prng,
+                                           (ecdaa_rand_func)xtt_crypto_get_random,
                                            &ecdaa_tpm_context);
     if (0 != ret) {
         return -1;
@@ -98,14 +91,7 @@ xtt_daa_sign_lrsw(unsigned char *signature_out,
 {
     int ret;
 
-    // 1) Create a PRNG.
-    struct ecdaa_prng prng;
-    ret = ecdaa_prng_init(&prng);
-    if (0 != ret) {
-        return -1;
-    }
-
-    // 2) Deserialize credential.
+    // 1) Deserialize credential.
     struct ecdaa_credential_FP256BN ecdaa_cred;
     assert(sizeof(xtt_daa_credential_lrsw) == ecdaa_credential_FP256BN_length());
     ret = ecdaa_credential_FP256BN_deserialize(&ecdaa_cred, cred->data);
@@ -113,7 +99,7 @@ xtt_daa_sign_lrsw(unsigned char *signature_out,
         return ret;
     }
 
-    // 3) Deserialize private key
+    // 2) Deserialize private key
     struct ecdaa_member_secret_key_FP256BN ecdaa_secret_key;
     assert(sizeof(xtt_daa_priv_key_lrsw) == ecdaa_member_secret_key_FP256BN_length());
     ret = ecdaa_member_secret_key_FP256BN_deserialize(&ecdaa_secret_key, priv_key->data);
@@ -130,7 +116,7 @@ xtt_daa_sign_lrsw(unsigned char *signature_out,
                                        basename_len,
                                        &ecdaa_secret_key,
                                        &ecdaa_cred,
-                                       &prng);
+                                       (ecdaa_rand_func)xtt_crypto_get_random);
     if (0 != ret) {
         return -1;
     }
