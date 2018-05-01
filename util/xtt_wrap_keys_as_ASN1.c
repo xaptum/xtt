@@ -72,7 +72,7 @@ int main(int argc, char *argv[])
     }
 
     unsigned char cert_buf[XTT_X509_CERTIFICATE_LENGTH];
-    if (0 != xtt_x509_from_ed25519_keypair(&pubkey_buf, &privkey_buf, &name_buf, cert_buf)) {
+    if (0 != xtt_x509_from_ed25519_keypair(&pubkey_buf, &privkey_buf, &name_buf, cert_buf, sizeof(cert_buf))) {
         fprintf(stderr, "Error creating X509 certificate\n");
         ret = 1;
         goto finish;
@@ -85,7 +85,7 @@ int main(int argc, char *argv[])
     }
 
     unsigned char asn1_priv_buf[XTT_ASN1_PRIVATE_KEY_LENGTH];
-    if (0 != xtt_asn1_from_ed25519_private_key(&privkey_buf, asn1_priv_buf)) {
+    if (0 != xtt_asn1_from_ed25519_private_key(&privkey_buf, asn1_priv_buf, sizeof(asn1_priv_buf))) {
         fprintf(stderr, "Error creating ASN.1 private key\n");
         ret = 1;
         goto finish;
