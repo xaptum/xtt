@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.0 FATAL_ERROR)
 list(APPEND CMAKE_MODULE_PATH CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/cmake)
 
 project(xtt
-        VERSION "0.5.3"
+        VERSION "0.5.5"
         )
 
 set(XTT_VERSION ${PROJECT_VERSION})
@@ -164,6 +164,13 @@ configure_package_config_file(${CMAKE_CURRENT_SOURCE_DIR}/xtt-config.cmake.in
   ${CMAKE_CURRENT_BINARY_DIR}/xtt-config.cmake
   INSTALL_DESTINATION ${INSTALL_CONFIGDIR}
 )
+
+install(FILES
+  ${CMAKE_CURRENT_BINARY_DIR}/xtt-config.cmake
+  ${CMAKE_CURRENT_BINARY_DIR}/xtt-config-version.cmake
+  DESTINATION ${INSTALL_CONFIGDIR}
+)
+
 
 ################################################################################
 # Examples
