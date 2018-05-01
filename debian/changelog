@@ -1,3 +1,30 @@
+xtt (0.5.4-1) unstable; urgency=medium
+
+  [ David R. Bild ]
+  * readme: add debian install instructions
+  * readme: add table of CMake options
+
+  [ Zane Beckwith ]
+  * Distinguish client, server, and root signature failures in return codes
+
+  [ David R. Bild ]
+  * asn1: add functions to access macro constants
+
+  [ Zane Beckwith ]
+  * Add a missing `xtt_` prefix to `generate_server_certificate_ed25519`
+
+  [ David R. Bild ]
+  * asn1: explicitly validate output buffer lengths
+
+  [ Zane Beckwith ]
+  * Upgrade to ECDAA v0.9.0
+  * Use randombytes_buf, not prng
+  * Use Findsodium.cmake
+  * Update README
+  * Bump patch number.
+
+ -- Zane Beckwith <zane.beckwith@xaptum.com>  Tue, 01 May 2018 22:35:11 +0000
+
 xtt (0.5.3-2) unstable; urgency=medium
 
   [ David R. Bild ]
