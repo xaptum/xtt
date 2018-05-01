@@ -166,6 +166,7 @@ configure_package_config_file(${CMAKE_CURRENT_SOURCE_DIR}/xtt-config.cmake.in
 )
 
 install(FILES
+  cmake/Findsodium.cmake
   ${CMAKE_CURRENT_BINARY_DIR}/xtt-config.cmake
   ${CMAKE_CURRENT_BINARY_DIR}/xtt-config-version.cmake
   DESTINATION ${INSTALL_CONFIGDIR}
