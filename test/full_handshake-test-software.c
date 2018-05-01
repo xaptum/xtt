@@ -115,7 +115,7 @@ int main()
     xtt_client_id server_id;
     xtt_ed25519_priv_key server_private_key;
     unsigned char serialized_certificate[XTT_SERVER_CERTIFICATE_ED25519_LENGTH];
-    generate_server_certificates(serialized_certificate, &server_id, &server_private_key, &root_id, &root_public_key);
+    xtt_generate_server_certificates(serialized_certificate, &server_id, &server_private_key, &root_id, &root_public_key);
 
     rc = xtt_initialize_server_root_certificate_context_ed25519(&root_certificate,
                                                                 &root_id,
@@ -287,7 +287,7 @@ void generate_server_certificates(unsigned char *cert_serialized_out,
     xtt_certificate_expiry expiry;
     memcpy(expiry.data, "21001231", 8);
 
-    rc = generate_server_certificate_ed25519(cert_serialized_out,
+    rc = xtt_generate_server_certificate_ed25519(cert_serialized_out,
                                              server_id,
                                              &public_key,
                                              &expiry,
