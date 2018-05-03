@@ -525,7 +525,7 @@ int do_handshake(int socket,
                     server_cert = lookup_certificate(&claimed_root_id);
                     if (NULL == server_cert) {
                         unsigned char err_buffer[16];
-                        (void)build_error_msg(err_buffer, &bytes_requested, version_g);
+                        (void)xtt_client_build_error_msg(&bytes_requested, &io_ptr, ctx);
                         int write_ret = write(socket, err_buffer, bytes_requested);
                         if (write_ret > 0) {
                         }
@@ -561,7 +561,7 @@ int do_handshake(int socket,
             default:
                 printf("Encountered error during client handshake: %d\n", rc);
                 unsigned char err_buffer[16];
-                (void)build_error_msg(err_buffer, &bytes_requested, version_g);
+                (void)xtt_client_build_error_msg(&bytes_requested, &io_ptr, ctx);
                 int write_ret = write(socket, err_buffer, bytes_requested);
                 if (write_ret > 0) {
                 }

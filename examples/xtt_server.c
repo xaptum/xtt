@@ -323,7 +323,7 @@ do_handshake(int client_sock,
                     gpk_ctx = lookup_gpk(&claimed_group_id);
                     if (NULL == gpk_ctx) {
                         unsigned char err_buffer[16];
-                        (void)build_error_msg(err_buffer, &bytes_requested, version_g);
+                        (void)xtt_server_build_error_msg(&bytes_requested, &io_ptr, &ctx);
                         int write_ret = write(client_sock, err_buffer, bytes_requested);
                         if (write_ret > 0) {
                             close(client_sock);
@@ -353,7 +353,7 @@ do_handshake(int client_sock,
                     int id_assign_ret = assign_client_id(&assigned_client_id, &requested_client_id, &claimed_group_id, &clients_pseudonym);
                     if (0 != id_assign_ret) {
                         unsigned char err_buffer[16];
-                        (void)build_error_msg(err_buffer, &bytes_requested, version_g);
+                        (void)xtt_server_build_error_msg(&bytes_requested, &io_ptr, &ctx);
                         int write_ret = write(client_sock, err_buffer, bytes_requested);
                         if (write_ret > 0) {
                             close(client_sock);
@@ -378,7 +378,7 @@ do_handshake(int client_sock,
             default:
                 fprintf(stderr, "Encountered error during server handshake: %d\n", rc);
                 unsigned char err_buffer[16];
-                (void)build_error_msg(err_buffer, &bytes_requested, version_g);
+                (void)xtt_server_build_error_msg(&bytes_requested, &io_ptr, &ctx);
                 int write_ret = write(client_sock, err_buffer, bytes_requested);
                 if (write_ret > 0) {
                     close(client_sock);

@@ -132,24 +132,15 @@ xtt_handshake_client_parse_idserverfinished(uint16_t *io_bytes_requested,
                                             unsigned char **io_ptr,
                                             struct xtt_client_handshake_context* handshake_ctx);
 
-/*
- * Build an Error message.
- *
- * out:
- *      out_buffer          - Buffer into which message will be put.
- *                            Assumed non-NULL and allocated to sufficient size by the caller.
- *
- *      out_length          - Will be populated with length, in bytes, of output ClientInit message.
- *
- * in:
- *      version             - XTT_VERSION used in the current handshake.
- *      
- * return XTT_RETURN_SUCCESS on success
- */
 xtt_return_code_type
-build_error_msg(unsigned char *out_buffer,
-                uint16_t *out_length,
-                xtt_version version);
+xtt_server_build_error_msg(uint16_t *io_bytes_requested,
+                           unsigned char **io_ptr,
+                           struct xtt_server_handshake_context* handshake_ctx);
+
+xtt_return_code_type
+xtt_client_build_error_msg(uint16_t *io_bytes_requested,
+                           unsigned char **io_ptr,
+                           struct xtt_client_handshake_context* handshake_ctx);
 
 #ifdef __cplusplus
 }
