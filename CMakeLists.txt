@@ -30,6 +30,15 @@ if(NOT DEFINED BUILD_SHARED_LIBS OR NOT  "${BUILD_SHARED_LIBS}")
 endif()
 
 option(BUILD_CPP "Build C++ wrapper" ON)
+option(BUILD_ASIO "Build high-level C++ API that uses Boost ASIO" ON)
+if (BUILD_ASIO)
+        set(BUILD_CPP ON "" FORCE)
+
+        add_definitions(-DBOOST_COROUTINES_NO_DEPRECATION_WARNING)
+        find_package(Boost 1.66 COMPONENTS system thread coroutine context REQUIRED QUIET)
+
+        add_subdirectory(asio)
+endif()
 if (BUILD_CPP)
         add_subdirectory(cpp)
 endif()

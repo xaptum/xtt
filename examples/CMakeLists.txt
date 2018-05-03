@@ -23,6 +23,9 @@ set(XTT_EXAMPLES_MAIN_FILES
         xtt_server.c
         )
 
+if (BUILD_ASIO)
+        list(APPEND XTT_EXAMPLES_MAIN_FILES xtt_asio_server.cpp)
+endif()
 
 foreach(main_file ${XTT_EXAMPLES_MAIN_FILES})
         get_filename_component(program_name ${main_file} NAME_WE)
@@ -30,9 +33,19 @@ foreach(main_file ${XTT_EXAMPLES_MAIN_FILES})
         add_executable(${program_name} ${main_file})
 
         if(BUILD_SHARED_LIBS)
-              target_link_libraries(${program_name} PRIVATE xtt sodium)
+              string(REGEX MATCH ".*asio.*|.*ASIO.*" match ${program_name})
+              if(match)
+                      target_link_libraries(${program_name} PRIVATE xtt-asio sodium)
+              else()
+                      target_link_libraries(${program_name} PRIVATE xtt sodium)
+              endif()
         else()
-              target_link_libraries(${program_name} PRIVATE xtt_static sodium)
+              string(REGEX MATCH ".*asio.*|.*ASIO.*" match ${program_name})
+              if(match)
+                      target_link_libraries(${program_name} PRIVATE xtt-asio_static sodium)
+              else()
+                      target_link_libraries(${program_name} PRIVATE xtt_static sodium)
+              endif()
         endif()
 
         set_target_properties(${program_name} PROPERTIES
