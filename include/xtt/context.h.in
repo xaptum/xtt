@@ -361,7 +361,7 @@ xtt_initialize_server_cookie_context(struct xtt_server_cookie_context* ctx);
 xtt_return_code_type
 xtt_initialize_server_certificate_context_ed25519(struct xtt_server_certificate_context *ctx_out,
                                                   const unsigned char *serialized_certificate,
-                                                  xtt_ed25519_priv_key *private_key);
+                                                  const xtt_ed25519_priv_key *private_key);
 
 xtt_return_code_type
 xtt_initialize_server_root_certificate_context_ed25519(struct xtt_server_root_certificate_context *cert_out,
@@ -372,7 +372,7 @@ xtt_return_code_type
 xtt_initialize_group_public_key_context_lrsw(struct xtt_group_public_key_context *ctx_out,
                                                  const unsigned char *basename,
                                                  uint16_t basename_length,
-                                                 xtt_daa_group_pub_key_lrsw *gpk);
+                                                 const xtt_daa_group_pub_key_lrsw *gpk);
 
 #ifdef USE_TPM
 xtt_return_code_type

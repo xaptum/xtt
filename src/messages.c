@@ -962,7 +962,7 @@ xtt_handshake_server_preparse_idclientattest(uint16_t *io_bytes_requested,
                                              xtt_identity_type* requested_client_id_out,
                                              xtt_group_id* claimed_group_id_out,
                                              struct xtt_server_cookie_context* cookie_ctx,
-                                             struct xtt_server_certificate_context *certificate_ctx,
+                                             const struct xtt_server_certificate_context *certificate_ctx,
                                              struct xtt_server_handshake_context* handshake_ctx)
 {
     xtt_return_code_type rc = XTT_RETURN_SUCCESS;
@@ -1118,7 +1118,7 @@ xtt_return_code_type
 xtt_handshake_server_verify_groupsignature(uint16_t *io_bytes_requested,
                                            unsigned char **io_ptr,
                                            struct xtt_group_public_key_context* group_pub_key_ctx,
-                                           struct xtt_server_certificate_context *certificate_ctx,
+                                           const struct xtt_server_certificate_context *certificate_ctx,
                                            struct xtt_server_handshake_context* handshake_ctx)
 {
     xtt_return_code_type rc;
@@ -1172,7 +1172,7 @@ finish:
 xtt_return_code_type
 xtt_handshake_server_build_idserverfinished(uint16_t *io_bytes_requested,
                                             unsigned char **io_ptr,
-                                            xtt_identity_type *client_id,
+                                            const xtt_identity_type *client_id,
                                             struct xtt_server_handshake_context* handshake_ctx)
 {
     xtt_return_code_type rc;
