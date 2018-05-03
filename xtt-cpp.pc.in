@@ -1,0 +1,10 @@
+prefix="@CMAKE_INSTALL_PREFIX@"
+exec_prefix=${prefix}
+libdir=${exec_prefix}/@CMAKE_INSTALL_LIBDIR@
+includedir=${prefix}/@CMAKE_INSTALL_INCLUDEDIR@
+
+Name: xtt-cpp
+Description: Library for XTT: Trusted Transit protocol, C++ wrapper
+Version: @XTT_VERSION@
+Libs: -L{libdir} -lxtt-cpp
+Cflags: -I${includedir}
