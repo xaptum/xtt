@@ -76,12 +76,14 @@ if(BUILD_SHARED_LIBS)
 
   target_link_libraries(xtt
           PRIVATE sodium 
-          PRIVATE ecdaa::ecdaa-tpm
           PRIVATE AMCL::AMCL
   )
 
   if(USE_TPM)
     target_link_libraries(xtt PUBLIC xaptum-tpm::xaptum-tpm)
+    target_link_libraries(xtt PRIVATE ecdaa::ecdaa-tpm)
+  else()
+    target_link_libraries(xtt PRIVATE ecdaa::ecdaa)
   endif()
 
   install(TARGETS xtt 
@@ -112,11 +114,13 @@ if(BUILD_STATIC_LIBS)
 
   target_link_libraries(xtt_static
           PRIVATE sodium 
-          PRIVATE ecdaa::ecdaa-tpm
           PRIVATE AMCL::AMCL
   )
   if(USE_TPM)
     target_link_libraries(xtt_static PUBLIC xaptum-tpm::xaptum-tpm)
+    target_link_libraries(xtt_static PRIVATE ecdaa::ecdaa-tpm)
+  else()
+    target_link_libraries(xtt_static PRIVATE ecdaa::ecdaa)
   endif()
 
   install(TARGETS xtt_static

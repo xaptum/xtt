@@ -21,11 +21,14 @@
 #include <xtt/crypto_types.h>
 
 #include <ecdaa.h>
+#ifdef USE_TPM
 #include <ecdaa-tpm.h>
+#endif
 
 #include <assert.h>
 #include <string.h>
 
+#ifdef USE_TPM
 int
 xtt_daa_sign_lrswTPM(unsigned char *signature_out,
                      const unsigned char *msg,
@@ -79,6 +82,7 @@ xtt_daa_sign_lrswTPM(unsigned char *signature_out,
 
     return 0;
 }
+#endif
 
 int
 xtt_daa_sign_lrsw(unsigned char *signature_out,
