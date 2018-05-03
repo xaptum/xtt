@@ -40,6 +40,11 @@ int xtt_crypto_do_x25519_diffie_hellman(unsigned char* shared_secret,
                                         const xtt_x25519_priv_key* my_sk,
                                         const xtt_x25519_pub_key* other_pk);
 
+int xtt_crypto_hash_sha256(unsigned char* out,
+                           uint16_t* out_length,
+                           const unsigned char* in,
+                           uint16_t in_len);
+
 int xtt_crypto_hash_sha512(unsigned char* out,
                            uint16_t* out_length,
                            const unsigned char* in,
@@ -49,6 +54,13 @@ int xtt_crypto_hash_blake2b(unsigned char* out,
                             uint16_t* out_length,
                             const unsigned char* in,
                             uint16_t in_len);
+
+int xtt_crypto_prf_sha256(unsigned char* out,
+                          uint16_t out_len,
+                          const unsigned char* in,
+                          uint16_t in_len,
+                          const unsigned char* key,
+                          uint16_t key_len);
 
 int xtt_crypto_prf_sha512(unsigned char* out,
                           uint16_t out_len,
