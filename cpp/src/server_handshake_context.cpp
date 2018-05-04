@@ -27,6 +27,9 @@ server_handshake_context::server_handshake_context(unsigned char *in_buffer,
                                                    unsigned char *out_buffer,
                                                    uint16_t out_buffer_size)
 {
+    if (!in_buffer || !out_buffer)
+        return;
+
     xtt_return_code_type rc;
     rc = xtt_initialize_server_handshake_context(&handshake_ctx_,
                                                  in_buffer,
