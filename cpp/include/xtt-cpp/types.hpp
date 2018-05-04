@@ -22,6 +22,8 @@
 
 #include <xtt/crypto_types.h>
 
+#include <ostream>
+
 namespace xtt {
 
 enum class version {
@@ -71,6 +73,8 @@ enum class return_code {
     BAD_ROOT_SIGNATURE = XTT_RETURN_BAD_ROOT_SIGNATURE,
     UNKNOWN_CRYPTO_SPEC = XTT_RETURN_UNKNOWN_CRYPTO_SPEC,
     BAD_CERTIFICATE = XTT_RETURN_BAD_CERTIFICATE,
+    BAD_GPK = XTT_RETURN_BAD_GPK,
+    BAD_ID = XTT_RETURN_BAD_ID,
     BAD_EXPIRY = XTT_RETURN_BAD_EXPIRY,
     CRYPTO = XTT_RETURN_CRYPTO,
     DAA = XTT_RETURN_DAA,
@@ -92,6 +96,12 @@ struct hash<xtt::suite_spec>
         return static_cast<std::size_t>(key);
     }
 };
+}
+
+inline
+std::ostream& operator<<(std::ostream& stream, enum xtt::return_code rc)
+{
+    return stream << xtt_strerror(static_cast<xtt_return_code_type>(rc));
 }
 
 #endif
