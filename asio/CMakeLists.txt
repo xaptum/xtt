@@ -15,8 +15,7 @@
 cmake_minimum_required(VERSION 3.0 FATAL_ERROR)
 
 set(XTT_ASIO_SRC_FILES
-        src/server_handshake.cpp
-        src/asio_runner.cpp
+        src/context.cpp
         )
 
 ################################################################################

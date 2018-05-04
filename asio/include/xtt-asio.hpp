@@ -20,8 +20,7 @@
 #define XTT_ASIO_H
 #pragma once
 
-#include <xtt-asio/server_handshake.hpp>
-#include <xtt-asio/asio_runner.hpp>
+#include <xtt-asio/context.hpp>
 
 #endif
 

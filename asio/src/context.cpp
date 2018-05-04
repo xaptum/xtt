@@ -16,29 +16,32 @@
  *
  *****************************************************************************/
 
-#include <xtt-asio/server_handshake.hpp>
+#include <xtt-asio/context.hpp>
 
 using namespace xtt;
 using namespace asio;
 
-server_handshake::server_handshake(boost::asio::ip::tcp::socket tcp_socket,
-                                   const std::unordered_map<suite_spec, std::unique_ptr<server_certificate_context>>& cert_map,
-                                   server_cookie_context& cookie_ctx)
+context::context(boost::asio::ip::tcp::socket tcp_socket,
+                 const server_certificate_map& cert_map,
+                 server_cookie_context& cookie_ctx)
     : in_buffer_(),
       out_buffer_(),
       handshake_ctx_(in_buffer_.data(), in_buffer_.size(), out_buffer_.data(), out_buffer_.size()),
       socket_(std::move(tcp_socket)),
-      strand_(socket_.get_io_service()),
-      asio_runner_(socket_, handshake_ctx_, cert_map, cookie_ctx)
+      cert_map_(cert_map),
+      cookie_ctx_(cookie_ctx)
 {
 }
 
-const boost::asio::ip::tcp::socket& server_handshake::lowest_layer() const
+const boost::asio::ip::tcp::socket& 
+context::lowest_layer() const
 {
     return socket_;
 }
 
-boost::asio::ip::tcp::socket& server_handshake::lowest_layer()
+boost::asio::ip::tcp::socket& 
+context::lowest_layer()
 {
     return socket_;
 }
+
