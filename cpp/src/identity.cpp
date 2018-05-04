@@ -24,7 +24,7 @@
 
 using namespace xtt;
 
-const identity xtt::null_identity(std::vector<unsigned char>(xtt_null_identity.data, xtt_null_identity.data + sizeof(xtt_identity_type)));
+const identity identity::null(std::vector<unsigned char>(xtt_null_identity.data, xtt_null_identity.data + sizeof(xtt_identity_type)));
 
 identity::identity(const std::vector<unsigned char>& serialized)
 {
@@ -52,7 +52,7 @@ std::string identity::serialize_to_text() const
 
 bool identity::is_null() const
 {
-    return *this == null_identity;
+    return *this == identity::null;
 }
 
 const xtt_identity_type* identity::get() const

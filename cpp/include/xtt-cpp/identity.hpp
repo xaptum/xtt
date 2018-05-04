@@ -38,6 +38,9 @@ namespace xtt {
 
 class identity {
 public:
+    static const identity null;
+
+public:
     identity() = default;
 
     identity(const std::vector<unsigned char>& serialized);
@@ -60,8 +63,6 @@ public:
 private:
     xtt_identity_type raw_;
 };
-
-extern const identity null_identity;
 
 }   // namespace xtt
 
