@@ -47,6 +47,7 @@ set(XTT_SRCS
         src/context.c
         src/crypto_types.c
         src/messages.c
+        src/return_codes.c
         src/asn1_utilities.c
         src/internal/byte_utils.c
         src/internal/key_derivation.c

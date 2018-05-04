@@ -74,7 +74,7 @@ typedef enum xtt_return_code_type {
     XTT_RETURN_CONTEXT_BUFFER_OVERFLOW
 } xtt_return_code_type;
 
-void xtt_strerror(xtt_return_code_type rc, char* buffer, size_t buflen);
+const char* xtt_strerror(xtt_return_code_type rc);
 
 #ifdef __cplusplus
 }
