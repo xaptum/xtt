@@ -67,23 +67,14 @@ std::experimental::optional<unsigned char> ascii_to_byte(const char value)
     if (value < 0)
         return {};
 
-    const unsigned char value_u = static_cast<unsigned char>(value);
-
-    static const unsigned char zero(static_cast<unsigned char>('0'));
-    static const unsigned char nine(static_cast<unsigned char>('9'));
-    static const unsigned char A(static_cast<unsigned char>('A'));
-    static const unsigned char F(static_cast<unsigned char>('F'));
-    static const unsigned char a(static_cast<unsigned char>('a'));
-    static const unsigned char f(static_cast<unsigned char>('f'));
-
-    if (value_u >= zero && value_u <= nine) {
-        return std::experimental::optional<unsigned char>(value_u - zero);
+    if (value >= '0' && value <= '9') {
+        return std::experimental::optional<unsigned char>(static_cast<unsigned char>(value - '0'));
     }
-    if (value_u >= A && value_u <= F) {
-        return std::experimental::optional<unsigned char>(value_u - A + 10U);
+    if (value >= 'A' && value <= 'F') {
+        return std::experimental::optional<unsigned char>(static_cast<unsigned char>(value - 'A' + 10));
     }
-    if (value_u >= a && value_u <= f) {
-        return std::experimental::optional<unsigned char>(value_u - a + 10U);
+    if (value >= 'a' && value <= 'f') {
+        return std::experimental::optional<unsigned char>(static_cast<unsigned char>(value - 'a' + 10));
     }
 
     return {};
