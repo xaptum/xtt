@@ -21,6 +21,7 @@ env:
     - INSTALL_PREFIX=${TRAVIS_BUILD_DIR}/usr
     - CMAKE_PREFIX_PATH=${INSTALL_PREFIX}
     - LIBSODIUM_DIR=${TRAVIS_BUILD_DIR}/libsodium
+    - BOOST_DIR=${TRAVIS_BUILD_DIR}/boost
     - AMCL_DIR=${TRAVIS_BUILD_DIR}/milagro-crypto-c/install
     - XAPTUM_TPM_DIR=${TRAVIS_BUILD_DIR}/xaptum-tpm/
     - ECDAA_CURVES=FP256BN
@@ -33,6 +34,7 @@ jobs:
   - env: TYPE=RELEASE
     before_script:
       - .travis/install-libsodium.sh ${LIBSODIUM_DIR}
+      - .travis/install-boost.sh ${BOOST_DIR}
       - .travis/install-xaptum-tpm.sh ${XAPTUM_TPM_DIR}
       - .travis/install-amcl.sh ${AMCL_DIR} ${ECDAA_CURVES}
       - .travis/install-ecdaa.sh ${ECDAA_DIR}
@@ -45,6 +47,7 @@ jobs:
   - env: TYPE=DEBUG
     before_script:
       - .travis/install-libsodium.sh ${LIBSODIUM_DIR}
+      - .travis/install-boost.sh ${BOOST_DIR}
       - .travis/install-xaptum-tpm.sh ${XAPTUM_TPM_DIR}
       - .travis/install-amcl.sh ${AMCL_DIR} ${ECDAA_CURVES}
       - .travis/install-ecdaa.sh ${ECDAA_DIR}
@@ -58,6 +61,7 @@ jobs:
     compiler: clang
     before_script:
       - .travis/install-libsodium.sh ${LIBSODIUM_DIR}
+      - .travis/install-boost.sh ${BOOST_DIR}
       - .travis/install-xaptum-tpm.sh ${XAPTUM_TPM_DIR}
       - .travis/install-amcl.sh ${AMCL_DIR} ${ECDAA_CURVES}
       - .travis/install-ecdaa.sh ${ECDAA_DIR}
@@ -72,6 +76,7 @@ jobs:
     compiler: clang
     before_script:
       - .travis/install-libsodium.sh ${LIBSODIUM_DIR}
+      - .travis/install-boost.sh ${BOOST_DIR}
       - .travis/install-xaptum-tpm.sh ${XAPTUM_TPM_DIR}
       - .travis/install-amcl.sh ${AMCL_DIR} ${ECDAA_CURVES}
       - .travis/install-ecdaa.sh ${ECDAA_DIR}

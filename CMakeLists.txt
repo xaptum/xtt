@@ -9,6 +9,10 @@ project(xtt
 set(XTT_VERSION ${PROJECT_VERSION})
 set(XTT_SOVERSION ${PROJECT_VERSION_MAJOR})
 
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Werror -Wall -Wextra -std=c99 -Wno-missing-field-initializers" CACHE STRING "" FORCE)
+set(CMAKE_C_FLAGS_RELWITHSANITIZE "${CMAKE_C_FLAGS_RELWITHSANITIZE} -O2 -g -fsanitize=address,undefined -fsanitize=unsigned-integer-overflow")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror -Wall -Wextra -std=c++14 -Wno-missing-field-initializers" CACHE STRING "" FORCE)
+set(CMAKE_CXX_FLAGS_RELWITHSANITIZE "${CMAKE_CXX_FLAGS_RELWITHSANITIZE} -O2 -g -fsanitize=address,undefined -fsanitize=unsigned-integer-overflow")
 
 include(GNUInstallDirs)
 include(CTest)
@@ -17,6 +21,27 @@ option(USE_TPM "use a TPM" ON)
 
 option(BUILD_SHARED_LIBS "Build as a shared library" ON)
 option(BUILD_STATIC_LIBS "Build as a static library" OFF)
+
+# If not building as a shared library, force build as a static.  This
+# is to match the CMake default semantics of using
+# BUILD_SHARED_LIBS = OFF to indicate a static build.
+if(NOT DEFINED BUILD_SHARED_LIBS OR NOT  "${BUILD_SHARED_LIBS}")
+  set(BUILD_STATIC_LIBS ON CACHE BOOL "Build as a static library" FORCE)
+endif()
+
+option(BUILD_CPP "Build C++ wrapper" ON)
+option(BUILD_ASIO "Build high-level C++ API that uses Boost ASIO" ON)
+if (BUILD_ASIO)
+        set(BUILD_CPP ON "" FORCE)
+
+        add_definitions(-DBOOST_COROUTINES_NO_DEPRECATION_WARNING)
+        find_package(Boost 1.66 COMPONENTS system thread coroutine context REQUIRED QUIET)
+
+        add_subdirectory(asio)
+endif()
+if (BUILD_CPP)
+        add_subdirectory(cpp)
+endif()
 
 find_package(ecdaa 0.9.0 COMPONENTS tpm REQUIRED QUIET)
 find_package(sodium 1.0.11 REQUIRED QUIET)
@@ -30,16 +55,6 @@ endif()
 configure_file(${PROJECT_SOURCE_DIR}/include/xtt/context.h.in ${CMAKE_BINARY_DIR}/include/xtt/context.h)
 configure_file(${PROJECT_SOURCE_DIR}/include/xtt/daa_wrapper.h.in ${CMAKE_BINARY_DIR}/include/xtt/daa_wrapper.h)
 
-# If not building as a shared library, force build as a static.  This
-# is to match the CMake default semantics of using
-# BUILD_SHARED_LIBS = OFF to indicate a static build.
-if(NOT DEFINED BUILD_SHARED_LIBS OR NOT  "${BUILD_SHARED_LIBS}")
-  set(BUILD_STATIC_LIBS ON CACHE BOOL "Build as a static library" FORCE)
-endif()
-
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Werror -Wall -Wextra -std=c99 -Wno-missing-field-initializers" CACHE STRING "" FORCE)
-set(CMAKE_C_FLAGS_RELWITHSANITIZE "${CMAKE_C_FLAGS_RELWITHSANITIZE} -O2 -g -fsanitize=address,undefined -fsanitize=unsigned-integer-overflow")
-
 set(XTT_SRCS
         src/libsodium_wrapper.c
         src/ecdaa_wrapper.c
@@ -47,6 +62,7 @@ set(XTT_SRCS
         src/context.c
         src/crypto_types.c
         src/messages.c
+        src/return_codes.c
         src/asn1_utilities.c
         src/internal/byte_utils.c
         src/internal/key_derivation.c
