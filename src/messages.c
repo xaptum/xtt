@@ -1531,7 +1531,7 @@ xtt_server_build_error_msg(uint16_t *io_bytes_requested,
 
     handshake_ctx->state = XTT_SERVER_HANDSHAKE_STATE_ERROR;
 
-    return XTT_RETURN_SUCCESS;
+    return XTT_RETURN_WANT_WRITE;
 }
 
 xtt_return_code_type
@@ -1551,5 +1551,5 @@ xtt_client_build_error_msg(uint16_t *io_bytes_requested,
 
     handshake_ctx->state = XTT_CLIENT_HANDSHAKE_STATE_ERROR;
 
-    return XTT_RETURN_SUCCESS;
+    return XTT_RETURN_WANT_WRITE;
 }
