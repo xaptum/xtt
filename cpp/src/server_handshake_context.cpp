@@ -85,14 +85,12 @@ std::unique_ptr<pseudonym> server_handshake_context::get_clients_pseudonym() con
         case suite_spec::X25519_LRSW_ED25519_AES256GCM_SHA512:
         case suite_spec::X25519_LRSW_ED25519_AES256GCM_BLAKE2B:
             {
-                // Avoid double-copying
-                xtt_daa_pseudonym_lrsw clients_pseudonym;
-                if (XTT_RETURN_SUCCESS != xtt_get_clients_pseudonym_lrsw(&clients_pseudonym, &handshake_ctx_)) {
+                auto ret = std::make_unique<pseudonym_lrsw>();
+                if (XTT_RETURN_SUCCESS != xtt_get_clients_pseudonym_lrsw(ret->get(), &handshake_ctx_)) {
                     return {};
                 }
 
-                std::vector<unsigned char> clients_pseudonym_as_vec(clients_pseudonym.data, clients_pseudonym.data+sizeof(xtt_daa_pseudonym_lrsw));
-                return std::make_unique<pseudonym_lrsw>(clients_pseudonym_as_vec);
+                return std::move(ret);
             }
         default:
             return {};
@@ -107,14 +105,12 @@ std::unique_ptr<longterm_key> server_handshake_context::get_clients_longterm_key
         case suite_spec::X25519_LRSW_ED25519_AES256GCM_SHA512:
         case suite_spec::X25519_LRSW_ED25519_AES256GCM_BLAKE2B:
             {
-                // Avoid double-copying
-                xtt_ed25519_pub_key clients_longterm_key;
-                if (XTT_RETURN_SUCCESS != xtt_get_clients_longterm_key_ed25519(&clients_longterm_key, &handshake_ctx_)) {
+                auto ret = std::make_unique<longterm_key_ed25519>();
+                if (XTT_RETURN_SUCCESS != xtt_get_clients_longterm_key_ed25519(ret->get(), &handshake_ctx_)) {
                     return {};
                 }
 
-                std::vector<unsigned char> clients_longterm_key_as_vec(clients_longterm_key.data, clients_longterm_key.data+sizeof(xtt_ed25519_pub_key));
-                return std::make_unique<longterm_key_ed25519>(clients_longterm_key_as_vec);
+                return std::move(ret);
             }
         default:
             return {};
