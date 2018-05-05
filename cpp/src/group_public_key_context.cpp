@@ -20,6 +20,7 @@
 
 #include <xtt/crypto_wrapper.h>
 
+#include <cassert>
 #include <stdexcept>
 #include <vector>
 #include <algorithm>
@@ -37,9 +38,7 @@ group_public_key_context_lrsw::group_public_key_context_lrsw()
                                                      nullptr,
                                                      0,
                                                      &group_public_key_lrsw_dummy);
-    if (XTT_RETURN_SUCCESS != ctor_ret) {
-        throw std::runtime_error("Error encountered in LRSW group public key context constructor");
-    }
+    assert(XTT_RETURN_SUCCESS == ctor_ret);
 }
 
 struct xtt_group_public_key_context* group_public_key_context_lrsw::get()
