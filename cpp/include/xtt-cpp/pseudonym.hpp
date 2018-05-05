@@ -31,6 +31,8 @@ class pseudonym {
 public:
     virtual ~pseudonym() = default;
 
+    virtual std::unique_ptr<pseudonym> clone() const = 0;
+
     virtual std::vector<unsigned char> serialize() const = 0;
 
     virtual std::string serialize_to_text() const = 0;
@@ -41,6 +43,10 @@ public:
 
 class pseudonym_lrsw : public pseudonym {
 public:
+    pseudonym_lrsw() = default;
+
+    std::unique_ptr<pseudonym> clone() const final;
+
     pseudonym_lrsw(const std::vector<unsigned char>& serialized);
 
     pseudonym_lrsw(const std::string& serialized_as_text);

@@ -25,6 +25,7 @@
 #include <xtt-cpp/group_identity.hpp>
 
 #include <vector>
+#include <memory>
 
 namespace xtt {
 
@@ -33,6 +34,8 @@ public:
     virtual ~group_public_key_context() = default;
 
     virtual group_identity gid_from_sha256() const = 0;
+
+    virtual std::unique_ptr<group_public_key_context> clone() const = 0;
 
     virtual std::pair<std::vector<unsigned char>, std::vector<unsigned char>> serialize() const = 0;
 
@@ -57,6 +60,8 @@ public:
     std::pair<std::string, std::string> serialize_to_text() const;
 
     group_identity gid_from_sha256() const final;
+
+    std::unique_ptr<group_public_key_context> clone() const final;
 
     struct xtt_group_public_key_context* get() final;
     const struct xtt_group_public_key_context* get() const final;

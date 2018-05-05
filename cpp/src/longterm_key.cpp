@@ -38,6 +38,11 @@ longterm_key_ed25519::longterm_key_ed25519(const std::string& serialized_as_text
 {
 }
 
+std::unique_ptr<longterm_key> longterm_key_ed25519::clone() const
+{
+    return std::make_unique<longterm_key_ed25519>(*this);
+}
+
 std::vector<unsigned char> longterm_key_ed25519::serialize() const
 {
     return std::vector<unsigned char>(raw_.data, raw_.data+sizeof(xtt_ed25519_pub_key));
@@ -70,6 +75,11 @@ longterm_private_key_ed25519::longterm_private_key_ed25519(const std::vector<uns
 longterm_private_key_ed25519::longterm_private_key_ed25519(const std::string& serialized_as_text)
     : longterm_private_key_ed25519(text_to_binary(serialized_as_text))
 {
+}
+
+std::unique_ptr<longterm_private_key> longterm_private_key_ed25519::clone() const
+{
+    return std::make_unique<longterm_private_key_ed25519>(*this);
 }
 
 std::vector<unsigned char> longterm_private_key_ed25519::serialize() const

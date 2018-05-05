@@ -38,6 +38,11 @@ pseudonym_lrsw::pseudonym_lrsw(const std::string& serialized_as_text)
 {
 }
 
+std::unique_ptr<pseudonym> pseudonym_lrsw::clone() const
+{
+    return std::make_unique<pseudonym_lrsw>(*this);
+}
+
 std::vector<unsigned char> pseudonym_lrsw::serialize() const
 {
     return std::vector<unsigned char>(raw_.data, raw_.data+sizeof(xtt_daa_pseudonym_lrsw));

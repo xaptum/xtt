@@ -35,6 +35,8 @@ class server_certificate_context {
 public:
     virtual ~server_certificate_context() = default;
 
+    virtual std::unique_ptr<server_certificate_context> clone() const = 0;
+
     virtual std::pair<std::vector<unsigned char>, std::vector<unsigned char>> serialize() const = 0;
 
     virtual std::pair<std::string, std::string> serialize_to_text() const = 0;
@@ -58,6 +60,8 @@ public:
 
     server_certificate_context_ed25519(const std::string& serialized_as_text_certificate,
                                        const std::string& serialized_as_text_private_key);
+
+    std::unique_ptr<server_certificate_context> clone() const final;
 
     std::pair<std::vector<unsigned char>, std::vector<unsigned char>> serialize() const final;
 

@@ -107,3 +107,8 @@ group_identity group_public_key_context_lrsw::gid_from_sha256() const
 
     return group_identity(raw_gid);
 }
+
+std::unique_ptr<group_public_key_context> group_public_key_context_lrsw::clone() const
+{
+    return std::make_unique<group_public_key_context_lrsw>(*this);
+}

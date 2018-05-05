@@ -103,6 +103,11 @@ server_certificate_context_ed25519::server_certificate_context_ed25519(const std
 {
 }
 
+std::unique_ptr<server_certificate_context> server_certificate_context_ed25519::clone() const
+{
+    return std::make_unique<server_certificate_context_ed25519>(*this);
+}
+
 std::pair<std::vector<unsigned char>, std::vector<unsigned char>> server_certificate_context_ed25519::serialize() const
 {
     return std::make_pair(std::vector<unsigned char>(certificate_ctx_.serialized_certificate_raw,

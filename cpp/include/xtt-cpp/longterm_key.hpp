@@ -31,6 +31,8 @@ class longterm_key {
 public:
     virtual ~longterm_key() = default;
 
+    virtual std::unique_ptr<longterm_key> clone() const = 0;
+
     virtual std::vector<unsigned char> serialize() const = 0;
 
     virtual std::string serialize_to_text() const = 0;
@@ -41,6 +43,10 @@ public:
 
 class longterm_key_ed25519 : public longterm_key {
 public:
+    longterm_key_ed25519() = default;
+
+    std::unique_ptr<longterm_key> clone() const final;
+
     longterm_key_ed25519(const std::vector<unsigned char>& serialized);
 
     longterm_key_ed25519(const std::string& serialized_as_text);
@@ -60,6 +66,8 @@ class longterm_private_key {
 public:
     virtual ~longterm_private_key() = default;
 
+    virtual std::unique_ptr<longterm_private_key> clone() const = 0;
+
     virtual std::vector<unsigned char> serialize() const = 0;
 
     virtual std::string serialize_to_text() const = 0;
@@ -70,6 +78,10 @@ public:
 
 class longterm_private_key_ed25519 : public longterm_private_key {
 public:
+    longterm_private_key_ed25519() = default;
+
+    std::unique_ptr<longterm_private_key> clone() const final;
+
     longterm_private_key_ed25519(const std::vector<unsigned char>& serialized);
 
     longterm_private_key_ed25519(const std::string& serialized_as_text);
