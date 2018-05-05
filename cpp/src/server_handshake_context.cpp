@@ -221,15 +221,7 @@ return_code server_handshake_context::build_idserverfinished(uint16_t& io_bytes_
 return_code server_handshake_context::build_error_msg(uint16_t& io_bytes_requested,
                                                       unsigned char*& io_ptr)
 {
-    xtt_version current_version;
-    xtt_return_code_type ret = xtt_get_version(&current_version, &handshake_ctx_);
-    if (XTT_RETURN_SUCCESS != ret) {
-        return static_cast<return_code>(ret);
-    }
-
-    ret = xtt_server_build_error_msg(&io_bytes_requested, &io_ptr, &handshake_ctx_);
-
-    return static_cast<return_code>(ret);
+    return static_cast<return_code>(xtt_server_build_error_msg(&io_bytes_requested, &io_ptr, &handshake_ctx_));
 }
 
 void swap(server_handshake_context& first, server_handshake_context& second)
