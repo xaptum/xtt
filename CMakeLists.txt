@@ -18,13 +18,14 @@ option(USE_TPM "use a TPM" ON)
 option(BUILD_SHARED_LIBS "Build as a shared library" ON)
 option(BUILD_STATIC_LIBS "Build as a static library" OFF)
 
-find_package(ecdaa 0.9.0 COMPONENTS tpm REQUIRED QUIET)
+find_package(ecdaa 0.9.0 REQUIRED QUIET)
 find_package(sodium 1.0.11 REQUIRED QUIET)
 
 if(USE_TPM)
         add_definitions(-DUSE_TPM)
         set(USE_TPM_DEFINE "#define USE_TPM")
         find_package(xaptum-tpm 0.5.0 REQUIRED QUIET)
+        find_package(ecdaa 0.9.0 COMPONENTS tpm REQUIRED QUIET)
 endif()
 
 configure_file(${PROJECT_SOURCE_DIR}/include/xtt/context.h.in ${CMAKE_BINARY_DIR}/include/xtt/context.h)
