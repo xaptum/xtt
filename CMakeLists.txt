@@ -69,7 +69,7 @@ if(BUILD_SHARED_LIBS)
     VERSION "${XTT_VERSION}"
     SOVERSION "${XTT_SOVERSION}"
   )
-  
+
   target_include_directories(xtt PUBLIC
     $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
     $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/include>
@@ -87,7 +87,7 @@ if(BUILD_SHARED_LIBS)
     target_link_libraries(xtt PRIVATE ecdaa::ecdaa-tpm)
   endif()
 
-  install(TARGETS xtt 
+  install(TARGETS xtt
           EXPORT xtt-targets
           RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
           LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
@@ -114,7 +114,7 @@ if(BUILD_STATIC_LIBS)
   )
 
   target_link_libraries(xtt_static
-          PRIVATE sodium 
+          PRIVATE sodium
           PRIVATE AMCL::AMCL
   )
   if(USE_TPM)
