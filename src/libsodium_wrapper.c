@@ -26,6 +26,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/ioctl.h>
+#include <linux/types.h>
 #include <linux/random.h>
 #endif
 
