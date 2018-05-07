@@ -18,13 +18,14 @@ option(USE_TPM "use a TPM" ON)
 option(BUILD_SHARED_LIBS "Build as a shared library" ON)
 option(BUILD_STATIC_LIBS "Build as a static library" OFF)
 
-find_package(ecdaa 0.9.0 COMPONENTS tpm REQUIRED QUIET)
+find_package(ecdaa 0.9.0 REQUIRED QUIET)
 find_package(sodium 1.0.11 REQUIRED QUIET)
 
 if(USE_TPM)
         add_definitions(-DUSE_TPM)
         set(USE_TPM_DEFINE "#define USE_TPM")
         find_package(xaptum-tpm 0.5.0 REQUIRED QUIET)
+        find_package(ecdaa 0.9.0 COMPONENTS tpm REQUIRED QUIET)
 endif()
 
 configure_file(${PROJECT_SOURCE_DIR}/include/xtt/context.h.in ${CMAKE_BINARY_DIR}/include/xtt/context.h)
@@ -68,7 +69,7 @@ if(BUILD_SHARED_LIBS)
     VERSION "${XTT_VERSION}"
     SOVERSION "${XTT_SOVERSION}"
   )
-  
+
   target_include_directories(xtt PUBLIC
     $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
     $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/include>
@@ -76,18 +77,17 @@ if(BUILD_SHARED_LIBS)
   )
 
   target_link_libraries(xtt
-          PRIVATE sodium 
+          PRIVATE sodium
           PRIVATE AMCL::AMCL
+          PRIVATE ecdaa::ecdaa
   )
 
   if(USE_TPM)
     target_link_libraries(xtt PUBLIC xaptum-tpm::xaptum-tpm)
     target_link_libraries(xtt PRIVATE ecdaa::ecdaa-tpm)
-  else()
-    target_link_libraries(xtt PRIVATE ecdaa::ecdaa)
   endif()
 
-  install(TARGETS xtt 
+  install(TARGETS xtt
           EXPORT xtt-targets
           RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
           LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
@@ -114,7 +114,7 @@ if(BUILD_STATIC_LIBS)
   )
 
   target_link_libraries(xtt_static
-          PRIVATE sodium 
+          PRIVATE sodium
           PRIVATE AMCL::AMCL
   )
   if(USE_TPM)
