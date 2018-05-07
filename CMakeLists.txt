@@ -77,15 +77,14 @@ if(BUILD_SHARED_LIBS)
   )
 
   target_link_libraries(xtt
-          PRIVATE sodium 
+          PRIVATE sodium
           PRIVATE AMCL::AMCL
+          PRIVATE ecdaa::ecdaa
   )
 
   if(USE_TPM)
     target_link_libraries(xtt PUBLIC xaptum-tpm::xaptum-tpm)
     target_link_libraries(xtt PRIVATE ecdaa::ecdaa-tpm)
-  else()
-    target_link_libraries(xtt PRIVATE ecdaa::ecdaa)
   endif()
 
   install(TARGETS xtt 
