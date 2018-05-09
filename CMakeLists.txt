@@ -38,7 +38,7 @@ if(NOT DEFINED BUILD_SHARED_LIBS OR NOT  "${BUILD_SHARED_LIBS}")
   set(BUILD_STATIC_LIBS ON CACHE BOOL "Build as a static library" FORCE)
 endif()
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Werror -Wall -Wextra -std=c99 -Wno-missing-field-initializers" CACHE STRING "" FORCE)
+add_compile_options(-std=c99 -Werror -Wall -Wextra -Wno-missing-field-initializers)
 set(CMAKE_C_FLAGS_RELWITHSANITIZE "${CMAKE_C_FLAGS_RELWITHSANITIZE} -O2 -g -fsanitize=address,undefined -fsanitize=unsigned-integer-overflow")
 
 set(XTT_SRCS
