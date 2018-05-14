@@ -72,17 +72,18 @@ ctest -V
 
 The following CMake configuration options are supported.
 
-| Option                              | Values          | Default    | Description                                     |
-|-------------------------------------|-----------------|------------|-------------------------------------------------|
-| CMAKE_BUILD_TYPE                    | Release         |            | With full optimizations.                        |
-|                                     | Debug           |            | With debug symbols.                             |
-|                                     | RelWithDebInfo  |            | With full optimizations and debug symbols.      |
-| CMAKE_INSTALL_PREFIX                | <string>        | /usr/local | The directory to install the library in.        |
-| BUILD_EXAMPLES                      | ON, OFF         | OFF        | Build example programs                          |
-| BUILD_SHARED_LIBS                   | ON, OFF         | ON         | Build shared libraries.                         |
-| BUILD_STATIC_LIBS                   | ON, OFF         | OFF        | Build static libraries.                         |
-| BUILD_TESTING                       | ON, OFF         | ON         | Build the test suite.                           |
-| STATIC_SUFFIX                       | <string>        | <none>     | Appends a suffix to the static lib name.        |
+| Option               | Values         | Default    | Description                                |
+|----------------------|----------------|------------|--------------------------------------------|
+| CMAKE_BUILD_TYPE     | Release        |            | With full optimizations.                   |
+|                      | Debug          |            | With debug symbols.                        |
+|                      | RelWithDebInfo |            | With full optimizations and debug symbols. |
+| CMAKE_INSTALL_PREFIX | <string>       | /usr/local | The directory to install the library in.   |
+| USE_TPM              | ON, OFF        | ON         | Build with support for using a TPM 2.0     |
+| BUILD_EXAMPLES       | ON, OFF        | OFF        | Build example programs                     |
+| BUILD_SHARED_LIBS    | ON, OFF        | ON         | Build shared libraries.                    |
+| BUILD_STATIC_LIBS    | ON, OFF        | OFF        | Build static libraries.                    |
+| BUILD_TESTING        | ON, OFF        | ON         | Build the test suite.                      |
+| STATIC_SUFFIX        | <string>       | <none>     | Appends a suffix to the static lib name.   |
 
 ### Installing
 
