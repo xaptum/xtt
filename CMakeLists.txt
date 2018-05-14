@@ -17,6 +17,7 @@ option(USE_TPM "use a TPM" ON)
 
 option(BUILD_SHARED_LIBS "Build as a shared library" ON)
 option(BUILD_STATIC_LIBS "Build as a static library" OFF)
+option(BUILD_UTILS "build utility programs" ON)
 
 find_package(ecdaa 0.9.0 REQUIRED QUIET)
 find_package(sodium 1.0.11 REQUIRED QUIET)
@@ -194,4 +195,6 @@ endif()
 ################################################################################
 # Util
 ################################################################################
-add_subdirectory(util)
+if(BUILD_UTILS)
+  add_subdirectory(util)
+endif()
