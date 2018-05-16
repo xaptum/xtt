@@ -524,9 +524,8 @@ int do_handshake(int socket,
                     struct xtt_server_root_certificate_context *server_cert;
                     server_cert = lookup_certificate(&claimed_root_id);
                     if (NULL == server_cert) {
-                        unsigned char err_buffer[16];
                         (void)xtt_client_build_error_msg(&bytes_requested, &io_ptr, ctx);
-                        int write_ret = write(socket, err_buffer, bytes_requested);
+                        int write_ret = write(socket, io_ptr, bytes_requested);
                         if (write_ret > 0) {
                         }
                         return -1;
