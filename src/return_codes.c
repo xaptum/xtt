@@ -53,6 +53,8 @@ static const char* strerr_arr[] =
     "XTT - BAD_ROOT_SIGNATURE",
     "XTT - UNKNOWN_CRYPTO_SPEC",
     "XTT - BAD_CERTIFICATE",
+    "XTT - UNKNOWN_CERTIFICATE",
+    "XTT - UNKNOWN_GID",
     "XTT - BAD_GPK",
     "XTT - BAD_ID",
     "XTT - BAD_EXPIRY",
