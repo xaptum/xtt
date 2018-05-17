@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.0 FATAL_ERROR)
 list(APPEND CMAKE_MODULE_PATH CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/cmake)
 
 project(xtt
-        VERSION "0.7.2"
+        VERSION "0.8.0"
         )
 
 set(XTT_VERSION ${PROJECT_VERSION})
