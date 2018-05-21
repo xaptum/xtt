@@ -100,13 +100,14 @@ int report_results(xtt_identity_type *requested_client_id,
 
 int main(int argc, char *argv[])
 {
+    int ret = 0;
+
     int init_ret = xtt_crypto_initialize_crypto();
     if (0 != init_ret) {
         fprintf(stderr, "Error initializing cryptography library: %d\n", init_ret);
         return 1;
     }
 
-    xtt_return_code_type rc = XTT_RETURN_SUCCESS;
     int init_daa_ret = -1;
     int socket = -1;
 
@@ -120,8 +121,8 @@ int main(int argc, char *argv[])
     // 1) Set my requested id and the intended server id (from files).
     xtt_identity_type requested_client_id;
     xtt_identity_type intended_server_id;
-    int id_ret = initialize_ids(&requested_client_id, &intended_server_id);
-    if(0 != id_ret) {
+    ret = initialize_ids(&requested_client_id, &intended_server_id);
+    if(0 != ret) {
         fprintf(stderr, "Error setting XTT ID's!\n");
         goto finish;
     }
@@ -129,12 +130,13 @@ int main(int argc, char *argv[])
     // 2) Setup the needed XTT contexts (from files).
     struct xtt_client_group_context group_ctx;
     init_daa_ret = initialize_daa(&group_ctx, use_tpm);
+    ret = init_daa_ret;
     if (0 != init_daa_ret) {
         fprintf(stderr, "Error initializing DAA context\n");
         goto finish;
     }
-    int init_certs_ret = initialize_certs(use_tpm);
-    if (0 != init_certs_ret) {
+    ret = initialize_certs(use_tpm);
+    if (0 != ret) {
         fprintf(stderr, "Error initializing server/root certificate contexts\n");
         goto finish;
     }
@@ -142,8 +144,10 @@ int main(int argc, char *argv[])
     // 3) Make TCP connection to server.
     printf("Connecting to server at %s:%d ...\t", server_ip, server_port);
     socket = connect_to_server(server_ip, server_port);
-    if (socket < 0)
+    if (socket < 0) {
+        ret = 1;
         goto finish;
+    }
     printf("ok\n");
 
     // 4) Initialize XTT handshake context
@@ -152,25 +156,24 @@ int main(int argc, char *argv[])
     unsigned char in_buffer[MAX_HANDSHAKE_SERVER_MESSAGE_LENGTH];
     unsigned char out_buffer[MAX_HANDSHAKE_CLIENT_MESSAGE_LENGTH];
     struct xtt_client_handshake_context ctx;
-    rc = xtt_initialize_client_handshake_context(&ctx, in_buffer, sizeof(in_buffer), out_buffer, sizeof(out_buffer), version_g, suite_spec);
+    xtt_return_code_type rc = xtt_initialize_client_handshake_context(&ctx, in_buffer, sizeof(in_buffer), out_buffer, sizeof(out_buffer), version_g, suite_spec);
     if (XTT_RETURN_SUCCESS != rc) {
+        ret = 1;
         fprintf(stderr, "Error initializing client handshake context: %d\n", rc);
         goto finish;
     }
 
     // 5) Run the identity-provisioning handshake with the server.
-    int handshake_ret;
-    handshake_ret = do_handshake(socket,
-                                 &requested_client_id,
-                                 &intended_server_id,
-                                 &group_ctx,
-                                 &ctx);
-    if (0 == handshake_ret) {
+    ret = do_handshake(socket,
+                       &requested_client_id,
+                       &intended_server_id,
+                       &group_ctx,
+                       &ctx);
+    if (0 == ret) {
         // 6) Print the results (what we and the server now agree on post-handshake)
-        int report_ret;
-        report_ret = report_results(&requested_client_id,
-                                    &ctx);
-        if (0 != report_ret)
+        ret = report_results(&requested_client_id,
+                             &ctx);
+        if (0 != ret)
             goto finish;
     } else {
         fprintf(stderr, "Handshake failed!\n");
@@ -186,7 +189,7 @@ finish:
         tss2_tcti_finalize(tcti_context);
     }
 #endif
-    if (XTT_RETURN_SUCCESS == rc) {
+    if (0 == ret) {
         return 0;
     } else {
         return 1;
