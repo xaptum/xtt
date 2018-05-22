@@ -28,7 +28,6 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <unistd.h>
-#include <sys/time.h>
 
 #ifdef USE_TPM
 #include <tss2/tss2_sys.h>
@@ -231,21 +230,12 @@ void parse_cmd_args(int argc, char *argv[], xtt_suite_spec *suite_spec, char *ip
 
 int connect_to_server(const char *ip, unsigned short port)
 {
-    const int read_timeout_secs = 10;
-
     int sock_ret = socket(AF_INET, SOCK_STREAM, 0);
     if (sock_ret == -1) {
         fprintf(stderr, "Error opening client socket\n");
         return -1;
     }
 
-    struct timeval tv;
-    tv.tv_sec = read_timeout_secs;
-    if (0 != setsockopt(sock_ret, SOL_SOCKET, SO_RCVTIMEO, (const char*)&tv, sizeof(tv))) {
-        fprintf(stderr, "Error setting read timeout on socket\n");
-        fflush(stderr);
-        return -1;
-    }
     struct sockaddr_in server_addr;
     server_addr.sin_addr.s_addr = inet_addr(ip);
     server_addr.sin_family = AF_INET;
