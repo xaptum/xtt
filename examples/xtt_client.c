@@ -31,8 +31,12 @@
 
 #ifdef USE_TPM
 #include <tss2/tss2_sys.h>
+#ifdef USE_TPM_TCP
 #include <tss2/tss2_tcti_socket.h>
-unsigned char tcti_context_buffer_g[128];
+#else
+#include <tss2/tss2_tcti_device.h>
+#endif
+unsigned char tcti_context_buffer_g[256];
 #endif
 
 uint32_t key_handle_g = 0x81800000;
@@ -42,6 +46,8 @@ uint32_t root_id_handle_g = 0x1410003;
 uint32_t root_pubkey_handle_g = 0x1410004;
 const char *tpm_hostname_g = "localhost";
 const char *tpm_port_g = "2321";
+const char *tpm_devfile_g = "/dev/tpm0";
+const size_t tpm_devfile_length_g = 9;
 const char *tpm_password = NULL;
 uint16_t tpm_password_len = 0;
 
@@ -298,9 +304,14 @@ int initialize_daa(struct xtt_client_group_context *group_ctx, int use_tpm)
 #ifdef USE_TPM
     TSS2_TCTI_CONTEXT *tcti_context;
     if (use_tpm) {
-        assert(tss2_tcti_getsize_socket() < sizeof(tcti_context_buffer_g));
         tcti_context = (TSS2_TCTI_CONTEXT*)tcti_context_buffer_g;
+#ifdef USE_TPM_TCP
+        assert(tss2_tcti_getsize_socket() < sizeof(tcti_context_buffer_g));
         int tcti_ret = tss2_tcti_init_socket(tpm_hostname_g, tpm_port_g, tcti_context);
+#else
+        assert(tss2_tcti_getsize_device() < sizeof(tcti_context_buffer_g));
+        int tcti_ret = tss2_tcti_init_device(tpm_devfile_g, tpm_devfile_length_g, tcti_context);
+#endif
         if (TSS2_RC_SUCCESS != tcti_ret) {
             fprintf(stderr, "Error: Unable to initialize TCTI context\n");
             return -1;
