@@ -1,5 +1,8 @@
 # XTT IoT security protocol
 
+[![Release](https://img.shields.io/github/release/xaptum/xtt.svg)](https://github.com/xaptum/xtt/releases)
+[![Build Status](https://travis-ci.org/xaptum/xtt.svg?branch=master)](https://travis-ci.org/xaptum/xtt)
+
 XTT is a C implementation of the [XTT
 protocol](https://xaptum.github.io/xtt-spec/) for securing Internet of
 Things (IoT) network traffic.  It provides scalable identity
@@ -7,9 +10,6 @@ provisioning, device authentication, and data integrity and
 confidentiality.
 
 TODO: Actually briefly summarize protocol justification and features.
-
-# Project Status
-[![Build Status](https://travis-ci.org/xaptum/xtt.svg?branch=master)](https://travis-ci.org/xaptum/xtt)
 
 ## Installation
 
