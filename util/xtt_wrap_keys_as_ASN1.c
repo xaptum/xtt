@@ -44,7 +44,7 @@ int main(int argc, char *argv[])
     struct cli_args args;
     parse_cli(argc, argv, &args);
 
-    printf("Saving keys from files '%s' and '%s' to certificate '%s', with Common Name from '%s'...\n",
+    printf("Saving keys from files '%s' and '%s' to certificate '%s', with identity from '%s'...\n",
            args.pubkey_in_filename,
            args.privkey_in_filename,
            args.cert_out_filename,
@@ -52,7 +52,7 @@ int main(int argc, char *argv[])
 
     xtt_identity_type name_buf;
     if (read_from_file(args.name_in_filename, name_buf.data, sizeof(xtt_identity_type))) {
-        fprintf(stderr, "Error reading common name in from file '%s'\n", args.name_in_filename);
+        fprintf(stderr, "Error reading identity in from file '%s'\n", args.name_in_filename);
         ret = 1;
         goto finish;
     }
@@ -105,7 +105,7 @@ finish:
 
 void parse_cli(int argc, char *argv[], struct cli_args *args)
 {
-    const char *usage = "usage: %s <common-name-file> <public-key-in-file> <private-key-in-file> [certificate-out-file] [private-key-out-file]\n"
+    const char *usage = "usage: %s <identity-file> <public-key-in-file> <private-key-in-file> [certificate-out-file] [private-key-out-file]\n"
                         "\tidentity-file            - File with XTT identity\n"
                         "\tpublic-key-in-file       - File with raw Ed25519 public key\n"
                         "\tprivate-key-in-file      - File with raw Ed25519 private key\n"

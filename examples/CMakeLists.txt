@@ -14,6 +14,12 @@
 
 cmake_minimum_required(VERSION 3.0 FATAL_ERROR)
 
+option(EXAMPLES_USE_TCP_TPM "use a TCP-socket-based TPM TCTI in the example client" OFF)
+
+if(USE_TPM_TCP)
+        add_definitions(-DUSE_TPM_TCP)
+endif()
+
 set(XTT_CURRENT_PROGRAMS_BINARY_DIR ${CMAKE_BINARY_DIR}/bin/)
 
 set(XTT_EXAMPLES_MAIN_FILES

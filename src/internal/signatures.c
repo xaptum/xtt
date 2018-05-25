@@ -118,7 +118,7 @@ verify_daa_signature(unsigned char *signature,
                      const unsigned char *identityclientattest_unencrypted_part,
                      const unsigned char *identityclientattest_encryptedpart_uptosignature,
                      struct xtt_group_public_key_context* group_pub_key_ctx,
-                     struct xtt_server_certificate_context *server_certificate_ctx,
+                     const struct xtt_server_certificate_context *server_certificate_ctx,
                      struct xtt_handshake_context *handshake_ctx)
 {
     xtt_return_code_type rc;
@@ -182,7 +182,7 @@ verify_client_longterm_signature(unsigned char *signature,
                                  const unsigned char *server_signature,
                                  const unsigned char *identityclientattest_unencrypted_part,
                                  const unsigned char *identityclientattest_encryptedpart_uptosignature,
-                                 struct xtt_server_certificate_context *server_certificate_ctx,
+                                 const struct xtt_server_certificate_context *server_certificate_ctx,
                                  struct xtt_server_handshake_context *handshake_ctx)
 {
     xtt_return_code_type rc;

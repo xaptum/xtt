@@ -40,8 +40,6 @@ const char *daa_gpk_file = "daa_gpk.bin";
 const char *basename_file = "basename.bin";
 const char *server_certificate_file = "server_certificate.bin";
 const char *server_privatekey_file = "server_privatekey.bin";
-const char *root_id_file = "root_id.bin";
-const char *root_pubkey_file = "root_pub.bin";
 
 // We have a toy "database" of client group public keys
 typedef struct {
@@ -53,8 +51,7 @@ const size_t gpk_db_size = 1;
 
 void parse_cmd_args(int argc, char *argv[], unsigned short *port);
 
-int initialize(struct xtt_server_root_certificate_context *root_certificate,
-               struct xtt_server_certificate_context *cert_ctx,
+int initialize(struct xtt_server_certificate_context *cert_ctx,
                struct xtt_server_cookie_context *cookie_ctx);
 
 int open_socket(unsigned short);
@@ -88,10 +85,9 @@ int main(int argc, char *argv[])
     parse_cmd_args(argc, argv, &server_port);
 
     // 1) Setup XTT context
-    struct xtt_server_root_certificate_context root_certificate;
     struct xtt_server_certificate_context cert_ctx;
     struct xtt_server_cookie_context cookie_ctx;
-    if (0 != initialize(&root_certificate, &cert_ctx, &cookie_ctx)) {
+    if (0 != initialize(&cert_ctx, &cookie_ctx)) {
         fprintf(stderr, "Error initializing server handshake context\n");
         return 1;
     }
@@ -131,8 +127,7 @@ void parse_cmd_args(int argc, char *argv[], unsigned short *port)
     *port = atoi(argv[1]);
 }
 
-int initialize(struct xtt_server_root_certificate_context *root_certificate,
-               struct xtt_server_certificate_context *cert_ctx,
+int initialize(struct xtt_server_certificate_context *cert_ctx,
                struct xtt_server_cookie_context *cookie_ctx)
 {
     int read_ret;
@@ -192,30 +187,7 @@ int initialize(struct xtt_server_root_certificate_context *root_certificate,
     if (XTT_RETURN_SUCCESS != rc)
         return -1;
 
-    // 8) Read in the root id from file
-    xtt_certificate_root_id root_id;
-    read_ret = read_file_into_buffer(root_id.data, sizeof(xtt_certificate_root_id), root_id_file);
-    if (sizeof(xtt_certificate_root_id) != read_ret) {
-        fprintf(stderr, "Error reading root's id from file\n");
-        return 1;
-    }
-
-    // 9) Read in the root public key from file
-    xtt_ed25519_pub_key root_public_key;
-    read_ret = read_file_into_buffer(root_public_key.data, sizeof(xtt_ed25519_pub_key), root_pubkey_file);
-    if (sizeof(xtt_ed25519_pub_key) != read_ret) {
-        fprintf(stderr, "Error reading root's public key from file\n");
-        return 1;
-    }
-
-    // 10) Initialize root certificate context
-    rc = xtt_initialize_server_root_certificate_context_ed25519(root_certificate,
-                                                                &root_id,
-                                                                &root_public_key);
-    if (XTT_RETURN_SUCCESS != rc)
-        return -1;
-
-    // 11) Initialize my server_cookie context
+    // 8) Initialize my server_cookie context
     rc = xtt_initialize_server_cookie_context(cookie_ctx);
     if (XTT_RETURN_SUCCESS != rc)
         return -1;
@@ -350,9 +322,8 @@ do_handshake(int client_sock,
                     struct xtt_group_public_key_context* gpk_ctx;
                     gpk_ctx = lookup_gpk(&claimed_group_id);
                     if (NULL == gpk_ctx) {
-                        unsigned char err_buffer[16];
-                        (void)build_error_msg(err_buffer, &bytes_requested, version_g);
-                        int write_ret = write(client_sock, err_buffer, bytes_requested);
+                        (void)xtt_server_build_error_msg(&bytes_requested, &io_ptr, &ctx);
+                        int write_ret = write(client_sock, io_ptr, bytes_requested);
                         if (write_ret > 0) {
                             close(client_sock);
                         }
@@ -380,9 +351,8 @@ do_handshake(int client_sock,
                     xtt_identity_type assigned_client_id;
                     int id_assign_ret = assign_client_id(&assigned_client_id, &requested_client_id, &claimed_group_id, &clients_pseudonym);
                     if (0 != id_assign_ret) {
-                        unsigned char err_buffer[16];
-                        (void)build_error_msg(err_buffer, &bytes_requested, version_g);
-                        int write_ret = write(client_sock, err_buffer, bytes_requested);
+                        (void)xtt_server_build_error_msg(&bytes_requested, &io_ptr, &ctx);
+                        int write_ret = write(client_sock, io_ptr, bytes_requested);
                         if (write_ret > 0) {
                             close(client_sock);
                         }
@@ -405,15 +375,16 @@ do_handshake(int client_sock,
                 return;
             default:
                 fprintf(stderr, "Encountered error during server handshake: %d\n", rc);
-                unsigned char err_buffer[16];
-                (void)build_error_msg(err_buffer, &bytes_requested, version_g);
-                int write_ret = write(client_sock, err_buffer, bytes_requested);
+                (void)xtt_server_build_error_msg(&bytes_requested, &io_ptr, &ctx);
+                int write_ret = write(client_sock, io_ptr, bytes_requested);
                 if (write_ret > 0) {
                     close(client_sock);
                 }
                 return;
         }
     }
+
+    close(client_sock);
 
     if (XTT_RETURN_HANDSHAKE_FINISHED == rc) {
         printf("Handshake completed successfully!\n");

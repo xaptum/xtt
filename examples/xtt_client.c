@@ -31,8 +31,12 @@
 
 #ifdef USE_TPM
 #include <tss2/tss2_sys.h>
+#ifdef USE_TPM_TCP
 #include <tss2/tss2_tcti_socket.h>
-unsigned char tcti_context_buffer_g[128];
+#else
+#include <tss2/tss2_tcti_device.h>
+#endif
+unsigned char tcti_context_buffer_g[256];
 #endif
 
 uint32_t key_handle_g = 0x81800000;
@@ -42,6 +46,8 @@ uint32_t root_id_handle_g = 0x1410003;
 uint32_t root_pubkey_handle_g = 0x1410004;
 const char *tpm_hostname_g = "localhost";
 const char *tpm_port_g = "2321";
+const char *tpm_devfile_g = "/dev/tpm0";
+const size_t tpm_devfile_length_g = 9;
 const char *tpm_password = NULL;
 uint16_t tpm_password_len = 0;
 
@@ -100,13 +106,14 @@ int report_results(xtt_identity_type *requested_client_id,
 
 int main(int argc, char *argv[])
 {
+    int ret = 0;
+
     int init_ret = xtt_crypto_initialize_crypto();
     if (0 != init_ret) {
         fprintf(stderr, "Error initializing cryptography library: %d\n", init_ret);
         return 1;
     }
 
-    xtt_return_code_type rc = XTT_RETURN_SUCCESS;
     int init_daa_ret = -1;
     int socket = -1;
 
@@ -120,8 +127,8 @@ int main(int argc, char *argv[])
     // 1) Set my requested id and the intended server id (from files).
     xtt_identity_type requested_client_id;
     xtt_identity_type intended_server_id;
-    int id_ret = initialize_ids(&requested_client_id, &intended_server_id);
-    if(0 != id_ret) {
+    ret = initialize_ids(&requested_client_id, &intended_server_id);
+    if(0 != ret) {
         fprintf(stderr, "Error setting XTT ID's!\n");
         goto finish;
     }
@@ -129,12 +136,13 @@ int main(int argc, char *argv[])
     // 2) Setup the needed XTT contexts (from files).
     struct xtt_client_group_context group_ctx;
     init_daa_ret = initialize_daa(&group_ctx, use_tpm);
+    ret = init_daa_ret;
     if (0 != init_daa_ret) {
         fprintf(stderr, "Error initializing DAA context\n");
         goto finish;
     }
-    int init_certs_ret = initialize_certs(use_tpm);
-    if (0 != init_certs_ret) {
+    ret = initialize_certs(use_tpm);
+    if (0 != ret) {
         fprintf(stderr, "Error initializing server/root certificate contexts\n");
         goto finish;
     }
@@ -142,8 +150,10 @@ int main(int argc, char *argv[])
     // 3) Make TCP connection to server.
     printf("Connecting to server at %s:%d ...\t", server_ip, server_port);
     socket = connect_to_server(server_ip, server_port);
-    if (socket < 0)
+    if (socket < 0) {
+        ret = 1;
         goto finish;
+    }
     printf("ok\n");
 
     // 4) Initialize XTT handshake context
@@ -152,25 +162,24 @@ int main(int argc, char *argv[])
     unsigned char in_buffer[MAX_HANDSHAKE_SERVER_MESSAGE_LENGTH];
     unsigned char out_buffer[MAX_HANDSHAKE_CLIENT_MESSAGE_LENGTH];
     struct xtt_client_handshake_context ctx;
-    rc = xtt_initialize_client_handshake_context(&ctx, in_buffer, sizeof(in_buffer), out_buffer, sizeof(out_buffer), version_g, suite_spec);
+    xtt_return_code_type rc = xtt_initialize_client_handshake_context(&ctx, in_buffer, sizeof(in_buffer), out_buffer, sizeof(out_buffer), version_g, suite_spec);
     if (XTT_RETURN_SUCCESS != rc) {
+        ret = 1;
         fprintf(stderr, "Error initializing client handshake context: %d\n", rc);
         goto finish;
     }
 
     // 5) Run the identity-provisioning handshake with the server.
-    int handshake_ret;
-    handshake_ret = do_handshake(socket,
-                                 &requested_client_id,
-                                 &intended_server_id,
-                                 &group_ctx,
-                                 &ctx);
-    if (0 == handshake_ret) {
+    ret = do_handshake(socket,
+                       &requested_client_id,
+                       &intended_server_id,
+                       &group_ctx,
+                       &ctx);
+    if (0 == ret) {
         // 6) Print the results (what we and the server now agree on post-handshake)
-        int report_ret;
-        report_ret = report_results(&requested_client_id,
-                                    &ctx);
-        if (0 != report_ret)
+        ret = report_results(&requested_client_id,
+                             &ctx);
+        if (0 != ret)
             goto finish;
     } else {
         fprintf(stderr, "Handshake failed!\n");
@@ -186,7 +195,7 @@ finish:
         tss2_tcti_finalize(tcti_context);
     }
 #endif
-    if (XTT_RETURN_SUCCESS == rc) {
+    if (0 == ret) {
         return 0;
     } else {
         return 1;
@@ -295,9 +304,14 @@ int initialize_daa(struct xtt_client_group_context *group_ctx, int use_tpm)
 #ifdef USE_TPM
     TSS2_TCTI_CONTEXT *tcti_context;
     if (use_tpm) {
-        assert(tss2_tcti_getsize_socket() < sizeof(tcti_context_buffer_g));
         tcti_context = (TSS2_TCTI_CONTEXT*)tcti_context_buffer_g;
+#ifdef USE_TPM_TCP
+        assert(tss2_tcti_getsize_socket() < sizeof(tcti_context_buffer_g));
         int tcti_ret = tss2_tcti_init_socket(tpm_hostname_g, tpm_port_g, tcti_context);
+#else
+        assert(tss2_tcti_getsize_device() < sizeof(tcti_context_buffer_g));
+        int tcti_ret = tss2_tcti_init_device(tpm_devfile_g, tpm_devfile_length_g, tcti_context);
+#endif
         if (TSS2_RC_SUCCESS != tcti_ret) {
             fprintf(stderr, "Error: Unable to initialize TCTI context\n");
             return -1;
@@ -524,9 +538,8 @@ int do_handshake(int socket,
                     struct xtt_server_root_certificate_context *server_cert;
                     server_cert = lookup_certificate(&claimed_root_id);
                     if (NULL == server_cert) {
-                        unsigned char err_buffer[16];
-                        (void)build_error_msg(err_buffer, &bytes_requested, version_g);
-                        int write_ret = write(socket, err_buffer, bytes_requested);
+                        (void)xtt_client_build_error_msg(&bytes_requested, &io_ptr, ctx);
+                        int write_ret = write(socket, io_ptr, bytes_requested);
                         if (write_ret > 0) {
                         }
                         return -1;
@@ -561,7 +574,7 @@ int do_handshake(int socket,
             default:
                 printf("Encountered error during client handshake: %d\n", rc);
                 unsigned char err_buffer[16];
-                (void)build_error_msg(err_buffer, &bytes_requested, version_g);
+                (void)xtt_client_build_error_msg(&bytes_requested, &io_ptr, ctx);
                 int write_ret = write(socket, err_buffer, bytes_requested);
                 if (write_ret > 0) {
                 }

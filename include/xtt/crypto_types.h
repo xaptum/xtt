@@ -111,6 +111,8 @@ typedef struct {unsigned char data[12];} xtt_aes256_nonce;
 typedef struct {unsigned char data[16];} xtt_aes256_mac;
 
 /* Hash/HMAC/KDF */
+typedef struct {unsigned char data[32];} xtt_sha256;
+
 typedef struct {unsigned char data[64];} xtt_sha512;
 
 typedef struct {unsigned char data[64];} xtt_blake2b;

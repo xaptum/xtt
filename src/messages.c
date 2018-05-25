@@ -526,7 +526,7 @@ finish:
     if (XTT_RETURN_SUCCESS == rc) {
         return XTT_RETURN_WANT_WRITE;
     } else {
-        (void)build_error_msg(ctx->base.out_message_start, io_bytes_requested, ctx->base.version);
+        (void)xtt_client_build_error_msg(io_bytes_requested, io_ptr, ctx);
 
         // 13) Set io_ptr
         *io_ptr = ctx->base.out_message_start;
@@ -563,7 +563,7 @@ finish:
     if (XTT_RETURN_SUCCESS == rc) {
         return XTT_RETURN_WANT_READ;
     } else {
-        (void)build_error_msg(ctx->base.out_message_start, io_bytes_requested, ctx->base.version);
+        (void)xtt_server_build_error_msg(io_bytes_requested, io_ptr, ctx);
 
         // 13) Set io_ptr
         *io_ptr = ctx->base.out_message_start;
@@ -714,7 +714,7 @@ finish:
 
         return XTT_RETURN_WANT_WRITE;
     } else {
-        (void)build_error_msg(ctx->base.out_message_start, io_bytes_requested, ctx->base.version);
+        (void)xtt_server_build_error_msg(io_bytes_requested, io_ptr, ctx);
 
         // 13) Set io_ptr
         *io_ptr = ctx->base.out_message_start;
@@ -776,7 +776,7 @@ finish:
     } else {
         *claimed_root_out = xtt_null_server_root_id;
 
-        (void)build_error_msg(handshake_ctx->base.out_message_start, io_bytes_requested, handshake_ctx->base.version);
+        (void)xtt_client_build_error_msg(io_bytes_requested, io_ptr, handshake_ctx);
 
         // 13) Set io_ptr
         *io_ptr = handshake_ctx->base.out_message_start;
@@ -945,7 +945,7 @@ finish:
 
         return XTT_RETURN_WANT_WRITE;
     } else {
-        (void)build_error_msg(handshake_ctx->base.out_message_start, io_bytes_requested, handshake_ctx->base.version);
+        (void)xtt_client_build_error_msg(io_bytes_requested, io_ptr, handshake_ctx);
 
         // 13) Set io_ptr
         *io_ptr = handshake_ctx->base.out_message_start;
@@ -962,7 +962,7 @@ xtt_handshake_server_preparse_idclientattest(uint16_t *io_bytes_requested,
                                              xtt_identity_type* requested_client_id_out,
                                              xtt_group_id* claimed_group_id_out,
                                              struct xtt_server_cookie_context* cookie_ctx,
-                                             struct xtt_server_certificate_context *certificate_ctx,
+                                             const struct xtt_server_certificate_context *certificate_ctx,
                                              struct xtt_server_handshake_context* handshake_ctx)
 {
     xtt_return_code_type rc = XTT_RETURN_SUCCESS;
@@ -1104,7 +1104,7 @@ finish:
 
         return XTT_RETURN_WANT_VERIFYGROUPSIGNATURE;
     } else {
-        (void)build_error_msg(handshake_ctx->base.out_message_start, io_bytes_requested, handshake_ctx->base.version);
+        (void)xtt_server_build_error_msg(io_bytes_requested, io_ptr, handshake_ctx);
 
         *io_ptr = handshake_ctx->base.out_message_start;
 
@@ -1118,7 +1118,7 @@ xtt_return_code_type
 xtt_handshake_server_verify_groupsignature(uint16_t *io_bytes_requested,
                                            unsigned char **io_ptr,
                                            struct xtt_group_public_key_context* group_pub_key_ctx,
-                                           struct xtt_server_certificate_context *certificate_ctx,
+                                           const struct xtt_server_certificate_context *certificate_ctx,
                                            struct xtt_server_handshake_context* handshake_ctx)
 {
     xtt_return_code_type rc;
@@ -1159,7 +1159,7 @@ finish:
 
         return XTT_RETURN_WANT_BUILDIDSERVERFINISHED;
     } else {
-        (void)build_error_msg(handshake_ctx->base.out_message_start, io_bytes_requested, handshake_ctx->base.version);
+        (void)xtt_server_build_error_msg(io_bytes_requested, io_ptr, handshake_ctx);
 
         *io_ptr = handshake_ctx->base.out_message_start;
 
@@ -1172,7 +1172,7 @@ finish:
 xtt_return_code_type
 xtt_handshake_server_build_idserverfinished(uint16_t *io_bytes_requested,
                                             unsigned char **io_ptr,
-                                            xtt_identity_type *client_id,
+                                            const xtt_identity_type *client_id,
                                             struct xtt_server_handshake_context* handshake_ctx)
 {
     xtt_return_code_type rc;
@@ -1252,7 +1252,7 @@ finish:
 
         return XTT_RETURN_WANT_WRITE;
     } else {
-        (void)build_error_msg(handshake_ctx->base.out_message_start, io_bytes_requested, handshake_ctx->base.version);
+        (void)xtt_server_build_error_msg(io_bytes_requested, io_ptr, handshake_ctx);
 
         *io_ptr = handshake_ctx->base.out_message_start;
 
@@ -1365,7 +1365,7 @@ finish:
 
         return XTT_RETURN_HANDSHAKE_FINISHED;
     } else {
-        (void)build_error_msg(handshake_ctx->base.out_message_start, io_bytes_requested, handshake_ctx->base.version);
+        (void)xtt_client_build_error_msg(io_bytes_requested, io_ptr, handshake_ctx);
 
         // 13) Set io_ptr
         *io_ptr = handshake_ctx->base.out_message_start;
@@ -1515,17 +1515,41 @@ parse_server_initandattest(struct xtt_client_handshake_context *handshake_ctx,
 }
 
 xtt_return_code_type
-build_error_msg(unsigned char *out_buffer,
-                uint16_t *out_length,
-                xtt_version version)
+xtt_server_build_error_msg(uint16_t *io_bytes_requested,
+                           unsigned char **io_ptr,
+                           struct xtt_server_handshake_context* handshake_ctx)
 {
-    *xtt_access_msg_type(out_buffer) = XTT_ERROR_MSG;
+    *io_ptr = handshake_ctx->base.out_message_start;
 
-    short_to_bigendian(xtt_error_msg_length(version),
-                       xtt_access_length(out_buffer));
-    *xtt_access_version(out_buffer) = version;
+    *xtt_access_msg_type(handshake_ctx->base.out_message_start) = XTT_ERROR_MSG;
 
-    *out_length = xtt_error_msg_length(version);
+    short_to_bigendian(xtt_error_msg_length(handshake_ctx->base.version),
+                       xtt_access_length(handshake_ctx->base.out_message_start));
+    *xtt_access_version(handshake_ctx->base.out_message_start) = handshake_ctx->base.version;
 
-    return XTT_RETURN_SUCCESS;
+    *io_bytes_requested = xtt_error_msg_length(handshake_ctx->base.version);
+
+    handshake_ctx->state = XTT_SERVER_HANDSHAKE_STATE_ERROR;
+
+    return XTT_RETURN_WANT_WRITE;
+}
+
+xtt_return_code_type
+xtt_client_build_error_msg(uint16_t *io_bytes_requested,
+                           unsigned char **io_ptr,
+                           struct xtt_client_handshake_context* handshake_ctx)
+{
+    *io_ptr = handshake_ctx->base.out_message_start;
+
+    *xtt_access_msg_type(handshake_ctx->base.out_message_start) = XTT_ERROR_MSG;
+
+    short_to_bigendian(xtt_error_msg_length(handshake_ctx->base.version),
+                       xtt_access_length(handshake_ctx->base.out_message_start));
+    *xtt_access_version(handshake_ctx->base.out_message_start) = handshake_ctx->base.version;
+
+    *io_bytes_requested = xtt_error_msg_length(handshake_ctx->base.version);
+
+    handshake_ctx->state = XTT_CLIENT_HANDSHAKE_STATE_ERROR;
+
+    return XTT_RETURN_WANT_WRITE;
 }

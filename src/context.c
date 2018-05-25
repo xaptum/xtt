@@ -429,7 +429,7 @@ xtt_initialize_server_cookie_context(struct xtt_server_cookie_context* ctx)
 xtt_return_code_type
 xtt_initialize_server_certificate_context_ed25519(struct xtt_server_certificate_context *ctx_out,
                                                   const unsigned char *serialized_certificate,
-                                                  xtt_ed25519_priv_key *private_key)
+                                                  const xtt_ed25519_priv_key *private_key)
 {
     ctx_out->sign = sign_server_ed25519;
 
@@ -465,7 +465,7 @@ xtt_return_code_type
 xtt_initialize_group_public_key_context_lrsw(struct xtt_group_public_key_context *ctx_out,
                                                  const unsigned char *basename,
                                                  uint16_t basename_length,
-                                                 xtt_daa_group_pub_key_lrsw *gpk)
+                                                 const xtt_daa_group_pub_key_lrsw *gpk)
 {
     ctx_out->verify_signature = verify_lrsw;
 
@@ -551,6 +551,7 @@ xtt_return_code_type
 xtt_get_version(xtt_version *version_out,
                 const struct xtt_server_handshake_context *handshake_context)
 {
+    // TODO: Check state
     switch (handshake_context->base.version) {
         case XTT_VERSION_ONE:
             *version_out = handshake_context->base.version;
@@ -565,6 +566,7 @@ xtt_return_code_type
 xtt_get_suite_spec(xtt_suite_spec *suite_spec_out,
                    const struct xtt_server_handshake_context *handshake_context)
 {
+    // TODO: Check state
     switch (handshake_context->base.suite_spec) {
         case XTT_X25519_LRSW_ED25519_CHACHA20POLY1305_SHA512:
         case XTT_X25519_LRSW_ED25519_CHACHA20POLY1305_BLAKE2B:
@@ -581,6 +583,7 @@ xtt_return_code_type
 xtt_get_clients_longterm_key_ed25519(xtt_ed25519_pub_key *longterm_key_out,
                                      const struct xtt_server_handshake_context *handshake_context)
 {
+    // TODO: Check state
     memcpy(longterm_key_out,
            handshake_context->clients_longterm_key.ed25519.data,
            sizeof(xtt_ed25519_pub_key));
@@ -592,6 +595,7 @@ xtt_return_code_type
 xtt_get_clients_identity(xtt_identity_type *client_id_out,
                           const struct xtt_server_handshake_context *handshake_context)
 {
+    // TODO: Check state
     memcpy(client_id_out->data,
             handshake_context->clients_identity.data,
             sizeof(xtt_identity_type));
@@ -603,6 +607,7 @@ xtt_return_code_type
 xtt_get_clients_pseudonym_lrsw(xtt_daa_pseudonym_lrsw *pseudonym_out,
                                const struct xtt_server_handshake_context *handshake_context)
 {
+    // TODO: Check state
     memcpy(pseudonym_out->data,
            handshake_context->clients_pseudonym.lrsw.data,
            sizeof(xtt_daa_pseudonym_lrsw));
@@ -614,6 +619,7 @@ xtt_return_code_type
 xtt_get_my_longterm_key_ed25519(xtt_ed25519_pub_key *longterm_key_out,
                                 const struct xtt_client_handshake_context *handshake_context)
 {
+    // TODO: Check state
     memcpy(longterm_key_out->data,
            handshake_context->longterm_key.ed25519.data,
            sizeof(xtt_ed25519_pub_key));
@@ -625,6 +631,7 @@ xtt_return_code_type
 xtt_get_my_longterm_private_key_ed25519(xtt_ed25519_priv_key *longterm_key_priv_out,
                                         const struct xtt_client_handshake_context *handshake_context)
 {
+    // TODO: Check state
     memcpy(longterm_key_priv_out->data,
            handshake_context->longterm_private_key.ed25519.data,
            sizeof(xtt_ed25519_priv_key));
@@ -636,6 +643,7 @@ xtt_return_code_type
 xtt_get_my_identity(xtt_identity_type *id_out,
                      const struct xtt_client_handshake_context *handshake_context)
 {
+    // TODO: Check state
     memcpy(id_out->data,
             handshake_context->identity.data,
             sizeof(xtt_identity_type));
@@ -647,6 +655,7 @@ xtt_return_code_type
 xtt_get_my_pseudonym_lrsw(xtt_daa_pseudonym_lrsw *pseudonym_out,
                           const struct xtt_client_handshake_context *handshake_context)
 {
+    // TODO: Check state
     memcpy(pseudonym_out->data,
            handshake_context->pseudonym.lrsw.data,
            sizeof(xtt_daa_pseudonym_lrsw));
