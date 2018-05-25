@@ -1,3 +1,54 @@
+xtt (0.8.1-1) unstable; urgency=medium
+
+  [ Zane Beckwith ]
+  * Clean up what data files are needed in the `examples/data` dirs
+  * Improve const-correctness, in message builders
+  * Add sha-256 to crypto-wrapper
+  * Make client/server-specific versions of build_error_msg.
+  * Only use ecdaa-tpm if USE_TPM=ON. Otherwise, use ecdaa.
+  * Add new return_codes: BAD_IO, BAD_GPK, and BAD_ID
+  * Implement xtt_strerr
+  * Return XTT_RETURN_WANT_WRITE from build_error_msg, for consistency
+
+  [ David R. Bild ]
+  * cmake: do not require ecdaa-tpm if use_tpm is off
+  * cmake: always link against ecdaa
+  * cmake: remove extraneous trailing whitespace
+
+  [ Zane Beckwith ]
+  * Bump minor version number
+
+  [ David R. Bild ]
+  * Fix imports for older Linux versions
+
+  [ Zane Beckwith ]
+  * ASN1: Set most-significant-BIT (not byte) to 0 in INTEGER
+  * Bump patch number
+  * Set compiler flags (e.g. -std= and -Werror) as add_compile_options.
+
+  [ David R. Bild ]
+  * readme: document USE_TPM build option
+  * cmake: add build option for utils programs
+
+  [ Zane Beckwith ]
+  * Send error messages correctly, in examples
+  * Clarify common name in util
+  * Add two return codes: UNKNOWN_CERTIFICATE and UNKNOWN_GID
+  * Bump minor version number
+  * Return correct error code in xtt_client example
+  * Add a 10 sec timeout on reads to xtt_client example
+  * Revert "Add a 10 sec timeout on reads to xtt_client example"
+
+  [ David R. Bild ]
+  * readme: fix apt-get to apt-key
+  * readme: add release badge to readme
+
+  [ Zane Beckwith ]
+  * Make dev-file-based TPM the default in xtt_client, with option for socket
+  * Bump patch number
+
+ -- Zane Beckwith <zane.beckwith@xaptum.com>  Fri, 25 May 2018 16:28:10 +0000
+
 xtt (0.6.0-1) unstable; urgency=medium
 
   [ Zane Beckwith ]
