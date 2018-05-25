@@ -26,6 +26,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/ioctl.h>
+#include <linux/types.h>
 #include <linux/random.h>
 #endif
 
@@ -99,6 +100,25 @@ int xtt_crypto_do_x25519_diffie_hellman(unsigned char* shared_secret,
     return rc;
 }
 
+int xtt_crypto_hash_sha256(unsigned char* out,
+                           uint16_t* out_length,
+                           const unsigned char* in,
+                           uint16_t in_len)
+{
+    crypto_hash_sha256_state h;
+
+    *out_length = sizeof(xtt_sha256);
+
+    if (0 != crypto_hash_sha256_init(&h))
+        return -1;
+    if (0 != crypto_hash_sha256_update(&h, in, in_len))
+        return -1;
+    if (0 != crypto_hash_sha256_final(&h, out))
+        return -1;
+
+    return 0;
+}
+
 int xtt_crypto_hash_sha512(unsigned char* out,
                            uint16_t* out_length,
                            const unsigned char* in,
@@ -138,6 +158,30 @@ int xtt_crypto_hash_blake2b(unsigned char* out,
                                               out,
                                               sizeof(xtt_blake2b)))
         return -1;
+
+    return 0;
+}
+
+int xtt_crypto_prf_sha256(unsigned char* out,
+                          uint16_t out_len,
+                          const unsigned char* in,
+                          uint16_t in_len,
+                          const unsigned char* key,
+                          uint16_t key_len)
+{
+    crypto_auth_hmacsha256_state h;
+    unsigned char buffer[crypto_hash_sha256_BYTES];
+
+    if (out_len > crypto_hash_sha256_BYTES)
+        return -1;
+    if (0 != crypto_auth_hmacsha256_init(&h, key, key_len))
+        return -1;
+    if (0 != crypto_auth_hmacsha256_update(&h, in, in_len))
+        return -1;
+    if (0 != crypto_auth_hmacsha256_final(&h, buffer))
+        return -1;
+
+    memcpy(out, buffer, out_len);
 
     return 0;
 }

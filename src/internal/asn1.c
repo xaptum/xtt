@@ -243,7 +243,7 @@ build_serial_number(unsigned char **current_loc)
     assert(len == 20);
     // Nb. We're only generating 19 bytes of randomness
     xtt_crypto_get_random(*current_loc, len-1);
-    (*current_loc)[0] = 0x00;   // clear MSB, to ensure it's not a signed integer
+    (*current_loc)[0] &= 0x7F;   // clear msb, to ensure it's positive 
 
     *current_loc += len;
 }

@@ -79,8 +79,8 @@ xtt_handshake_client_start(uint16_t *io_bytes_requested,
                       
 xtt_return_code_type
 xtt_handshake_server_handle_connect(uint16_t *io_bytes_requested,
-                                       unsigned char **io_ptr,
-                                       struct xtt_server_handshake_context* ctx);
+                                    unsigned char **io_ptr,
+                                    struct xtt_server_handshake_context* ctx);
 
 xtt_return_code_type
 xtt_handshake_server_build_serverattest(uint16_t *io_bytes_requested,
@@ -111,20 +111,20 @@ xtt_handshake_server_preparse_idclientattest(uint16_t *io_bytes_requested,
                                              xtt_identity_type* requested_client_id_out,
                                              xtt_group_id* claimed_group_id_out,
                                              struct xtt_server_cookie_context* cookie_ctx,
-                                             struct xtt_server_certificate_context *certificate_ctx,
+                                             const struct xtt_server_certificate_context *certificate_ctx,
                                              struct xtt_server_handshake_context* handshake_ctx);
 
 xtt_return_code_type
 xtt_handshake_server_verify_groupsignature(uint16_t *io_bytes_requested,
                                            unsigned char **io_ptr,
                                            struct xtt_group_public_key_context* group_pub_key_ctx,
-                                           struct xtt_server_certificate_context *certificate_ctx,
+                                           const struct xtt_server_certificate_context *certificate_ctx,
                                            struct xtt_server_handshake_context* handshake_ctx);
 
 xtt_return_code_type
 xtt_handshake_server_build_idserverfinished(uint16_t *io_bytes_requested,
                                             unsigned char **io_ptr,
-                                            xtt_identity_type *client_id,
+                                            const xtt_identity_type *client_id,
                                             struct xtt_server_handshake_context* handshake_ctx);
 
 xtt_return_code_type
@@ -132,24 +132,15 @@ xtt_handshake_client_parse_idserverfinished(uint16_t *io_bytes_requested,
                                             unsigned char **io_ptr,
                                             struct xtt_client_handshake_context* handshake_ctx);
 
-/*
- * Build an Error message.
- *
- * out:
- *      out_buffer          - Buffer into which message will be put.
- *                            Assumed non-NULL and allocated to sufficient size by the caller.
- *
- *      out_length          - Will be populated with length, in bytes, of output ClientInit message.
- *
- * in:
- *      version             - XTT_VERSION used in the current handshake.
- *      
- * return XTT_RETURN_SUCCESS on success
- */
 xtt_return_code_type
-build_error_msg(unsigned char *out_buffer,
-                uint16_t *out_length,
-                xtt_version version);
+xtt_server_build_error_msg(uint16_t *io_bytes_requested,
+                           unsigned char **io_ptr,
+                           struct xtt_server_handshake_context* handshake_ctx);
+
+xtt_return_code_type
+xtt_client_build_error_msg(uint16_t *io_bytes_requested,
+                           unsigned char **io_ptr,
+                           struct xtt_client_handshake_context* handshake_ctx);
 
 #ifdef __cplusplus
 }

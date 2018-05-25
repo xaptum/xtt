@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.0 FATAL_ERROR)
 list(APPEND CMAKE_MODULE_PATH CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/cmake)
 
 project(xtt
-        VERSION "0.6.0"
+        VERSION "0.8.1"
         )
 
 set(XTT_VERSION ${PROJECT_VERSION})
@@ -17,14 +17,16 @@ option(USE_TPM "use a TPM" ON)
 
 option(BUILD_SHARED_LIBS "Build as a shared library" ON)
 option(BUILD_STATIC_LIBS "Build as a static library" OFF)
+option(BUILD_UTILS "build utility programs" ON)
 
-find_package(ecdaa 0.9.0 COMPONENTS tpm REQUIRED QUIET)
+find_package(ecdaa 0.9.0 REQUIRED QUIET)
 find_package(sodium 1.0.11 REQUIRED QUIET)
 
 if(USE_TPM)
         add_definitions(-DUSE_TPM)
         set(USE_TPM_DEFINE "#define USE_TPM")
         find_package(xaptum-tpm 0.5.0 REQUIRED QUIET)
+        find_package(ecdaa 0.9.0 COMPONENTS tpm REQUIRED QUIET)
 endif()
 
 configure_file(${PROJECT_SOURCE_DIR}/include/xtt/context.h.in ${CMAKE_BINARY_DIR}/include/xtt/context.h)
@@ -37,7 +39,7 @@ if(NOT DEFINED BUILD_SHARED_LIBS OR NOT  "${BUILD_SHARED_LIBS}")
   set(BUILD_STATIC_LIBS ON CACHE BOOL "Build as a static library" FORCE)
 endif()
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Werror -Wall -Wextra -std=c99 -Wno-missing-field-initializers" CACHE STRING "" FORCE)
+add_compile_options(-std=c99 -Werror -Wall -Wextra -Wno-missing-field-initializers)
 set(CMAKE_C_FLAGS_RELWITHSANITIZE "${CMAKE_C_FLAGS_RELWITHSANITIZE} -O2 -g -fsanitize=address,undefined -fsanitize=unsigned-integer-overflow")
 
 set(XTT_SRCS
@@ -47,6 +49,7 @@ set(XTT_SRCS
         src/context.c
         src/crypto_types.c
         src/messages.c
+        src/return_codes.c
         src/asn1_utilities.c
         src/internal/byte_utils.c
         src/internal/key_derivation.c
@@ -67,7 +70,7 @@ if(BUILD_SHARED_LIBS)
     VERSION "${XTT_VERSION}"
     SOVERSION "${XTT_SOVERSION}"
   )
-  
+
   target_include_directories(xtt PUBLIC
     $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
     $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/include>
@@ -75,16 +78,17 @@ if(BUILD_SHARED_LIBS)
   )
 
   target_link_libraries(xtt
-          PRIVATE sodium 
-          PRIVATE ecdaa::ecdaa-tpm
+          PRIVATE sodium
           PRIVATE AMCL::AMCL
+          PRIVATE ecdaa::ecdaa
   )
 
   if(USE_TPM)
     target_link_libraries(xtt PUBLIC xaptum-tpm::xaptum-tpm)
+    target_link_libraries(xtt PRIVATE ecdaa::ecdaa-tpm)
   endif()
 
-  install(TARGETS xtt 
+  install(TARGETS xtt
           EXPORT xtt-targets
           RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
           LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
@@ -111,12 +115,14 @@ if(BUILD_STATIC_LIBS)
   )
 
   target_link_libraries(xtt_static
-          PRIVATE sodium 
-          PRIVATE ecdaa::ecdaa-tpm
+          PRIVATE sodium
           PRIVATE AMCL::AMCL
   )
   if(USE_TPM)
     target_link_libraries(xtt_static PUBLIC xaptum-tpm::xaptum-tpm)
+    target_link_libraries(xtt_static PRIVATE ecdaa::ecdaa-tpm)
+  else()
+    target_link_libraries(xtt_static PRIVATE ecdaa::ecdaa)
   endif()
 
   install(TARGETS xtt_static
@@ -189,4 +195,6 @@ endif()
 ################################################################################
 # Util
 ################################################################################
-add_subdirectory(util)
+if(BUILD_UTILS)
+  add_subdirectory(util)
+endif()
