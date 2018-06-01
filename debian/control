@@ -6,9 +6,25 @@ Build-Depends: debhelper (>= 10), cmake (>= 3.0.2)
 Standards-Version: 3.9.8
 Homepage: https://github.com/xaptum/xtt
 
+Package: xtt
+Architecture: any
+Multi-Arch: foreign
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: XTT toolkit - cryptographic utility
+ This package contains general-purpose command line utilities
+ for the XTT Trusted Transit protocol for tasks such as:
+  * running a simple XTT server
+  * running a simple XTT client
+  * generating ED25519 identity key pairs
+  * generating server key pairs and certificates
+  * generating root key pairs and certificates
+  * creating certificates from keys generated during an XTT handshake
+  * converting XTT keys to the formats used by TLS libraries
+
 Package: libxtt0
 Section: libs
 Architecture: any
+Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends}, ${shlibs:Depends}
 Description: XTT security protocol for IoT transit
@@ -18,7 +34,7 @@ Description: XTT security protocol for IoT transit
 Package: libxtt-dev
 Section: libdevel
 Architecture: any
-Pre-Depends: ${misc:Pre-Depends}
+Multi-Arch: same
 Depends: ${misc:Depends}, libxtt0 (= ${binary:Version}), libxaptum-tpm-dev (>= 0.5.0)
 Description: XTT security protocol for IoT transit
  .
