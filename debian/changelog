@@ -1,3 +1,10 @@
+xtt (0.8.1-2) unstable; urgency=medium
+
+  * Install utilities into separate deb
+  * Packages examples along with utils
+
+ -- David R. Bild <david.bild@xaptum.com>  Fri, 01 Jun 2018 16:28:37 +0000
+
 xtt (0.8.1-1) unstable; urgency=medium
 
   [ Zane Beckwith ]
