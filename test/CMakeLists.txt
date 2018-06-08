@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.0 FATAL_ERROR)
 
-macro(add_test_case case_file)
+function(add_test_case case_file test_args)
   get_filename_component(case_name ${case_file} NAME_WE)
 
   add_executable(${case_name} ${case_file})
@@ -23,19 +23,22 @@ macro(add_test_case case_file)
 
   set_target_properties(${case_name} PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY ${CURRENT_TEST_BINARY_DIR}
-  )
+ )
 
-  add_test(NAME ${case_name} 
-    COMMAND ${CURRENT_TEST_BINARY_DIR}/${case_name}
-  )
-endmacro()
+  if(test_args)
+      foreach(test_arg ${test_args})
+        add_test(NAME "${case_name}_${test_arg}"
+          COMMAND "${CURRENT_TEST_BINARY_DIR}/${case_name}" ${test_arg}
+        )
+      endforeach()
+  else()
+      add_test(NAME ${case_name}
+        COMMAND ${CURRENT_TEST_BINARY_DIR}/${case_name}
+      )
+  endif()
+endfunction()
 
-if(BUILD_TESTING)
-  set(CURRENT_TEST_BINARY_DIR ${CMAKE_BINARY_DIR}/testBin/)
+set(CURRENT_TEST_BINARY_DIR ${CMAKE_BINARY_DIR}/testBin/)
 
-  file(GLOB_RECURSE TEST_SRCS "*.c")
-  foreach(case_file ${TEST_SRCS})
-    add_test_case(${case_file})
-  endforeach()
-
-endif()
+add_test_case("wrapper_sanity-test.c" "")
+add_test_case("integration_test.c" "1;2;3;4")
