@@ -44,6 +44,9 @@ uint32_t gpk_handle_g = 0x1410000;
 uint32_t cred_handle_g = 0x1410001;
 uint32_t root_id_handle_g = 0x1410003;
 uint32_t root_pubkey_handle_g = 0x1410004;
+uint32_t basename_size_handle_g = 0x1410006;
+uint32_t basename_handle_g = 0x1410007;
+uint32_t server_id_handle_g = 0x1410008;
 const char *tpm_hostname_g = "localhost";
 const char *tpm_port_g = "2321";
 const char *tpm_devfile_g = "/dev/tpm0";
@@ -78,7 +81,8 @@ void parse_cmd_args(int argc, char *argv[], xtt_suite_spec *suite_spec, char *ip
 int connect_to_server(const char *ip, unsigned short port);
 
 int initialize_ids(xtt_identity_type *requested_client_id,
-                   xtt_identity_type *intended_server_id);
+                   xtt_identity_type *intended_server_id,
+                   int use_tpm);
 
 int initialize_certs(int use_tpm);
 
@@ -124,16 +128,7 @@ int main(int argc, char *argv[])
     int use_tpm;
     parse_cmd_args(argc, argv, &suite_spec, server_ip, &server_port, &use_tpm);
 
-    // 1) Set my requested id and the intended server id (from files).
-    xtt_identity_type requested_client_id;
-    xtt_identity_type intended_server_id;
-    ret = initialize_ids(&requested_client_id, &intended_server_id);
-    if(0 != ret) {
-        fprintf(stderr, "Error setting XTT ID's!\n");
-        goto finish;
-    }
-
-    // 2) Setup the needed XTT contexts (from files).
+    // 1) Setup the needed XTT contexts (from files).
     struct xtt_client_group_context group_ctx;
     init_daa_ret = initialize_daa(&group_ctx, use_tpm);
     ret = init_daa_ret;
@@ -144,6 +139,15 @@ int main(int argc, char *argv[])
     ret = initialize_certs(use_tpm);
     if (0 != ret) {
         fprintf(stderr, "Error initializing server/root certificate contexts\n");
+        goto finish;
+    }
+
+    // 2) Set my requested id and the intended server id.
+    xtt_identity_type requested_client_id;
+    xtt_identity_type intended_server_id;
+    ret = initialize_ids(&requested_client_id, &intended_server_id, use_tpm);
+    if(0 != ret) {
+        fprintf(stderr, "Error setting XTT ID's!\n");
         goto finish;
     }
 
@@ -257,8 +261,27 @@ int connect_to_server(const char *ip, unsigned short port)
 }
 
 int initialize_ids(xtt_identity_type *requested_client_id,
-                   xtt_identity_type *intended_server_id)
+                   xtt_identity_type *intended_server_id,
+                   int use_tpm)
 {
+#ifdef USE_TPM
+    TSS2_TCTI_CONTEXT *tcti_context;
+    if (use_tpm) {
+        tcti_context = (TSS2_TCTI_CONTEXT*)tcti_context_buffer_g;
+#ifdef USE_TPM_TCP
+        assert(tss2_tcti_getsize_socket() < sizeof(tcti_context_buffer_g));
+        int tcti_ret = tss2_tcti_init_socket(tpm_hostname_g, tpm_port_g, tcti_context);
+#else
+        assert(tss2_tcti_getsize_device() < sizeof(tcti_context_buffer_g));
+        int tcti_ret = tss2_tcti_init_device(tpm_devfile_g, tpm_devfile_length_g, tcti_context);
+#endif
+        if (TSS2_RC_SUCCESS != tcti_ret) {
+            fprintf(stderr, "Error: Unable to initialize TCTI context\n");
+            return -1;
+        }
+    }
+#endif
+
     int read_ret;
 
     // 1) Set requested client id from file
@@ -275,13 +298,23 @@ int initialize_ids(xtt_identity_type *requested_client_id,
     }
 
     // Set server's id from file
-    char intended_server_id_str[sizeof(xtt_identity_type)];
-    read_ret = read_file_into_buffer((unsigned char*)intended_server_id_str, sizeof(xtt_identity_type), server_id_file);
-    if (sizeof(xtt_identity_type) != read_ret) {
-        fprintf(stderr, "Error reading server's ID from file\n");
-        return -1;
+    if (use_tpm) {
+        int nvram_ret;
+        nvram_ret = read_nvram(intended_server_id->data,
+                               sizeof(xtt_identity_type),
+                               server_id_handle_g,
+                               tcti_context);
+        if (0 != nvram_ret) {
+            fprintf(stderr, "Error reading server id from TPM NVRAM");
+            return -1;
+        }
+    } else {
+        read_ret = read_file_into_buffer(intended_server_id->data, sizeof(xtt_identity_type), server_id_file);
+        if (sizeof(xtt_identity_type) != read_ret) {
+            fprintf(stderr, "Error reading server's ID from file\n");
+            return -1;
+        }
     }
-    memcpy(intended_server_id->data, intended_server_id_str, sizeof(xtt_identity_type));
 
     return 0;
 }
@@ -291,15 +324,6 @@ int initialize_daa(struct xtt_client_group_context *group_ctx, int use_tpm)
     (void)write_buffer_to_file;
     xtt_return_code_type rc;
     int read_ret;
-
-    // 1) Read DAA-related things in from file/TPM-NVRAM
-    unsigned char basename[1024];
-    read_ret = read_file_into_buffer(basename, sizeof(basename), basename_file);
-    if (read_ret < 0) {
-        fprintf(stderr, "Error reading basename from file\n");
-        return -1;
-    }
-    uint16_t basename_len = (uint16_t)read_ret;
 
 #ifdef USE_TPM
     TSS2_TCTI_CONTEXT *tcti_context;
@@ -319,12 +343,34 @@ int initialize_daa(struct xtt_client_group_context *group_ctx, int use_tpm)
     }
 #endif
 
+    // 1) Read DAA-related things in from file/TPM-NVRAM
     xtt_daa_group_pub_key_lrsw gpk;
     xtt_daa_credential_lrsw cred;
     xtt_daa_priv_key_lrsw daa_priv_key;
+    unsigned char basename[1024];
+    uint16_t basename_len = 0;
     if (use_tpm) {
 #ifdef USE_TPM
         int nvram_ret;
+        uint8_t basename_len_from_tpm = 0;
+        nvram_ret = read_nvram((unsigned char*)&basename_len_from_tpm,
+                               1,
+                               basename_size_handle_g,
+                               tcti_context);
+        if (0 != nvram_ret) {
+            fprintf(stderr, "Error reading basename size from TPM NVRAM\n");
+            return -1;
+        }
+        basename_len = basename_len_from_tpm;
+        nvram_ret = read_nvram(basename,
+                               basename_len,
+                               basename_handle_g,
+                               tcti_context);
+        if (0 != nvram_ret) {
+            fprintf(stderr, "Error reading basename from TPM NVRAM\n");
+            return -1;
+        }
+
         nvram_ret = read_nvram(gpk.data,
                                sizeof(xtt_daa_group_pub_key_lrsw),
                                gpk_handle_g,
@@ -347,6 +393,12 @@ int initialize_daa(struct xtt_client_group_context *group_ctx, int use_tpm)
         return -1;
 #endif
     } else {
+        read_ret = read_file_into_buffer(basename, sizeof(basename), basename_file);
+        if (read_ret < 0) {
+            fprintf(stderr, "Error reading basename from file\n");
+            return -1;
+        }
+        basename_len = (uint16_t)read_ret;
         read_ret = read_file_into_buffer(gpk.data, sizeof(xtt_daa_group_pub_key_lrsw), daa_gpk_file);
         if (sizeof(xtt_daa_group_pub_key_lrsw) != read_ret) {
             fprintf(stderr, "Error reading DAA GPK from file\n");
