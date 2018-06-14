@@ -23,6 +23,7 @@
 #include <sodium.h>
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <assert.h>
 #include <sys/socket.h>
@@ -82,7 +83,8 @@ typedef enum {
 } xtt_tcti_type;
 
 void parse_cmd_args(int argc, char *argv[], xtt_suite_spec *suite_spec, char *ip,
-        unsigned short *port, int *use_tpm, xtt_tcti_type *tcti_type, char *dev_file);
+        unsigned short *port, int *use_tpm, xtt_tcti_type *tcti_type, char *dev_file,
+        xtt_identity_type *requested_client_id);
 
 int connect_to_server(const char *ip, unsigned short port);
 
@@ -135,7 +137,8 @@ int main(int argc, char *argv[])
     int use_tpm;
     xtt_tcti_type tcti_type;
     char tcti_dev_file[MAX_TPM_DEV_FILE_LENGTH];
-    parse_cmd_args(argc, argv, &suite_spec, server_ip, &server_port, &use_tpm, &tcti_type, tcti_dev_file);
+    xtt_identity_type requested_client_id;
+    parse_cmd_args(argc, argv, &suite_spec, server_ip, &server_port, &use_tpm, &tcti_type, tcti_dev_file, &requested_client_id);
 
     // 1) Setup the needed XTT contexts (from files).
     struct xtt_client_group_context group_ctx;
@@ -151,12 +154,11 @@ int main(int argc, char *argv[])
         goto finish;
     }
 
-    // 2) Set my requested id and the intended server id.
-    xtt_identity_type requested_client_id;
+    // 2) Set the intended server id.
     xtt_identity_type intended_server_id;
     ret = initialize_server_id(&intended_server_id, use_tpm, tcti_type, tcti_dev_file);
     if(0 != ret) {
-        fprintf(stderr, "Error setting XTT ID's!\n");
+        fprintf(stderr, "Error setting XTT server ID!\n");
         goto finish;
     }
 
@@ -216,7 +218,8 @@ finish:
 }
 
 void parse_cmd_args(int argc, char *argv[], xtt_suite_spec *suite_spec,
-        char *ip, unsigned short *port, int *use_tpm, xtt_tcti_type *tcti_type, char *dev_file)
+        char *ip, unsigned short *port, int *use_tpm, xtt_tcti_type *tcti_type, char *dev_file,
+        xtt_identity_type *requested_client_id)
 {
 
     // Set defaults
@@ -226,10 +229,11 @@ void parse_cmd_args(int argc, char *argv[], xtt_suite_spec *suite_spec,
     *use_tpm = 0;
     *tcti_type = XTT_TCTI_DEVICE;
     strcpy(dev_file, "/dev/tpm0");
+    *requested_client_id = xtt_null_identity;
 
     // Parse args
     int c;
-    while ((c = getopt(argc, argv, "ms:a:p:t:d:h")) != -1) {
+    while ((c = getopt(argc, argv, "ms:a:p:t:d:i:h")) != -1) {
         switch (c) {
             case 'm':
                 *use_tpm = 1;
@@ -281,13 +285,31 @@ void parse_cmd_args(int argc, char *argv[], xtt_suite_spec *suite_spec,
                 strncpy(dev_file, optarg, MAX_TPM_DEV_FILE_LENGTH-1);
                 break;
             }
+            case 'i':
+            {
+                size_t serverid_opt_len = strlen(optarg);
+                if (serverid_opt_len != 2*sizeof(xtt_identity_type)) {
+                    fprintf(stderr, "Provided requested client ID is the wrong length (must be 32 characters)");
+                    exit(1);
+                }
+                char *end;
+                char digit_str[3];
+                digit_str[2] = 0;
+                for (unsigned i=0; i<sizeof(xtt_identity_type); ++i) {
+                    memcpy(digit_str, &optarg[2*i], 2);
+                    requested_client_id->data[i] = strtoul(digit_str, &end, 16);
+                }
+                break;
+            }
             case 'h':
-                fprintf(stderr, "usage: %s [-m] [-s <suite_spec>] [-a <server_ip>] [-p <server_port>] [-t <tcti_type>] [-d <tcti_device_file>]\n", argv[0]);
+                fprintf(stderr, "usage: %s [-m] [-i <requested_client_id>] [-s <suite_spec>] [-a <server_ip>] [-p <server_port>] [-t <tcti_type>] [-d <tcti_device_file>]\n", argv[0]);
                 fprintf(stderr, "\tsuite_spec can be one of the following:\n");
                 fprintf(stderr, "\t\tX25519_LRSW_ED25519_CHACHA20POLY1305_SHA512 (default)\n");
                 fprintf(stderr, "\t\tX25519_LRSW_ED25519_CHACHA20POLY1305_BLAKE2B\n");
                 fprintf(stderr, "\t\tX25519_LRSW_ED25519_AES256GCM_SHA512\n");
                 fprintf(stderr, "\t\tX25519_LRSW_ED25519_AES256GCM_BLAKE2B\n");
+                fprintf(stderr, "\trequested_client_id is the 32-byte ASCII-encoded client ID to request from the server\n");
+                fprintf(stderr, "\t\txtt_client_id_null (default)\n");
                 fprintf(stderr, "\tserver_ip is the dotted-decimal address of the XTT server to connect to\n");
                 fprintf(stderr, "\t\t127.0.0.1 (default)\n");
                 fprintf(stderr, "\tserver_port is the TCP port of the XTT server to connect to\n");
@@ -332,19 +354,6 @@ int initialize_server_id(xtt_identity_type *intended_server_id,
                          const char* dev_file)
 {
     int read_ret;
-
-    // 1) Set requested client id from file
-    char requested_client_id_str[sizeof(xtt_identity_type)];
-    read_ret = read_file_into_buffer((unsigned char*)requested_client_id_str, sizeof(xtt_identity_type), requested_client_id_file);
-    if (sizeof(xtt_identity_type) != read_ret && 1 != read_ret) {
-        fprintf(stderr, "Error reading requested client ID from file\n");
-        return -1;
-    }
-    if (0 == memcmp(requested_client_id_str, "0", read_ret)) {
-        *requested_client_id = xtt_null_identity;
-    } else {
-        memcpy(requested_client_id->data, requested_client_id_str, sizeof(xtt_identity_type));
-    }
 
     // Set server's id from file/NVRAM
     if (use_tpm) {
