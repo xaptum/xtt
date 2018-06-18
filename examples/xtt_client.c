@@ -23,19 +23,21 @@
 #include <sodium.h>
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <assert.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <unistd.h>
+#include <getopt.h>
+
+#define MAX_SERVER_IP_LENGTH 16
+#define MAX_TPM_DEV_FILE_LENGTH 128
 
 #ifdef USE_TPM
 #include <tss2/tss2_sys.h>
-#ifdef USE_TPM_TCP
 #include <tss2/tss2_tcti_socket.h>
-#else
 #include <tss2/tss2_tcti_device.h>
-#endif
 unsigned char tcti_context_buffer_g[256];
 #endif
 
@@ -44,9 +46,11 @@ uint32_t gpk_handle_g = 0x1410000;
 uint32_t cred_handle_g = 0x1410001;
 uint32_t root_id_handle_g = 0x1410003;
 uint32_t root_pubkey_handle_g = 0x1410004;
+uint32_t basename_size_handle_g = 0x1410006;
+uint32_t basename_handle_g = 0x1410007;
+uint32_t server_id_handle_g = 0x1410008;
 const char *tpm_hostname_g = "localhost";
 const char *tpm_port_g = "2321";
-const char *tpm_devfile_g = "/dev/tpm0";
 const size_t tpm_devfile_length_g = 9;
 const char *tpm_password = NULL;
 uint16_t tpm_password_len = 0;
@@ -73,16 +77,25 @@ typedef struct {
 certificate_db_record certificate_db[1];
 const size_t certificate_db_size = 1;
 
-void parse_cmd_args(int argc, char *argv[], xtt_suite_spec *suite_spec, char *ip, unsigned short *port, int *use_tpm);
+typedef enum {
+    XTT_TCTI_SOCKET,
+    XTT_TCTI_DEVICE,
+} xtt_tcti_type;
+
+void parse_cmd_args(int argc, char *argv[], xtt_suite_spec *suite_spec, char *ip,
+        unsigned short *port, int *use_tpm, xtt_tcti_type *tcti_type, char *dev_file,
+        xtt_identity_type *requested_client_id);
 
 int connect_to_server(const char *ip, unsigned short port);
 
-int initialize_ids(xtt_identity_type *requested_client_id,
-                   xtt_identity_type *intended_server_id);
+int initialize_server_id(xtt_identity_type *intended_server_id,
+                         int use_tpm,
+                         xtt_tcti_type tcti_type,
+                         const char* dev_file);
 
 int initialize_certs(int use_tpm);
 
-int initialize_daa(struct xtt_client_group_context *group_ctx, int use_tpm);
+int initialize_daa(struct xtt_client_group_context *group_ctx, int use_tpm, xtt_tcti_type tcti_type, const char* dev_file);
 
 #ifdef USE_TPM
 int
@@ -119,23 +132,17 @@ int main(int argc, char *argv[])
 
     // 0) Parse the command line args
     xtt_suite_spec suite_spec;
-    char server_ip[16];
+    char server_ip[MAX_SERVER_IP_LENGTH];
     unsigned short server_port;
     int use_tpm;
-    parse_cmd_args(argc, argv, &suite_spec, server_ip, &server_port, &use_tpm);
-
-    // 1) Set my requested id and the intended server id (from files).
+    xtt_tcti_type tcti_type;
+    char tcti_dev_file[MAX_TPM_DEV_FILE_LENGTH];
     xtt_identity_type requested_client_id;
-    xtt_identity_type intended_server_id;
-    ret = initialize_ids(&requested_client_id, &intended_server_id);
-    if(0 != ret) {
-        fprintf(stderr, "Error setting XTT ID's!\n");
-        goto finish;
-    }
+    parse_cmd_args(argc, argv, &suite_spec, server_ip, &server_port, &use_tpm, &tcti_type, tcti_dev_file, &requested_client_id);
 
-    // 2) Setup the needed XTT contexts (from files).
+    // 1) Setup the needed XTT contexts (from files).
     struct xtt_client_group_context group_ctx;
-    init_daa_ret = initialize_daa(&group_ctx, use_tpm);
+    init_daa_ret = initialize_daa(&group_ctx, use_tpm, tcti_type, tcti_dev_file);
     ret = init_daa_ret;
     if (0 != init_daa_ret) {
         fprintf(stderr, "Error initializing DAA context\n");
@@ -144,6 +151,14 @@ int main(int argc, char *argv[])
     ret = initialize_certs(use_tpm);
     if (0 != ret) {
         fprintf(stderr, "Error initializing server/root certificate contexts\n");
+        goto finish;
+    }
+
+    // 2) Set the intended server id.
+    xtt_identity_type intended_server_id;
+    ret = initialize_server_id(&intended_server_id, use_tpm, tcti_type, tcti_dev_file);
+    if(0 != ret) {
+        fprintf(stderr, "Error setting XTT server ID!\n");
         goto finish;
     }
 
@@ -202,34 +217,111 @@ finish:
     }
 }
 
-void parse_cmd_args(int argc, char *argv[], xtt_suite_spec *suite_spec, char *ip, unsigned short *port, int *use_tpm)
+void parse_cmd_args(int argc, char *argv[], xtt_suite_spec *suite_spec,
+        char *ip, unsigned short *port, int *use_tpm, xtt_tcti_type *tcti_type, char *dev_file,
+        xtt_identity_type *requested_client_id)
 {
-    if (5 != argc && 4 != argc) {
-        fprintf(stderr, "usage: %s <suite_spec> <server IP> <server port> [--use-tpm]\n", argv[0]);
-        fprintf(stderr, "\twhere:\n");
-        fprintf(stderr, "\t\tXTT_X25519_LRSW_ED25519_CHACHA20POLY1305_SHA512    = 1,\n");
-        fprintf(stderr, "\t\tXTT_X25519_LRSW_ED25519_CHACHA20POLY1305_BLAKE2B   = 2,\n");
-        fprintf(stderr, "\t\tXTT_X25519_LRSW_ED25519_AES256GCM_SHA512           = 3,\n");
-        fprintf(stderr, "\t\tXTT_X25519_LRSW_ED25519_AES256GCM_BLAKE2B          = 4,\n");
-        exit(1);
-    }
 
-    *suite_spec = atoi(argv[1]);
-    if (*suite_spec != 1 && *suite_spec != 2 && *suite_spec != 3 && *suite_spec != 4) {
-        fprintf(stderr, "Unknown suite_spec\n");
-        exit(1);
-    }
-
-    strcpy(ip, argv[2]);
-    *port = atoi(argv[3]);
-
+    // Set defaults
+    *suite_spec = XTT_X25519_LRSW_ED25519_CHACHA20POLY1305_SHA512;
+    strcpy(ip, "127.0.0.1");
+    *port = 4444;
     *use_tpm = 0;
-    if (5 == argc) {
-        if (0 == strcmp("--use-tpm", argv[4])) {
-            *use_tpm = 1;
-        } else {
-            fprintf(stderr, "Unknown tpm option: %s\n", argv[4]);
-            exit(1);
+    *tcti_type = XTT_TCTI_DEVICE;
+    strcpy(dev_file, "/dev/tpm0");
+    *requested_client_id = xtt_null_identity;
+
+    // Parse args
+    int c;
+    while ((c = getopt(argc, argv, "ms:a:p:t:d:i:h")) != -1) {
+        switch (c) {
+            case 'm':
+                *use_tpm = 1;
+                break;
+            case 's':
+                if (0 == strcmp(optarg, "X25519_LRSW_ED25519_CHACHA20POLY1305_SHA512")) {
+                    *suite_spec = XTT_X25519_LRSW_ED25519_CHACHA20POLY1305_SHA512;
+                } else if (0 == strcmp(optarg, "X25519_LRSW_ED25519_CHACHA20POLY1305_BLAKE2B")) {
+                    *suite_spec = XTT_X25519_LRSW_ED25519_CHACHA20POLY1305_BLAKE2B;
+                } else if (0 == strcmp(optarg, "X25519_LRSW_ED25519_AES256GCM_SHA512")) {
+                    *suite_spec = XTT_X25519_LRSW_ED25519_AES256GCM_SHA512;
+                } else if (0 == strcmp(optarg, "X25519_LRSW_ED25519_AES256GCM_BLAKE2B")) {
+                    *suite_spec = XTT_X25519_LRSW_ED25519_AES256GCM_BLAKE2B;
+                } else {
+                    fprintf(stderr, "Unknown suite_spec '%s'\n", optarg);
+                    exit(1);
+                }
+                break;
+            case 'a':
+            {
+                size_t ip_opt_len = strlen(optarg);
+                if (ip_opt_len > MAX_SERVER_IP_LENGTH) {
+                    fprintf(stderr, "Provided server IP address is too long (> %d)\n", MAX_SERVER_IP_LENGTH);
+                    exit(1);
+                }
+                strncpy(ip, optarg, MAX_SERVER_IP_LENGTH-1);
+                break;
+            }
+            case 'p':
+                *port = atoi(optarg);
+                break;
+            case 't':
+                if (0 == strcmp(optarg, "device")) {
+                    *tcti_type = XTT_TCTI_DEVICE;
+                } else if (0 == strcmp(optarg, "socket")) {
+                    *tcti_type = XTT_TCTI_SOCKET;
+                } else {
+                    fprintf(stderr, "Unknown tcti_type '%s'\n", optarg);
+                    exit(1);
+                }
+                break;
+            case 'd':
+            {
+                size_t dev_opt_len = strlen(optarg);
+                if (dev_opt_len > MAX_TPM_DEV_FILE_LENGTH) {
+                    fprintf(stderr, "Provided TPM TCTI device file is too long (> %d)\n", MAX_TPM_DEV_FILE_LENGTH);
+                    exit(1);
+                }
+                strncpy(dev_file, optarg, MAX_TPM_DEV_FILE_LENGTH-1);
+                break;
+            }
+            case 'i':
+            {
+                size_t serverid_opt_len = strlen(optarg);
+                if (serverid_opt_len != 2*sizeof(xtt_identity_type)) {
+                    fprintf(stderr, "Provided requested client ID is the wrong length (must be 32 characters)");
+                    exit(1);
+                }
+                char *end;
+                char digit_str[3];
+                digit_str[2] = 0;
+                for (unsigned i=0; i<sizeof(xtt_identity_type); ++i) {
+                    memcpy(digit_str, &optarg[2*i], 2);
+                    requested_client_id->data[i] = strtoul(digit_str, &end, 16);
+                }
+                break;
+            }
+            case 'h':
+                fprintf(stderr, "usage: %s [-m] [-i <requested_client_id>] [-s <suite_spec>] [-a <server_ip>] [-p <server_port>] [-t <tcti_type>] [-d <tcti_device_file>]\n", argv[0]);
+                fprintf(stderr, "\tsuite_spec can be one of the following:\n");
+                fprintf(stderr, "\t\tX25519_LRSW_ED25519_CHACHA20POLY1305_SHA512 (default)\n");
+                fprintf(stderr, "\t\tX25519_LRSW_ED25519_CHACHA20POLY1305_BLAKE2B\n");
+                fprintf(stderr, "\t\tX25519_LRSW_ED25519_AES256GCM_SHA512\n");
+                fprintf(stderr, "\t\tX25519_LRSW_ED25519_AES256GCM_BLAKE2B\n");
+                fprintf(stderr, "\trequested_client_id is the 32-byte ASCII-encoded client ID to request from the server\n");
+                fprintf(stderr, "\t\txtt_client_id_null (default)\n");
+                fprintf(stderr, "\tserver_ip is the dotted-decimal address of the XTT server to connect to\n");
+                fprintf(stderr, "\t\t127.0.0.1 (default)\n");
+                fprintf(stderr, "\tserver_port is the TCP port of the XTT server to connect to\n");
+                fprintf(stderr, "\t\t4444 (default)\n");
+                fprintf(stderr, "\t-m indicates to use a TPM, not local files\n");
+                fprintf(stderr, "\tThe following options are ignored unless -m is specified:\n");
+                fprintf(stderr, "\t\ttcti_type can be one of the following:\n");
+                fprintf(stderr, "\t\t\tdevice (default)\n");
+                fprintf(stderr, "\t\t\tsocket\n");
+                fprintf(stderr, "\t\ttcti_device_file is ignored unless tcti_type==device\n");
+                fprintf(stderr, "\t\t\t/dev/tpm0 (default)\n");
+                exit(1);
         }
     }
 }
@@ -256,75 +348,114 @@ int connect_to_server(const char *ip, unsigned short port)
     return sock_ret;
 }
 
-int initialize_ids(xtt_identity_type *requested_client_id,
-                   xtt_identity_type *intended_server_id)
+int initialize_server_id(xtt_identity_type *intended_server_id,
+                         int use_tpm,
+                         xtt_tcti_type tcti_type,
+                         const char* dev_file)
 {
     int read_ret;
 
-    // 1) Set requested client id from file
-    char requested_client_id_str[sizeof(xtt_identity_type)];
-    read_ret = read_file_into_buffer((unsigned char*)requested_client_id_str, sizeof(xtt_identity_type), requested_client_id_file);
-    if (sizeof(xtt_identity_type) != read_ret && 1 != read_ret) {
-        fprintf(stderr, "Error reading requested client ID from file\n");
-        return -1;
-    }
-    if (0 == memcmp(requested_client_id_str, "0", read_ret)) {
-        *requested_client_id = xtt_null_identity;
-    } else {
-        memcpy(requested_client_id->data, requested_client_id_str, sizeof(xtt_identity_type));
-    }
+    // Set server's id from file/NVRAM
+    if (use_tpm) {
+#ifdef USE_TPM
+        TSS2_TCTI_CONTEXT *tcti_context = (TSS2_TCTI_CONTEXT*)tcti_context_buffer_g;
+        switch (tcti_type) {
+            case XTT_TCTI_SOCKET:
+                assert(tss2_tcti_getsize_socket() < sizeof(tcti_context_buffer_g));
+                if (TSS2_RC_SUCCESS != tss2_tcti_init_socket(tpm_hostname_g, tpm_port_g, tcti_context)) {
+                    fprintf(stderr, "Error: Unable to initialize socket TCTI context\n");
+                    return -1;
+                }
+                break;
+            case XTT_TCTI_DEVICE:
+                assert(tss2_tcti_getsize_device() < sizeof(tcti_context_buffer_g));
+                if (TSS2_RC_SUCCESS != tss2_tcti_init_device(dev_file, strlen(dev_file), tcti_context)) {
+                    fprintf(stderr, "Error: Unable to initialize device TCTI context\n");
+                    return -1;
+                }
+                break;
+        }
 
-    // Set server's id from file
-    char intended_server_id_str[sizeof(xtt_identity_type)];
-    read_ret = read_file_into_buffer((unsigned char*)intended_server_id_str, sizeof(xtt_identity_type), server_id_file);
-    if (sizeof(xtt_identity_type) != read_ret) {
-        fprintf(stderr, "Error reading server's ID from file\n");
+        int nvram_ret;
+        nvram_ret = read_nvram(intended_server_id->data,
+                               sizeof(xtt_identity_type),
+                               server_id_handle_g,
+                               tcti_context);
+        if (0 != nvram_ret) {
+            fprintf(stderr, "Error reading server id from TPM NVRAM");
+            return -1;
+        }
+#else
+        fprintf(stderr, "Attempted to use a TPM, but not built with TPM enabled!\n");
         return -1;
+#endif
+    } else {
+        read_ret = read_file_into_buffer(intended_server_id->data, sizeof(xtt_identity_type), server_id_file);
+        if (sizeof(xtt_identity_type) != read_ret) {
+            fprintf(stderr, "Error reading server's ID from file\n");
+            return -1;
+        }
     }
-    memcpy(intended_server_id->data, intended_server_id_str, sizeof(xtt_identity_type));
 
     return 0;
 }
 
-int initialize_daa(struct xtt_client_group_context *group_ctx, int use_tpm)
+int initialize_daa(struct xtt_client_group_context *group_ctx, int use_tpm, xtt_tcti_type tcti_type, const char* dev_file)
 {
     (void)write_buffer_to_file;
     xtt_return_code_type rc;
     int read_ret;
 
-    // 1) Read DAA-related things in from file/TPM-NVRAM
-    unsigned char basename[1024];
-    read_ret = read_file_into_buffer(basename, sizeof(basename), basename_file);
-    if (read_ret < 0) {
-        fprintf(stderr, "Error reading basename from file\n");
-        return -1;
-    }
-    uint16_t basename_len = (uint16_t)read_ret;
-
 #ifdef USE_TPM
     TSS2_TCTI_CONTEXT *tcti_context;
     if (use_tpm) {
         tcti_context = (TSS2_TCTI_CONTEXT*)tcti_context_buffer_g;
-#ifdef USE_TPM_TCP
-        assert(tss2_tcti_getsize_socket() < sizeof(tcti_context_buffer_g));
-        int tcti_ret = tss2_tcti_init_socket(tpm_hostname_g, tpm_port_g, tcti_context);
-#else
-        assert(tss2_tcti_getsize_device() < sizeof(tcti_context_buffer_g));
-        int tcti_ret = tss2_tcti_init_device(tpm_devfile_g, tpm_devfile_length_g, tcti_context);
-#endif
-        if (TSS2_RC_SUCCESS != tcti_ret) {
-            fprintf(stderr, "Error: Unable to initialize TCTI context\n");
-            return -1;
+        switch (tcti_type) {
+            case XTT_TCTI_SOCKET:
+                assert(tss2_tcti_getsize_socket() < sizeof(tcti_context_buffer_g));
+                if (TSS2_RC_SUCCESS != tss2_tcti_init_socket(tpm_hostname_g, tpm_port_g, tcti_context)) {
+                    fprintf(stderr, "Error: Unable to initialize socket TCTI context\n");
+                    return -1;
+                }
+                break;
+            case XTT_TCTI_DEVICE:
+                assert(tss2_tcti_getsize_device() < sizeof(tcti_context_buffer_g));
+                if (TSS2_RC_SUCCESS != tss2_tcti_init_device(dev_file, strlen(dev_file), tcti_context)) {
+                    fprintf(stderr, "Error: Unable to initialize device TCTI context\n");
+                    return -1;
+                }
         }
     }
 #endif
 
+    // 1) Read DAA-related things in from file/TPM-NVRAM
     xtt_daa_group_pub_key_lrsw gpk;
     xtt_daa_credential_lrsw cred;
     xtt_daa_priv_key_lrsw daa_priv_key;
+    unsigned char basename[1024];
+    uint16_t basename_len = 0;
     if (use_tpm) {
 #ifdef USE_TPM
         int nvram_ret;
+        uint8_t basename_len_from_tpm = 0;
+        nvram_ret = read_nvram((unsigned char*)&basename_len_from_tpm,
+                               1,
+                               basename_size_handle_g,
+                               tcti_context);
+        if (0 != nvram_ret) {
+            fprintf(stderr, "Error reading basename size from TPM NVRAM\n");
+            return -1;
+        }
+        basename_len = basename_len_from_tpm;
+        nvram_ret = read_nvram(basename,
+                               basename_len,
+                               basename_handle_g,
+                               tcti_context);
+        if (0 != nvram_ret) {
+            fprintf(stderr, "Error reading basename from TPM NVRAM\n");
+            return -1;
+        }
+
         nvram_ret = read_nvram(gpk.data,
                                sizeof(xtt_daa_group_pub_key_lrsw),
                                gpk_handle_g,
@@ -347,6 +478,12 @@ int initialize_daa(struct xtt_client_group_context *group_ctx, int use_tpm)
         return -1;
 #endif
     } else {
+        read_ret = read_file_into_buffer(basename, sizeof(basename), basename_file);
+        if (read_ret < 0) {
+            fprintf(stderr, "Error reading basename from file\n");
+            return -1;
+        }
+        basename_len = (uint16_t)read_ret;
         read_ret = read_file_into_buffer(gpk.data, sizeof(xtt_daa_group_pub_key_lrsw), daa_gpk_file);
         if (sizeof(xtt_daa_group_pub_key_lrsw) != read_ret) {
             fprintf(stderr, "Error reading DAA GPK from file\n");
