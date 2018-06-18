@@ -129,13 +129,11 @@ into the working directory:
 cp ${xtt_root_directory}/examples/data/client/* .
 ```
 
-The client executable takes the `xtt_suite_spec` to use
-(run the executable with no arguments to see what the options are)
-and the IP and port of the server as parameters:
+The client executable can take the IP and port of the server as parameters
+(run `xtt_client -h` for a full help on all available parameters):
 ```bash
-xtt_client 1 127.0.0.1 4444
+xtt_client -a 127.0.0.1 -p 4444
 ```
-(a suite_spec value of `1` indicates `XTT_X25519_LRSW_ED25519_CHACHA20POLY1305_SHA512`).
 
 The client will then initiate an identity-provisioning handshake with the server
 listening on the given IP and port,
