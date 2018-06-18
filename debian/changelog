@@ -1,9 +1,16 @@
-xtt (0.8.1-2) unstable; urgency=medium
+xtt (0.8.2-1) unstable; urgency=medium
 
-  * install utilities into separate deb
-  * package examples along with utils
+  [ David R. Bild ]
+  * cmake: explicitly set language as C
 
- -- David R. Bild <david.bild@xaptum.com>  Fri, 01 Jun 2018 17:04:15 +0000
+  [ Zane Beckwith ]
+  * Client: Read basename and server-id from TPM NVRAM
+  * Client: Use getopts for setting socket-vs-device
+  * Client: Set requested client id via CLI param
+  * Update the README
+  * Bump patch number
+
+ -- Zane Beckwith <zane.beckwith@xaptum.com>  Mon, 18 Jun 2018 22:24:58 +0000
 
 xtt (0.8.1-1) unstable; urgency=medium
 
