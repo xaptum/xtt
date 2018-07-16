@@ -34,6 +34,7 @@
 static
 void rand_wrapper(void *buf, size_t buflen)
 {
+    // ECDAA always requests <256B, so size_t->uint16_t conversion _should_ be OK.
     if (buflen > UINT16_MAX) {
         assert(buflen <= UINT16_MAX);
         return;
