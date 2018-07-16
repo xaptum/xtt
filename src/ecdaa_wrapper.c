@@ -28,6 +28,20 @@
 #include <assert.h>
 #include <string.h>
 
+/*
+ * Wrap our rand function, to make the signatures agree.
+ */
+static
+void rand_wrapper(void *buf, size_t buflen)
+{
+    if (buflen > UINT16_MAX) {
+        assert(buflen <= UINT16_MAX);
+        return;
+    }
+
+    xtt_crypto_get_random(buf, buflen);
+}
+
 #ifdef USE_TPM
 int
 xtt_daa_sign_lrswTPM(unsigned char *signature_out,
@@ -70,7 +84,7 @@ xtt_daa_sign_lrswTPM(unsigned char *signature_out,
                                            basename,
                                            basename_len,
                                            &ecdaa_cred,
-                                           (ecdaa_rand_func)xtt_crypto_get_random,
+                                           rand_wrapper,
                                            &ecdaa_tpm_context);
     if (0 != ret) {
         return -1;
@@ -120,7 +134,7 @@ xtt_daa_sign_lrsw(unsigned char *signature_out,
                                        basename_len,
                                        &ecdaa_secret_key,
                                        &ecdaa_cred,
-                                       (ecdaa_rand_func)xtt_crypto_get_random);
+                                       rand_wrapper);
     if (0 != ret) {
         return -1;
     }
