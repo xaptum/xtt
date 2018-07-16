@@ -443,12 +443,7 @@ assign_client_id(xtt_identity_type *assigned_client_id_out,
     // If the client sent xtt_null_client_id assign them a randomly-generated id.
     // Otherwise, just echo back what they requested.
     if (0 == xtt_crypto_memcmp(requested_client_id->data, xtt_null_identity.data, sizeof(xtt_identity_type))) {
-        if (0 != xtt_crypto_get_random(assigned_client_id_out->data, sizeof(xtt_identity_type))) {
-            fprintf(stderr, "Client requested an id assignment, but there was an error generating it!\n");
-            return -1;
-            // close(client_sock);
-            // goto finished_handshake;
-        }
+        xtt_crypto_get_random(assigned_client_id_out->data, sizeof(xtt_identity_type));
     } else {
         memcpy(assigned_client_id_out->data, requested_client_id->data, sizeof(xtt_identity_type));
     }

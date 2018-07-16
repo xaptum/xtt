@@ -1,13 +1,13 @@
 /******************************************************************************
  *
  * Copyright 2018 Xaptum, Inc.
- * 
+ *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
  *    You may obtain a copy of the License at
- * 
+ *
  *        http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  *    Unless required by applicable law or agreed to in writing, software
  *    distributed under the License is distributed on an "AS IS" BASIS,
  *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -73,11 +73,12 @@ void xtt_crypto_secure_clear(unsigned char* memory, uint16_t memory_length)
     sodium_memzero(memory, memory_length);
 }
 
-int xtt_crypto_get_random(unsigned char* buffer, uint16_t buffer_length)
+void xtt_crypto_get_random(unsigned char* buffer, uint16_t buffer_length)
 {
+    // Libsodium makes sure any requests (of any length) always succeed
+    // (i.e. they handle EAGAIN or EINTR for getrandom).
+    // If there is a fatal problem, they die loudly.
     randombytes_buf(buffer, buffer_length);
-    
-    return 0;
 }
 
 int xtt_crypto_create_x25519_key_pair(xtt_x25519_pub_key *pub, xtt_x25519_priv_key *priv)
