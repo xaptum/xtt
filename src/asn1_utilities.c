@@ -1,13 +1,13 @@
 /******************************************************************************
  *
  * Copyright 2017 Xaptum, Inc.
- * 
+ *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
  *    You may obtain a copy of the License at
- * 
+ *
  *        http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  *    Unless required by applicable law or agreed to in writing, software
  *    distributed under the License is distributed on an "AS IS" BASIS,
  *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -36,8 +36,8 @@ size_t xtt_asn1_private_key_length(void)
     return XTT_ASN1_PRIVATE_KEY_LENGTH;
 }
 
-int xtt_x509_from_ed25519_keypair(const xtt_ed25519_pub_key *pub_key_in,
-                                  const xtt_ed25519_priv_key *priv_key_in,
+int xtt_x509_from_ecdsap256_keypair(const xtt_ecdsap256_pub_key *pub_key_in,
+                                  const xtt_ecdsap256_priv_key *priv_key_in,
                                   const xtt_identity_type *common_name,
                                   unsigned char *certificate_out,
                                   size_t certificate_out_length)
@@ -59,9 +59,10 @@ int xtt_x509_from_ed25519_keypair(const xtt_ed25519_pub_key *pub_key_in,
 
     build_x509_skeleton(certificate_out, &pub_key_location, &signature_location, &signature_input_location, &signature_input_length, common_name_as_string.data);
 
-    memcpy(pub_key_location, pub_key_in->data, sizeof(xtt_ed25519_pub_key));
+    memcpy(pub_key_location, pub_key_in->data, sizeof(xtt_ecdsap256_pub_key));
 
-    int sign_ret = xtt_crypto_sign_ed25519(signature_location, signature_input_location, signature_input_length, priv_key_in);
+    int sign_ret = xtt_crypto_sign_ecdsap256(signature_location, signature_input_location, signature_input_length, priv_key_in);
+
     if (0 != sign_ret) {
         return -1;
     } else {
@@ -69,21 +70,24 @@ int xtt_x509_from_ed25519_keypair(const xtt_ed25519_pub_key *pub_key_in,
     }
 }
 
-int xtt_asn1_from_ed25519_private_key(const xtt_ed25519_priv_key *priv_key_in,
-                                      unsigned char *asn1_out,
-                                      size_t asn1_out_length)
+int xtt_asn1_from_ecdsap256_private_key(const xtt_ecdsap256_priv_key *priv_key_in,
+                                        const xtt_ecdsap256_pub_key *pub_key_in,
+                                        unsigned char *asn1_out,
+                                        size_t asn1_out_length)
 {
+    assert(XTT_ASN1_PRIVATE_KEY_LENGTH == get_asn1privatekey_length());
+
     unsigned char *privkey_location;
+    unsigned char *pubkey_location;
 
     if (asn1_out_length < XTT_ASN1_PRIVATE_KEY_LENGTH)
       return -1;
 
-    build_asn1_key_skeleton(asn1_out, &privkey_location);
+    build_asn1_key_skeleton(asn1_out, &privkey_location, &pubkey_location);
 
-    int ret = xtt_crypto_extract_ed25519_private_key(privkey_location, priv_key_in);
-    if (0 != ret) {
-        return -1;
-    } else {
-        return 0;
-    }
+    memcpy(privkey_location, priv_key_in, sizeof(xtt_ecdsap256_priv_key));
+
+    memcpy(pubkey_location, pub_key_in, sizeof(xtt_ecdsap256_pub_key));
+
+    return 0;
 }

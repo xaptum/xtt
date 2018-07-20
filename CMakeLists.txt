@@ -4,7 +4,7 @@ list(APPEND CMAKE_MODULE_PATH CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/cmake)
 
 project(xtt
         LANGUAGES C
-        VERSION "0.8.2"
+        VERSION "0.9.0"
         )
 
 set(XTT_VERSION ${PROJECT_VERSION})
@@ -45,6 +45,7 @@ set(CMAKE_C_FLAGS_RELWITHSANITIZE "${CMAKE_C_FLAGS_RELWITHSANITIZE} -O2 -g -fsan
 
 set(XTT_SRCS
         src/libsodium_wrapper.c
+	src/amcl_wrapper.c
         src/ecdaa_wrapper.c
         src/certificates.c
         src/context.c
@@ -190,8 +191,9 @@ endif()
 ################################################################################
 # Tests
 ################################################################################
-# Current disabled, while moving rapidly. TODO!!!
-# add_subdirectory(test)
+if(BUILD_TESTING)
+ add_subdirectory(test)
+endif()
 
 ################################################################################
 # Util

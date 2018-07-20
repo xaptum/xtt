@@ -1,13 +1,13 @@
 /******************************************************************************
  *
  * Copyright 2017 Xaptum, Inc.
- * 
+ *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
  *    You may obtain a copy of the License at
- * 
+ *
  *        http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  *    Unless required by applicable law or agreed to in writing, software
  *    distributed under the License is distributed on an "AS IS" BASIS,
  *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -34,56 +34,31 @@ const unsigned char OBJECTIDENTIFIER_TAG = 0x06;
 const unsigned char UTCTIME_TAG = 0x17;
 const unsigned char BITSTRING_TAG = 0x03;
 const unsigned char OCTETSTRING_TAG = 0x04;
+const unsigned char CONSTRUCTED_TAG0 = 0xA0;
+const unsigned char CONSTRUCTED_TAG1 = 0xA1;
 
 const unsigned char COMMONNAME_OID[] = {0x55, 0x04, 0x03};
-const unsigned char ED25519_OID[] = {0x2B, 0x65, 0x70};
+const unsigned char ECDSA_W_SHA256_OID[] = {0x2A, 0x86, 0x48, 0xCE, 0x3D, 0x04, 0x03, 0x02};     //1.2.840.10045.4.3.2
+const unsigned char PRIME256V1_OID[] = {0x2A, 0x86, 0x48, 0xCE, 0x3D, 0x03, 0x01, 0x07};     //1.2.840.10045.3.1.7
 
-const unsigned char ONEASYMMETRICKEY_VERSION = 0x00;
+const unsigned char ECPUBLICKEY_OID[] = {0x2A, 0x86, 0x48, 0xCE, 0x3D, 0x02, 0x01};
+
+const unsigned char ONEASYMMETRICKEY_VERSION = 0x01;
 
 const unsigned char UTF8STRING_ATTRTYPE = 0x0C;
 
 const int VALIDITY_YEARS = 1;
 
-enum { UTC_LENGTH = 13 };                                                               // YYMMDDhhssmm'Z'
-enum { NAME_LENGTH = 32 };
-enum { RAW_PRIVATE_KEY_LENGTH = 32 };
-enum { PUBLIC_KEY_LENGTH = 32 };
-enum { SIGNATURE_LENGTH = 64 };
-
-enum { serial_num_length = 1 + 1 + 20 };                                                // tag(1) + length(1) + content(20)
-
-enum { ed25519_oid_length = 1 + 1 + 3 };                                                // tag(1) + length(1) + content(3)
-enum { ed25519_algid_length = 1 + 1 + ed25519_oid_length };                             // tag(1) + length(1) + ed25519_oid_length
-
-enum { name_string_length = 1 + 1 + NAME_LENGTH };                                               // tag(1) + length(1) + content(32)
-enum { name_oid_length = 1 + 1 + 3 };                                                   // tag(1) + length(1) + content(3)
-enum { name_attr_tandv_length = 1 + 1 + name_oid_length + name_string_length };         // tag(1) + length(1) + name_oid_length + name_string_length
-enum { rdn_length = 1 + 1 + name_attr_tandv_length };                                   // tag(1) + length(1) + name_attr_tandv_length
-enum { name_length = 1 + 1 + rdn_length };                                              // tag(1) + length(1) + rdn_length
-
-enum { utctime_length = 1 + 1 + UTC_LENGTH };                                           // tag(1) + length(1) + content(13) 'YYMMDDhhssmmZ'
-enum { validity_length = 1 + 1 + 2*utctime_length };                                    // tag(1) + length(1) + 2*utctime_length (one for notBefore, other for notAfter)
-
-enum { pubkey_bitstring_length = 1 + 1 + 1 + PUBLIC_KEY_LENGTH };                       // tag(1) + length(1) + padding(1) + content(32)
-enum { subjectpublickeyinfo_length = 1 + 1 + ed25519_algid_length + pubkey_bitstring_length };    // tag(1) + length(1) + ed25519_algid_length + pubkey_bitstring_length
-
-enum { tbs_certificate_length = 1 + 2 + serial_num_length + ed25519_algid_length + name_length + validity_length + name_length + subjectpublickeyinfo_length };
-
-enum { signature_algorithm_length = ed25519_algid_length }; 
-
-enum { signature_value_length = 1 + 1 + 1 + SIGNATURE_LENGTH };                         // tag(1) + length(1) + padding(1) + content(64)
-
-enum { certificate_length = 1 + 3 + tbs_certificate_length + signature_algorithm_length + signature_value_length };
-
-enum { asn1_privatekey_version_length = 1 + 1 + 1 };                                    // tag(1) + length(1) + content(1)
-enum { asn1_curveprivatekey_length = 1 + 1 + RAW_PRIVATE_KEY_LENGTH };
-enum { asn1_privatekey_total_length = 1 + 1 + asn1_curveprivatekey_length };            // tag(1) + length(1) + asn1_curveprivatekey_length
-enum { asn1_privatekey_length = 1 + 1 + asn1_privatekey_version_length + ed25519_algid_length + asn1_privatekey_total_length };
-
 size_t
 get_certificate_length()
 {
     return certificate_length;
+}
+
+size_t
+get_asn1privatekey_length()
+{
+    return asn1_privatekey_length;
 }
 
 void
@@ -97,7 +72,7 @@ build_x509_skeleton(unsigned char *certificate_out,
     unsigned char *current_loc = certificate_out;
 
     set_as_sequence(&current_loc);
-    set_length(&current_loc, certificate_length - 1 - 3);
+    set_length(&current_loc, get_certificate_length() - 3 - 1);
 
     *signature_input_location = current_loc;
     *signature_input_length = tbs_certificate_length;
@@ -130,34 +105,45 @@ build_privkey_version(unsigned char **current_loc)
 }
 
 void
-build_curveprivatekey(unsigned char **current_loc,
-                      unsigned char **privatekey_location)
+build_privatekey(unsigned char **current_loc,
+                 unsigned char **privatekey_location)
 {
     **current_loc = OCTETSTRING_TAG;
     *current_loc += 1;
-    set_length(current_loc, asn1_privatekey_total_length - 1 - 1);
-
-    **current_loc = OCTETSTRING_TAG;
-    *current_loc += 1;
-    set_length(current_loc, asn1_curveprivatekey_length - 1 - 1);
+    set_length(current_loc, asn1_privatekeyfield_length - 1 - 1);
 
     *privatekey_location = *current_loc;
+    *current_loc += RAW_PRIVATE_KEY_LENGTH;
 }
 
 void
 build_asn1_key_skeleton(unsigned char *asn1_out,
-                        unsigned char **privkey_location)
+                        unsigned char **privkey_location,
+                        unsigned char **pubkey_location)
 {
     unsigned char *current_loc = asn1_out;
 
     set_as_sequence(&current_loc);
-    set_length(&current_loc, asn1_privatekey_length - 1 - 1);
+    set_length(&current_loc, asn1_privatekey_length - 2);
 
     build_privkey_version(&current_loc);
 
-    build_signature_algorithm(&current_loc);
+    build_privatekey(&current_loc, privkey_location);
 
-    build_curveprivatekey(&current_loc, privkey_location);
+    build_privatekey_algorithm(&current_loc);
+
+    build_privatekey_publickeycopy(&current_loc, pubkey_location);
+}
+
+void
+build_privatekey_publickeycopy(unsigned char **current_loc,
+                               unsigned char **pubkey_location)
+{
+    **current_loc = CONSTRUCTED_TAG1;
+    *current_loc += 1;
+    set_length(current_loc, asn1_privatekey_pubkeycopy_length - 1 - 1);
+
+    build_publickey(current_loc, pubkey_location);
 }
 
 void
@@ -193,6 +179,7 @@ build_tbs_certificate(unsigned char **current_loc,
     build_name(current_loc, common_name);    // subject name
 
     build_subjectpublickeyinfo(current_loc, pubkey_location);
+
 }
 
 void
@@ -221,14 +208,50 @@ void
 build_signature_algorithm(unsigned char **current_loc)
 {
     set_as_sequence(current_loc);
-    set_length(current_loc, ed25519_algid_length - 1 - 1);
+    set_length(current_loc, ecdsap256_algid_length - 1 - 1);
 
     **current_loc = OBJECTIDENTIFIER_TAG;
     *current_loc += 1;
-    set_length(current_loc, ed25519_oid_length - 1 - 1);
+    set_length(current_loc, ecdsa_w_sha256_oid_length - 1 - 1);
 
-    memcpy(*current_loc, ED25519_OID, 3);
-    *current_loc += 3;
+    memcpy(*current_loc, ECDSA_W_SHA256_OID, 8);
+    *current_loc += 8;
+}
+
+void
+build_privatekey_algorithm(unsigned char **current_loc)
+{
+    **current_loc = CONSTRUCTED_TAG0;
+    *current_loc += 1;
+    set_length(current_loc, p256_keyid_length - 1 - 1);
+
+    **current_loc = OBJECTIDENTIFIER_TAG;
+    *current_loc += 1;
+    set_length(current_loc, prime256v1_oid_length - 1 - 1);
+
+    memcpy(*current_loc, PRIME256V1_OID, 8);
+    *current_loc += 8;
+}
+
+void
+build_curve(unsigned char **current_loc)
+{
+    set_as_sequence(current_loc);
+    set_length(current_loc, curve_def_length - 1 - 1);
+
+    **current_loc = OBJECTIDENTIFIER_TAG;
+    *current_loc += 1;
+    set_length(current_loc, ecpublickey_oid_length - 1 - 1);
+
+    memcpy(*current_loc, ECPUBLICKEY_OID, 7);
+    *current_loc += 7;
+
+    **current_loc = OBJECTIDENTIFIER_TAG;
+    *current_loc += 1;
+    set_length(current_loc, prime256v1_oid_length - 1 - 1);
+
+    memcpy(*current_loc, PRIME256V1_OID, 8);
+    *current_loc += 8;
 }
 
 void
@@ -243,7 +266,7 @@ build_serial_number(unsigned char **current_loc)
     assert(len == 20);
     // Nb. We're only generating 19 bytes of randomness
     xtt_crypto_get_random(*current_loc, len-1);
-    (*current_loc)[0] &= 0x7F;   // clear msb, to ensure it's positive 
+    (*current_loc)[0] &= 0x7F;   // clear msb, to ensure it's positive
 
     *current_loc += len;
 }
@@ -300,13 +323,8 @@ build_validity(unsigned char **current_loc)
 }
 
 void
-build_subjectpublickeyinfo(unsigned char **current_loc, unsigned char **pubkey_location)
+build_publickey(unsigned char **current_loc, unsigned char **pubkey_location)
 {
-    set_as_sequence(current_loc);
-    set_length(current_loc, subjectpublickeyinfo_length - 1 - 1);
-
-    build_signature_algorithm(current_loc);
-
     **current_loc = BITSTRING_TAG;
     *current_loc += 1;
     set_length(current_loc, pubkey_bitstring_length - 1 - 1);
@@ -318,7 +336,18 @@ build_subjectpublickeyinfo(unsigned char **current_loc, unsigned char **pubkey_l
     *pubkey_location = *current_loc;
 
     // Increment, to make space for pub key (caller will copy it in)
-    *current_loc += sizeof(xtt_ed25519_pub_key);
+    *current_loc += sizeof(xtt_ecdsap256_pub_key);
+}
+
+void
+build_subjectpublickeyinfo(unsigned char **current_loc, unsigned char **pubkey_location)
+{
+    set_as_sequence(current_loc);
+    set_length(current_loc, subjectpublickeyinfo_length - 1 - 1);
+
+    build_curve(current_loc);
+
+    build_publickey(current_loc, pubkey_location);
 }
 
 void

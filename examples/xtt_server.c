@@ -1,13 +1,13 @@
 /******************************************************************************
  *
  * Copyright 2018 Xaptum, Inc.
- * 
+ *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
  *    You may obtain a copy of the License at
- * 
+ *
  *        http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  *    Unless required by applicable law or agreed to in writing, software
  *    distributed under the License is distributed on an "AS IS" BASIS,
  *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -29,7 +29,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <netdb.h>
-#include <sys/types.h> 
+#include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
@@ -140,7 +140,7 @@ int initialize(struct xtt_server_certificate_context *cert_ctx,
         fprintf(stderr, "Error reading DAA GPK from file\n");
         return 1;
     }
-    
+
     // 2) Read DAA basename from file
     unsigned char basename[1024];
     read_ret = read_file_into_buffer(basename, sizeof(basename), basename_file);
@@ -165,23 +165,23 @@ int initialize(struct xtt_server_certificate_context *cert_ctx,
         return -1;
 
     // 5) Read in my certificate from file
-    unsigned char serialized_certificate[XTT_SERVER_CERTIFICATE_ED25519_LENGTH];
-    read_ret = read_file_into_buffer(serialized_certificate, XTT_SERVER_CERTIFICATE_ED25519_LENGTH, server_certificate_file);
-    if (XTT_SERVER_CERTIFICATE_ED25519_LENGTH != read_ret) {
+    unsigned char serialized_certificate[XTT_SERVER_CERTIFICATE_ECDSAP256_LENGTH];
+    read_ret = read_file_into_buffer(serialized_certificate, XTT_SERVER_CERTIFICATE_ECDSAP256_LENGTH, server_certificate_file);
+    if (XTT_SERVER_CERTIFICATE_ECDSAP256_LENGTH != read_ret) {
         fprintf(stderr, "Error reading server certificate from file\n");
         return -1;
     }
 
     // 6) Read in my private key from file
-    xtt_ed25519_priv_key server_private_key;
-    read_ret = read_file_into_buffer(server_private_key.data, sizeof(xtt_ed25519_priv_key), server_privatekey_file);
-    if (sizeof(xtt_ed25519_priv_key) != read_ret) {
+    xtt_ecdsap256_priv_key server_private_key;
+    read_ret = read_file_into_buffer(server_private_key.data, sizeof(xtt_ecdsap256_priv_key), server_privatekey_file);
+    if (sizeof(xtt_ecdsap256_priv_key) != read_ret) {
         fprintf(stderr, "Error reading server's private key from file\n");
         return -1;
     }
 
     // 7) Initialize my certificate context
-    rc = xtt_initialize_server_certificate_context_ed25519(cert_ctx,
+    rc = xtt_initialize_server_certificate_context_ecdsap256(cert_ctx,
                                                            serialized_certificate,
                                                            &server_private_key);
     if (XTT_RETURN_SUCCESS != rc)
@@ -443,12 +443,7 @@ assign_client_id(xtt_identity_type *assigned_client_id_out,
     // If the client sent xtt_null_client_id assign them a randomly-generated id.
     // Otherwise, just echo back what they requested.
     if (0 == xtt_crypto_memcmp(requested_client_id->data, xtt_null_identity.data, sizeof(xtt_identity_type))) {
-        if (0 != xtt_crypto_get_random(assigned_client_id_out->data, sizeof(xtt_identity_type))) {
-            fprintf(stderr, "Client requested an id assignment, but there was an error generating it!\n");
-            return -1;
-            // close(client_sock);
-            // goto finished_handshake;
-        }
+        xtt_crypto_get_random(assigned_client_id_out->data, sizeof(xtt_identity_type));
     } else {
         memcpy(assigned_client_id_out->data, requested_client_id->data, sizeof(xtt_identity_type));
     }
@@ -484,20 +479,20 @@ void report_results(struct xtt_server_handshake_context *ctx)
         return;
     }
     switch (ctx->base.suite_spec) {
-        case XTT_X25519_LRSW_ED25519_CHACHA20POLY1305_SHA512:
-        case XTT_X25519_LRSW_ED25519_CHACHA20POLY1305_BLAKE2B:
-        case XTT_X25519_LRSW_ED25519_AES256GCM_SHA512:
-        case XTT_X25519_LRSW_ED25519_AES256GCM_BLAKE2B:
+        case XTT_X25519_LRSW_ECDSAP256_CHACHA20POLY1305_SHA512:
+        case XTT_X25519_LRSW_ECDSAP256_CHACHA20POLY1305_BLAKE2B:
+        case XTT_X25519_LRSW_ECDSAP256_AES256GCM_SHA512:
+        case XTT_X25519_LRSW_ECDSAP256_AES256GCM_BLAKE2B:
             {
-                xtt_ed25519_pub_key clients_longterm_key;
-                if (XTT_RETURN_SUCCESS != xtt_get_clients_longterm_key_ed25519(&clients_longterm_key, ctx)) {
+                xtt_ecdsap256_pub_key clients_longterm_key;
+                if (XTT_RETURN_SUCCESS != xtt_get_clients_longterm_key_ecdsap256(&clients_longterm_key, ctx)) {
                     printf("Error getting the client's longterm key!\n");
                     return;
                 }
                 printf("The client sent us the longterm key: {");
-                for (size_t i=0; i < sizeof(xtt_ed25519_pub_key); ++i) {
+                for (size_t i=0; i < sizeof(xtt_ecdsap256_pub_key); ++i) {
                     printf("%#02X", clients_longterm_key.data[i]);
-                    if (i < (sizeof(xtt_ed25519_pub_key)-1)) {
+                    if (i < (sizeof(xtt_ecdsap256_pub_key)-1)) {
                         printf(", ");
                     } else {
                         printf("}\n");
