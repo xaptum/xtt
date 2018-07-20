@@ -1,3 +1,22 @@
+xtt (0.9.0-1) unstable; urgency=medium
+
+  [ Kathryn Fejer ]
+  * Adding integration testing allows handshake to be tested and network to be simulated
+
+  [ Zane Beckwith ]
+  * Some whitespace fixes
+  * Add rand_wrapper to make function signatures agree.
+  * More whitespace
+  * Return `void` from xtt_crypto_get_random.
+
+  [ Kathryn Fejer ]
+  * Transitions XTT to ECDSA with secp256r
+
+  [ Zane Beckwith ]
+  * Bump minor version.
+
+ -- Zane Beckwith <zane.beckwith@xaptum.com>  Fri, 20 Jul 2018 16:29:54 +0000
+
 xtt (0.8.2-1) unstable; urgency=medium
 
   [ David R. Bild ]
