@@ -1,13 +1,13 @@
 /******************************************************************************
  *
  * Copyright 2018 Xaptum, Inc.
- * 
+ *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
  *    You may obtain a copy of the License at
- * 
+ *
  *        http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  *    Unless required by applicable law or agreed to in writing, software
  *    distributed under the License is distributed on an "AS IS" BASIS,
  *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -35,12 +35,12 @@ int do_diffie_hellman_x25519(unsigned char* shared_secret,
                              const unsigned char* other_pk,
                              const struct xtt_handshake_context* self);
 
-void copy_longterm_key_ed25519(unsigned char* out,
+void copy_longterm_key_ecdsap256(unsigned char* out,
                                uint16_t* out_length,
                                const struct xtt_client_handshake_context* self);
 
 
-int compare_longterm_keys_ed25519(unsigned char *other_key,
+int compare_longterm_keys_ecdsap256(unsigned char *other_key,
                                   const struct xtt_client_handshake_context *self);
 
 int encrypt_null(unsigned char* ciphertext,
@@ -91,26 +91,26 @@ int decrypt_aes256(unsigned char* decrypted,
                    uint16_t addl_len,
                    struct xtt_handshake_context *self);
 
-void read_longterm_key_ed25519(struct xtt_server_handshake_context *self,
+void read_longterm_key_ecdsap256(struct xtt_server_handshake_context *self,
                                uint16_t* key_length,
                                unsigned char* key_in);
 
-int verify_server_signature_ed25519(const unsigned char *signature,
+int verify_server_signature_ecdsap256(const unsigned char *signature,
                                     const unsigned char *msg,
                                     uint16_t msg_len,
                                     const unsigned char *server_public_key);
 
-int sign_server_ed25519(unsigned char *signature_out,
+int sign_server_ecdsap256(unsigned char *signature_out,
                         const unsigned char *msg,
                         uint16_t msg_len,
                         const struct xtt_server_certificate_context *self);
 
-int longterm_sign_ed25519(unsigned char *signature_out,
+int longterm_sign_ecdsap256(unsigned char *signature_out,
                           const unsigned char *msg,
                           uint16_t msg_len,
                           const struct xtt_client_handshake_context *self);
 
-int verify_root_ed25519(const unsigned char *signature,
+int verify_root_ecdsap256(const unsigned char *signature,
                         const struct xtt_server_certificate_raw_type *certificate,
                         const struct xtt_server_root_certificate_context *self);
 
@@ -146,4 +146,3 @@ int copy_in_pseudonym_client_lrsw(struct xtt_client_handshake_context *self,
 #endif
 
 #endif
-

@@ -1,13 +1,13 @@
 /******************************************************************************
  *
  * Copyright 2018 Xaptum, Inc.
- * 
+ *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
  *    You may obtain a copy of the License at
- * 
+ *
  *        http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  *    Unless required by applicable law or agreed to in writing, software
  *    distributed under the License is distributed on an "AS IS" BASIS,
  *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -197,8 +197,8 @@ struct xtt_handshake_context {
     xtt_server_cookie server_cookie;
     unsigned char hash_buffer[HASH_BUFFER_SIZE];
     unsigned char client_init_buffer[80];
-    unsigned char server_initandattest_buffer[200];
-    unsigned char server_signature_buffer[sizeof(xtt_ed25519_signature)];
+    unsigned char server_initandattest_buffer[233];
+    unsigned char server_signature_buffer[sizeof(xtt_ecdsap256_signature)];
     // TODO: properly size this
     unsigned char clientattest_buffer[1024];
     unsigned char buffer[HANDSHAKE_CONTEXT_BUFFER_SIZE];
@@ -224,7 +224,7 @@ struct xtt_server_handshake_context {
     xtt_identity_type clients_identity;
 
     union {
-        xtt_ed25519_pub_key ed25519;
+        xtt_ecdsap256_pub_key ecdsap256;
     } clients_longterm_key;
 
     union {
@@ -263,10 +263,10 @@ struct xtt_client_handshake_context {
     } pseudonym;
 
     union {
-        xtt_ed25519_pub_key ed25519;
+        xtt_ecdsap256_pub_key ecdsap256;
     } longterm_key;
     union {
-        xtt_ed25519_priv_key ed25519;
+        xtt_ecdsap256_priv_key ecdsap256;
     } longterm_private_key;
 };
 
@@ -280,11 +280,11 @@ struct xtt_server_certificate_context {
                 uint16_t msg_len,
                 const struct xtt_server_certificate_context *self);
     uint16_t signature_length;
-    unsigned char serialized_certificate_raw[XTT_SERVER_CERTIFICATE_ED25519_LENGTH];
+    unsigned char serialized_certificate_raw[XTT_SERVER_CERTIFICATE_ECDSAP256_LENGTH];
     struct xtt_server_certificate_raw_type *serialized_certificate;
 
     union {
-        xtt_ed25519_priv_key ed25519;
+        xtt_ecdsap256_priv_key ecdsap256;
     } private_key;
 };
 
@@ -296,7 +296,7 @@ struct xtt_server_root_certificate_context {
     xtt_certificate_root_id id;
 
     union {
-        xtt_ed25519_pub_key ed25519;
+        xtt_ecdsap256_pub_key ecdsap256;
     } public_key;
 };
 
@@ -359,14 +359,14 @@ xtt_return_code_type
 xtt_initialize_server_cookie_context(struct xtt_server_cookie_context* ctx);
 
 xtt_return_code_type
-xtt_initialize_server_certificate_context_ed25519(struct xtt_server_certificate_context *ctx_out,
+xtt_initialize_server_certificate_context_ecdsap256(struct xtt_server_certificate_context *ctx_out,
                                                   const unsigned char *serialized_certificate,
-                                                  const xtt_ed25519_priv_key *private_key);
+                                                  const xtt_ecdsap256_priv_key *private_key);
 
 xtt_return_code_type
-xtt_initialize_server_root_certificate_context_ed25519(struct xtt_server_root_certificate_context *cert_out,
+xtt_initialize_server_root_certificate_context_ecdsap256(struct xtt_server_root_certificate_context *cert_out,
                                                        xtt_certificate_root_id *id,
-                                                       xtt_ed25519_pub_key *public_key);
+                                                       xtt_ecdsap256_pub_key *public_key);
 
 xtt_return_code_type
 xtt_initialize_group_public_key_context_lrsw(struct xtt_group_public_key_context *ctx_out,
@@ -404,7 +404,7 @@ xtt_get_suite_spec(xtt_suite_spec *suite_spec_out,
                    const struct xtt_server_handshake_context *handshake_context);
 
 xtt_return_code_type
-xtt_get_clients_longterm_key_ed25519(xtt_ed25519_pub_key *longterm_key_out,
+xtt_get_clients_longterm_key_ecdsap256(xtt_ecdsap256_pub_key *longterm_key_out,
                                      const struct xtt_server_handshake_context *handshake_context);
 
 xtt_return_code_type
@@ -416,11 +416,11 @@ xtt_get_clients_pseudonym_lrsw(xtt_daa_pseudonym_lrsw *pseudonym_out,
                                const struct xtt_server_handshake_context *handshake_context);
 
 xtt_return_code_type
-xtt_get_my_longterm_key_ed25519(xtt_ed25519_pub_key *longterm_key_out,
+xtt_get_my_longterm_key_ecdsap256(xtt_ecdsap256_pub_key *longterm_key_out,
                                 const struct xtt_client_handshake_context *handshake_context);
 
 xtt_return_code_type
-xtt_get_my_longterm_private_key_ed25519(xtt_ed25519_priv_key *longterm_key_priv_out,
+xtt_get_my_longterm_private_key_ecdsap256(xtt_ecdsap256_priv_key *longterm_key_priv_out,
                                         const struct xtt_client_handshake_context *handshake_context);
 
 xtt_return_code_type
@@ -441,4 +441,3 @@ xtt_get_my_pseudonym_lrsw(xtt_daa_pseudonym_lrsw *pseudonym_out,
 #endif
 
 #endif
-

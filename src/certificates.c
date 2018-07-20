@@ -1,13 +1,13 @@
 /******************************************************************************
  *
  * Copyright 2018 Xaptum, Inc.
- * 
+ *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
  *    You may obtain a copy of the License at
- * 
+ *
  *        http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  *    Unless required by applicable law or agreed to in writing, software
  *    distributed under the License is distributed on an "AS IS" BASIS,
  *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -23,13 +23,14 @@
 #include <assert.h>
 #include <string.h>
 
+//used to test creation of certificates in /example
 xtt_return_code_type
-xtt_generate_server_certificate_ed25519(unsigned char *cert_out,
+xtt_generate_server_certificate_ecdsap256(unsigned char *cert_out,
                                         xtt_identity_type *servers_id,
-                                        xtt_ed25519_pub_key *servers_pub_key,
+                                        xtt_ecdsap256_pub_key *servers_pub_key,
                                         xtt_certificate_expiry *expiry,
                                         xtt_certificate_root_id *roots_id,
-                                        xtt_ed25519_priv_key *roots_priv_key)
+                                        xtt_ecdsap256_priv_key *roots_priv_key)
 {
     struct xtt_server_certificate_raw_type *cert_ptr = (struct xtt_server_certificate_raw_type*)cert_out;
 
@@ -47,13 +48,13 @@ xtt_generate_server_certificate_ed25519(unsigned char *cert_out,
 
     memcpy(xtt_server_certificate_access_pubkey(cert_ptr),
            servers_pub_key->data,
-           sizeof(xtt_ed25519_pub_key));
+           sizeof(xtt_ecdsap256_pub_key));
 
     unsigned char* root_signature = xtt_server_certificate_access_rootsignature_fromsignaturetype(cert_ptr,
-                                                                                                  XTT_SERVER_SIGNATURE_TYPE_ED25519);
-    int rc = xtt_crypto_sign_ed25519(root_signature,
+                                                                                                  XTT_SERVER_SIGNATURE_TYPE_ECDSAP256);
+    int rc = xtt_crypto_sign_ecdsap256(root_signature,
                                      cert_out,
-                                     xtt_server_certificate_length_uptosignature_fromsignaturetype(XTT_SERVER_SIGNATURE_TYPE_ED25519),
+                                     xtt_server_certificate_length_uptosignature_fromsignaturetype(XTT_SERVER_SIGNATURE_TYPE_ECDSAP256),
                                      roots_priv_key);
     if (0 != rc)
         return XTT_RETURN_CRYPTO;
@@ -64,14 +65,19 @@ xtt_generate_server_certificate_ed25519(unsigned char *cert_out,
 uint16_t
 xtt_server_certificate_length_fromsignaturetype(xtt_server_signature_type type)
 {
+    uint16_t ret;
     switch (type) {
-        case XTT_SERVER_SIGNATURE_TYPE_ED25519:
-            return sizeof(xtt_identity_type)
+        case XTT_SERVER_SIGNATURE_TYPE_ECDSAP256:
+            ret = sizeof(xtt_identity_type)
                        + sizeof(xtt_certificate_expiry)
                        + sizeof(xtt_certificate_root_id)
-                       + sizeof(xtt_ed25519_pub_key)
-                       + sizeof(xtt_ed25519_signature);
+                       + sizeof(xtt_ecdsap256_pub_key)
+                       + sizeof(xtt_ecdsap256_signature);
+            assert(ret == XTT_SERVER_CERTIFICATE_ECDSAP256_LENGTH);
+            return ret;
     }
+
+
 
     assert(0);
     return 0;
@@ -81,11 +87,11 @@ uint16_t
 xtt_server_certificate_length(xtt_suite_spec suite_spec)
 {
     switch (suite_spec) {
-        case XTT_X25519_LRSW_ED25519_CHACHA20POLY1305_SHA512:
-        case XTT_X25519_LRSW_ED25519_CHACHA20POLY1305_BLAKE2B:
-        case XTT_X25519_LRSW_ED25519_AES256GCM_SHA512:
-        case XTT_X25519_LRSW_ED25519_AES256GCM_BLAKE2B:
-            return xtt_server_certificate_length_fromsignaturetype(XTT_SERVER_SIGNATURE_TYPE_ED25519);
+        case XTT_X25519_LRSW_ECDSAP256_CHACHA20POLY1305_SHA512:
+        case XTT_X25519_LRSW_ECDSAP256_CHACHA20POLY1305_BLAKE2B:
+        case XTT_X25519_LRSW_ECDSAP256_AES256GCM_SHA512:
+        case XTT_X25519_LRSW_ECDSAP256_AES256GCM_BLAKE2B:
+            return xtt_server_certificate_length_fromsignaturetype(XTT_SERVER_SIGNATURE_TYPE_ECDSAP256);
     }
 
     assert(0);
@@ -96,11 +102,11 @@ uint16_t
 xtt_server_certificate_length_uptosignature_fromsignaturetype(xtt_server_signature_type type)
 {
     switch (type) {
-        case XTT_SERVER_SIGNATURE_TYPE_ED25519:
+        case XTT_SERVER_SIGNATURE_TYPE_ECDSAP256:
             return sizeof(xtt_identity_type)
                        + sizeof(xtt_certificate_expiry)
                        + sizeof(xtt_certificate_root_id)
-                       + sizeof(xtt_ed25519_pub_key);
+                       + sizeof(xtt_ecdsap256_pub_key);
     }
 
     assert(0);
@@ -111,11 +117,11 @@ uint16_t
 xtt_server_certificate_length_uptosignature(xtt_suite_spec suite_spec)
 {
     switch (suite_spec) {
-        case XTT_X25519_LRSW_ED25519_CHACHA20POLY1305_SHA512:
-        case XTT_X25519_LRSW_ED25519_CHACHA20POLY1305_BLAKE2B:
-        case XTT_X25519_LRSW_ED25519_AES256GCM_SHA512:
-        case XTT_X25519_LRSW_ED25519_AES256GCM_BLAKE2B:
-            return xtt_server_certificate_length_uptosignature_fromsignaturetype(XTT_SERVER_SIGNATURE_TYPE_ED25519);
+        case XTT_X25519_LRSW_ECDSAP256_CHACHA20POLY1305_SHA512:
+        case XTT_X25519_LRSW_ECDSAP256_CHACHA20POLY1305_BLAKE2B:
+        case XTT_X25519_LRSW_ECDSAP256_AES256GCM_SHA512:
+        case XTT_X25519_LRSW_ECDSAP256_AES256GCM_BLAKE2B:
+            return xtt_server_certificate_length_uptosignature_fromsignaturetype(XTT_SERVER_SIGNATURE_TYPE_ECDSAP256);
     }
 
     assert(0);
@@ -157,12 +163,12 @@ xtt_server_certificate_access_rootsignature_fromsignaturetype(const struct xtt_s
                                                               xtt_server_signature_type type)
 {
     switch (type) {
-        case XTT_SERVER_SIGNATURE_TYPE_ED25519:
+        case XTT_SERVER_SIGNATURE_TYPE_ECDSAP256:
             return (unsigned char*)(certificate)
                                     + sizeof(xtt_identity_type)
                                     + sizeof(xtt_certificate_expiry)
                                     + sizeof(xtt_certificate_root_id)
-                                    + sizeof(xtt_ed25519_pub_key);
+                                    + sizeof(xtt_ecdsap256_pub_key);
     }
 
     assert(0);
@@ -174,11 +180,11 @@ xtt_server_certificate_access_rootsignature(const struct xtt_server_certificate_
                                             xtt_suite_spec suite_spec)
 {
     switch (suite_spec) {
-        case XTT_X25519_LRSW_ED25519_CHACHA20POLY1305_SHA512:
-        case XTT_X25519_LRSW_ED25519_CHACHA20POLY1305_BLAKE2B:
-        case XTT_X25519_LRSW_ED25519_AES256GCM_SHA512:
-        case XTT_X25519_LRSW_ED25519_AES256GCM_BLAKE2B:
-            return xtt_server_certificate_access_rootsignature_fromsignaturetype(certificate, XTT_SERVER_SIGNATURE_TYPE_ED25519);
+        case XTT_X25519_LRSW_ECDSAP256_CHACHA20POLY1305_SHA512:
+        case XTT_X25519_LRSW_ECDSAP256_CHACHA20POLY1305_BLAKE2B:
+        case XTT_X25519_LRSW_ECDSAP256_AES256GCM_SHA512:
+        case XTT_X25519_LRSW_ECDSAP256_AES256GCM_BLAKE2B:
+            return xtt_server_certificate_access_rootsignature_fromsignaturetype(certificate, XTT_SERVER_SIGNATURE_TYPE_ECDSAP256);
     }
 
     assert(0);

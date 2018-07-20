@@ -1,3 +1,21 @@
+/******************************************************************************
+ *
+ * Copyright 2018 Xaptum, Inc.
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License");
+ *    you may not use this file except in compliance with the License.
+ *    You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS,
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *    See the License for the specific language governing permissions and
+ *    limitations under the License
+ *
+ *****************************************************************************/
+ 
 #include <xtt.h>
 
 #include "network_array.h"
@@ -175,19 +193,19 @@ void handshake_checks(struct xtt_client_ctxhelper* client, struct xtt_server_ctx
     EXPECT_EQ(XTT_RETURN_SUCCESS, client->rc);
     TEST_ASSERT(0 == memcmp(&assigned_id.data, &client_id->data, sizeof(xtt_identity_type)));
 
-    xtt_ed25519_pub_key clients_longterm_key;
-    server->rc = xtt_get_clients_longterm_key_ed25519(&clients_longterm_key, &server->ctx);
+    xtt_ecdsap256_pub_key clients_longterm_key;
+    server->rc = xtt_get_clients_longterm_key_ecdsap256(&clients_longterm_key, &server->ctx);
     EXPECT_EQ(XTT_RETURN_SUCCESS, server->rc);
-    xtt_ed25519_pub_key my_longterm_key;
-    client->rc = xtt_get_my_longterm_key_ed25519(&my_longterm_key, &client->ctx);
+    xtt_ecdsap256_pub_key my_longterm_key;
+    client->rc = xtt_get_my_longterm_key_ecdsap256(&my_longterm_key, &client->ctx);
     EXPECT_EQ(XTT_RETURN_SUCCESS, client->rc);
-    TEST_ASSERT(0 == memcmp(my_longterm_key.data, clients_longterm_key.data, sizeof(xtt_ed25519_pub_key)));
+    TEST_ASSERT(0 == memcmp(my_longterm_key.data, clients_longterm_key.data, sizeof(xtt_ecdsap256_pub_key)));
 
     xtt_daa_pseudonym_lrsw pseudonym_out;
     server->rc = xtt_get_clients_pseudonym_lrsw(&pseudonym_out, &server->ctx);
     EXPECT_EQ(XTT_RETURN_SUCCESS, server->rc);
 
-    xtt_ed25519_priv_key longterm_key_priv_out;
-    client->rc = xtt_get_my_longterm_private_key_ed25519(&longterm_key_priv_out, &client->ctx);
+    xtt_ecdsap256_priv_key longterm_key_priv_out;
+    client->rc = xtt_get_my_longterm_private_key_ecdsap256(&longterm_key_priv_out, &client->ctx);
     EXPECT_EQ(XTT_RETURN_SUCCESS, client->rc);
 }

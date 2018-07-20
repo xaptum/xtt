@@ -1,13 +1,13 @@
 /******************************************************************************
  *
  * Copyright 2018 Xaptum, Inc.
- * 
+ *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
  *    You may obtain a copy of the License at
- * 
+ *
  *        http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  *    Unless required by applicable law or agreed to in writing, software
  *    distributed under the License is distributed on an "AS IS" BASIS,
  *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -28,10 +28,10 @@
 extern "C" {
 #endif
 
-#define MAX_HANDSHAKE_SERVER_MESSAGE_LENGTH 384 // ServerInitAndAttest
+#define MAX_HANDSHAKE_SERVER_MESSAGE_LENGTH 417 // ServerInitAndAttest
 uint16_t max_handshake_server_message_length(void);
 
-#define MAX_HANDSHAKE_CLIENT_MESSAGE_LENGTH 685 // Identity_ClientAttest
+#define MAX_HANDSHAKE_CLIENT_MESSAGE_LENGTH 718 // Identity_ClientAttest
 uint16_t max_handshake_client_message_length(void);
 
 /*
@@ -76,7 +76,7 @@ xtt_return_code_type
 xtt_handshake_client_start(uint16_t *io_bytes_requested,
                            unsigned char **io_ptr,
                            struct xtt_client_handshake_context* ctx);
-                      
+
 xtt_return_code_type
 xtt_handshake_server_handle_connect(uint16_t *io_bytes_requested,
                                     unsigned char **io_ptr,
@@ -147,4 +147,3 @@ xtt_client_build_error_msg(uint16_t *io_bytes_requested,
 #endif
 
 #endif
-

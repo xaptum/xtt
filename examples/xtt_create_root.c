@@ -1,13 +1,13 @@
 /******************************************************************************
  *
  * Copyright 2018 Xaptum, Inc.
- * 
+ *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
  *    You may obtain a copy of the License at
- * 
+ *
  *        http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  *    Unless required by applicable law or agreed to in writing, software
  *    distributed under the License is distributed on an "AS IS" BASIS,
  *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -41,24 +41,24 @@ int main()
     }
 
     // 1) Generate root's keypair
-    xtt_ed25519_pub_key root_public_key;
-    xtt_ed25519_priv_key root_priv_key;
-    xtt_return_code_type rc = xtt_crypto_create_ed25519_key_pair(&root_public_key, &root_priv_key);
+    xtt_ecdsap256_pub_key root_public_key;
+    xtt_ecdsap256_priv_key root_priv_key;
+    xtt_return_code_type rc = xtt_crypto_create_ecdsap256_key_pair(&root_public_key, &root_priv_key);
     if (XTT_RETURN_SUCCESS != rc) {
         fprintf(stderr, "Error creating root's key pair\n");
         return 1;
     }
 
     // 2) Write root's public key to file
-    write_ret = write_buffer_to_file(root_pub_file, root_public_key.data, sizeof(xtt_ed25519_pub_key));
-    if (sizeof(xtt_ed25519_pub_key) != write_ret) {
+    write_ret = write_buffer_to_file(root_pub_file, root_public_key.data, sizeof(xtt_ecdsap256_pub_key));
+    if (sizeof(xtt_ecdsap256_pub_key) != write_ret) {
         fprintf(stderr, "Error writing root's public key to file\n");
         return 1;
     }
 
     // 3) Write root's private key to file
-    write_ret = write_buffer_to_file(root_priv_file, root_priv_key.data, sizeof(xtt_ed25519_priv_key));
-    if (sizeof(xtt_ed25519_priv_key) != write_ret) {
+    write_ret = write_buffer_to_file(root_priv_file, root_priv_key.data, sizeof(xtt_ecdsap256_priv_key));
+    if (sizeof(xtt_ecdsap256_priv_key) != write_ret) {
         fprintf(stderr, "Error writing root's private key to file\n");
         return 1;
     }

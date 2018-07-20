@@ -1,3 +1,21 @@
+/******************************************************************************
+ *
+ * Copyright 2018 Xaptum, Inc.
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License");
+ *    you may not use this file except in compliance with the License.
+ *    You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS,
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *    See the License for the specific language governing permissions and
+ *    limitations under the License
+ *
+ *****************************************************************************/
+ 
 #ifndef XTT_CLIENT_SETUP_H
 #define XTT_CLIENT_SETUP_H
 #pragma once
@@ -56,17 +74,19 @@ void setup_client_input(struct xtt_client_ctxhelper *client){
     const unsigned char basename[] = {0x42, 0x41, 0x53, 0x45, 0x4e, 0x41, 0x4d, 0x45};
     uint16_t basename_length = sizeof(basename);
 
+    xtt_ecdsap256_pub_key root_pub_key = {.data ={0x04, 0xc6, 0x33, 0x28, 0x1d, 0x25, 0x3c, 0xe4, 0xc5, 0x61, 0xbd, 0xf4, 0x7f, 0xa3, 0x30,
+    0x01, 0x9f, 0x85, 0x80, 0x12, 0x03, 0xd3, 0xe8, 0x84, 0x3b, 0x8d, 0xde, 0xd0, 0xd3, 0x12,
+    0xc6, 0x14, 0x15, 0xf2, 0x72, 0xd4, 0x83, 0x44, 0xc2, 0x59, 0x01, 0x38, 0x72, 0x0c, 0x07,
+    0xeb, 0x0f, 0x92, 0xce, 0xd8, 0xd6, 0x40, 0xca, 0xe4, 0x08, 0x9d, 0xa4, 0x89, 0x8b, 0xf3,
+    0x36, 0xeb, 0x04, 0x82, 0x30}};
 
-    xtt_ed25519_pub_key root_pub_key = {.data = {0xa1, 0xce, 0xaf, 0xed, 0x2f, 0x4e, 0x17, 0x0f, 0x9a, 0x17, 0x6b, 0x17,
-    0xb5, 0x3c, 0x54, 0x95, 0xef, 0xe5, 0xa5, 0x41, 0xde, 0x3d, 0x79, 0xf2,
-    0x30, 0x08, 0x5d, 0xc1, 0xb2, 0xed, 0xe0, 0x18}};
 
     memset(client->gid.data, 0, sizeof(xtt_group_id));
 
     client->rc = xtt_initialize_client_group_context_lrsw(&client->group_ctx, &client->gid, &daa_priv_key, &daa_cred, basename, basename_length);
     EXPECT_EQ(client->rc, XTT_RETURN_SUCCESS);
 
-    client->rc = xtt_initialize_server_root_certificate_context_ed25519(&client->server_root_cert, &client->roots_id, &root_pub_key);
+    client->rc = xtt_initialize_server_root_certificate_context_ecdsap256(&client->server_root_cert, &client->roots_id, &root_pub_key);
     EXPECT_EQ(client->rc, XTT_RETURN_SUCCESS);
 
     client->rc = xtt_initialize_client_handshake_context(&client->ctx, client->in , sizeof(client->in), client->out, sizeof(client->out), client->version, client->suite_spec);

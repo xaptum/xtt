@@ -1,13 +1,13 @@
 /******************************************************************************
  *
  * Copyright 2018 Xaptum, Inc.
- * 
+ *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
  *    You may obtain a copy of the License at
- * 
+ *
  *        http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  *    Unless required by applicable law or agreed to in writing, software
  *    distributed under the License is distributed on an "AS IS" BASIS,
  *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -82,7 +82,7 @@ xtt_setup_server_handshake_context(struct xtt_server_handshake_context* ctx_out,
     ctx_out->base.suite_spec = suite_spec;
 
     switch (suite_spec) {
-        case XTT_X25519_LRSW_ED25519_CHACHA20POLY1305_SHA512:
+        case XTT_X25519_LRSW_ECDSAP256_CHACHA20POLY1305_SHA512:
             ctx_out->base.copy_dh_pubkey = copy_dh_pubkey_x25519;
 
             ctx_out->base.do_diffie_hellman = do_diffie_hellman_x25519;
@@ -93,8 +93,8 @@ xtt_setup_server_handshake_context(struct xtt_server_handshake_context* ctx_out,
 
             ctx_out->base.hash = xtt_crypto_hash_sha512;
 
-            ctx_out->base.longterm_key_length = sizeof(xtt_ed25519_pub_key);
-            ctx_out->base.longterm_key_signature_length = sizeof(xtt_ed25519_signature);
+            ctx_out->base.longterm_key_length = sizeof(xtt_ecdsap256_pub_key);
+            ctx_out->base.longterm_key_signature_length = sizeof(xtt_ecdsap256_signature);
             ctx_out->base.shared_secret_length = sizeof(xtt_x25519_shared_secret);
             ctx_out->base.hash_length = sizeof(xtt_sha512);
             ctx_out->base.mac_length = sizeof(xtt_chacha_mac);
@@ -104,17 +104,17 @@ xtt_setup_server_handshake_context(struct xtt_server_handshake_context* ctx_out,
             ctx_out->base.tx_sequence_num = 0;
             ctx_out->base.rx_sequence_num = 0;
 
-            ctx_out->read_longterm_key = read_longterm_key_ed25519;
+            ctx_out->read_longterm_key = read_longterm_key_ecdsap256;
 
             ctx_out->copy_in_clients_pseudonym = copy_in_pseudonym_server_lrsw;
 
-            ctx_out->verify_client_longterm_signature = verify_server_signature_ed25519;
+            ctx_out->verify_client_longterm_signature = verify_server_signature_ecdsap256;
 
             if (0 != xtt_crypto_create_x25519_key_pair(&ctx_out->base.dh_pub_key.x25519, &ctx_out->base.dh_priv_key.x25519))
                 return XTT_RETURN_CRYPTO;
 
             return XTT_RETURN_SUCCESS;
-        case XTT_X25519_LRSW_ED25519_CHACHA20POLY1305_BLAKE2B:
+        case XTT_X25519_LRSW_ECDSAP256_CHACHA20POLY1305_BLAKE2B:
             ctx_out->base.copy_dh_pubkey = copy_dh_pubkey_x25519;
 
             ctx_out->base.do_diffie_hellman = do_diffie_hellman_x25519;
@@ -125,8 +125,8 @@ xtt_setup_server_handshake_context(struct xtt_server_handshake_context* ctx_out,
 
             ctx_out->base.hash = xtt_crypto_hash_blake2b;
 
-            ctx_out->base.longterm_key_length = sizeof(xtt_ed25519_pub_key);
-            ctx_out->base.longterm_key_signature_length = sizeof(xtt_ed25519_signature);
+            ctx_out->base.longterm_key_length = sizeof(xtt_ecdsap256_pub_key);
+            ctx_out->base.longterm_key_signature_length = sizeof(xtt_ecdsap256_signature);
             ctx_out->base.shared_secret_length = sizeof(xtt_x25519_shared_secret);
             ctx_out->base.hash_length = sizeof(xtt_blake2b);
             ctx_out->base.mac_length = sizeof(xtt_chacha_mac);
@@ -136,17 +136,17 @@ xtt_setup_server_handshake_context(struct xtt_server_handshake_context* ctx_out,
             ctx_out->base.tx_sequence_num = 0;
             ctx_out->base.rx_sequence_num = 0;
 
-            ctx_out->read_longterm_key = read_longterm_key_ed25519;
+            ctx_out->read_longterm_key = read_longterm_key_ecdsap256;
 
             ctx_out->copy_in_clients_pseudonym = copy_in_pseudonym_server_lrsw;
 
-            ctx_out->verify_client_longterm_signature = verify_server_signature_ed25519;
+            ctx_out->verify_client_longterm_signature = verify_server_signature_ecdsap256;
 
             if (0 != xtt_crypto_create_x25519_key_pair(&ctx_out->base.dh_pub_key.x25519, &ctx_out->base.dh_priv_key.x25519))
                 return XTT_RETURN_CRYPTO;
 
             return XTT_RETURN_SUCCESS;
-        case XTT_X25519_LRSW_ED25519_AES256GCM_SHA512:
+        case XTT_X25519_LRSW_ECDSAP256_AES256GCM_SHA512:
             ctx_out->base.copy_dh_pubkey = copy_dh_pubkey_x25519;
 
             ctx_out->base.do_diffie_hellman = do_diffie_hellman_x25519;
@@ -157,8 +157,8 @@ xtt_setup_server_handshake_context(struct xtt_server_handshake_context* ctx_out,
 
             ctx_out->base.hash = xtt_crypto_hash_sha512;
 
-            ctx_out->base.longterm_key_length = sizeof(xtt_ed25519_pub_key);
-            ctx_out->base.longterm_key_signature_length = sizeof(xtt_ed25519_signature);
+            ctx_out->base.longterm_key_length = sizeof(xtt_ecdsap256_pub_key);
+            ctx_out->base.longterm_key_signature_length = sizeof(xtt_ecdsap256_signature);
             ctx_out->base.shared_secret_length = sizeof(xtt_x25519_shared_secret);
             ctx_out->base.hash_length = sizeof(xtt_sha512);
             ctx_out->base.mac_length = sizeof(xtt_aes256_mac);
@@ -168,17 +168,17 @@ xtt_setup_server_handshake_context(struct xtt_server_handshake_context* ctx_out,
             ctx_out->base.tx_sequence_num = 0;
             ctx_out->base.rx_sequence_num = 0;
 
-            ctx_out->read_longterm_key = read_longterm_key_ed25519;
+            ctx_out->read_longterm_key = read_longterm_key_ecdsap256;
 
             ctx_out->copy_in_clients_pseudonym = copy_in_pseudonym_server_lrsw;
 
-            ctx_out->verify_client_longterm_signature = verify_server_signature_ed25519;
+            ctx_out->verify_client_longterm_signature = verify_server_signature_ecdsap256;
 
             if (0 != xtt_crypto_create_x25519_key_pair(&ctx_out->base.dh_pub_key.x25519, &ctx_out->base.dh_priv_key.x25519))
                 return XTT_RETURN_CRYPTO;
 
             return XTT_RETURN_SUCCESS;
-        case XTT_X25519_LRSW_ED25519_AES256GCM_BLAKE2B:
+        case XTT_X25519_LRSW_ECDSAP256_AES256GCM_BLAKE2B:
             ctx_out->base.copy_dh_pubkey = copy_dh_pubkey_x25519;
 
             ctx_out->base.do_diffie_hellman = do_diffie_hellman_x25519;
@@ -189,8 +189,8 @@ xtt_setup_server_handshake_context(struct xtt_server_handshake_context* ctx_out,
 
             ctx_out->base.hash = xtt_crypto_hash_blake2b;
 
-            ctx_out->base.longterm_key_length = sizeof(xtt_ed25519_pub_key);
-            ctx_out->base.longterm_key_signature_length = sizeof(xtt_ed25519_signature);
+            ctx_out->base.longterm_key_length = sizeof(xtt_ecdsap256_pub_key);
+            ctx_out->base.longterm_key_signature_length = sizeof(xtt_ecdsap256_signature);
             ctx_out->base.shared_secret_length = sizeof(xtt_x25519_shared_secret);
             ctx_out->base.hash_length = sizeof(xtt_blake2b);
             ctx_out->base.mac_length = sizeof(xtt_aes256_mac);
@@ -200,11 +200,11 @@ xtt_setup_server_handshake_context(struct xtt_server_handshake_context* ctx_out,
             ctx_out->base.tx_sequence_num = 0;
             ctx_out->base.rx_sequence_num = 0;
 
-            ctx_out->read_longterm_key = read_longterm_key_ed25519;
+            ctx_out->read_longterm_key = read_longterm_key_ecdsap256;
 
             ctx_out->copy_in_clients_pseudonym = copy_in_pseudonym_server_lrsw;
 
-            ctx_out->verify_client_longterm_signature = verify_server_signature_ed25519;
+            ctx_out->verify_client_longterm_signature = verify_server_signature_ecdsap256;
 
             if (0 != xtt_crypto_create_x25519_key_pair(&ctx_out->base.dh_pub_key.x25519, &ctx_out->base.dh_priv_key.x25519))
                 return XTT_RETURN_CRYPTO;
@@ -255,7 +255,7 @@ xtt_initialize_client_handshake_context(struct xtt_client_handshake_context* ctx
     memset(ctx_out->base.prf_key, 0, sizeof(ctx_out->base.prf_key_raw));
 
     switch (suite_spec) {
-        case XTT_X25519_LRSW_ED25519_CHACHA20POLY1305_SHA512:
+        case XTT_X25519_LRSW_ECDSAP256_CHACHA20POLY1305_SHA512:
             ctx_out->base.copy_dh_pubkey = copy_dh_pubkey_x25519;
 
             ctx_out->base.do_diffie_hellman = do_diffie_hellman_x25519;
@@ -266,8 +266,8 @@ xtt_initialize_client_handshake_context(struct xtt_client_handshake_context* ctx
 
             ctx_out->base.hash = xtt_crypto_hash_sha512;
 
-            ctx_out->base.longterm_key_length = sizeof(xtt_ed25519_pub_key);
-            ctx_out->base.longterm_key_signature_length = sizeof(xtt_ed25519_signature);
+            ctx_out->base.longterm_key_length = sizeof(xtt_ecdsap256_pub_key);
+            ctx_out->base.longterm_key_signature_length = sizeof(xtt_ecdsap256_signature);
             ctx_out->base.shared_secret_length = sizeof(xtt_x25519_shared_secret);
             ctx_out->base.hash_length = sizeof(xtt_sha512);
             ctx_out->base.mac_length = sizeof(xtt_chacha_mac);
@@ -277,24 +277,24 @@ xtt_initialize_client_handshake_context(struct xtt_client_handshake_context* ctx
             ctx_out->base.tx_sequence_num = 0;
             ctx_out->base.rx_sequence_num = 0;
 
-            ctx_out->verify_server_signature = verify_server_signature_ed25519;
+            ctx_out->verify_server_signature = verify_server_signature_ecdsap256;
 
-            ctx_out->copy_longterm_key = copy_longterm_key_ed25519;
-            
-            ctx_out->compare_longterm_keys = compare_longterm_keys_ed25519;
+            ctx_out->copy_longterm_key = copy_longterm_key_ecdsap256;
+
+            ctx_out->compare_longterm_keys = compare_longterm_keys_ecdsap256;
 
             if (0 != xtt_crypto_create_x25519_key_pair(&ctx_out->base.dh_pub_key.x25519, &ctx_out->base.dh_priv_key.x25519))
                 return XTT_RETURN_CRYPTO;
 
-            ctx_out->longterm_sign = longterm_sign_ed25519;
+            ctx_out->longterm_sign = longterm_sign_ecdsap256;
 
             ctx_out->copy_in_my_pseudonym = copy_in_pseudonym_client_lrsw;
 
-            if (0 != xtt_crypto_create_ed25519_key_pair(&ctx_out->longterm_key.ed25519, &ctx_out->longterm_private_key.ed25519))
+            if (0 != xtt_crypto_create_ecdsap256_key_pair(&ctx_out->longterm_key.ecdsap256, &ctx_out->longterm_private_key.ecdsap256))
                 return XTT_RETURN_CRYPTO;
 
             return XTT_RETURN_SUCCESS;
-        case XTT_X25519_LRSW_ED25519_CHACHA20POLY1305_BLAKE2B:
+        case XTT_X25519_LRSW_ECDSAP256_CHACHA20POLY1305_BLAKE2B:
             ctx_out->base.copy_dh_pubkey = copy_dh_pubkey_x25519;
 
             ctx_out->base.do_diffie_hellman = do_diffie_hellman_x25519;
@@ -305,8 +305,8 @@ xtt_initialize_client_handshake_context(struct xtt_client_handshake_context* ctx
 
             ctx_out->base.hash = xtt_crypto_hash_blake2b;
 
-            ctx_out->base.longterm_key_length = sizeof(xtt_ed25519_pub_key);
-            ctx_out->base.longterm_key_signature_length = sizeof(xtt_ed25519_signature);
+            ctx_out->base.longterm_key_length = sizeof(xtt_ecdsap256_pub_key);
+            ctx_out->base.longterm_key_signature_length = sizeof(xtt_ecdsap256_signature);
             ctx_out->base.shared_secret_length = sizeof(xtt_x25519_shared_secret);
             ctx_out->base.hash_length = sizeof(xtt_blake2b);
             ctx_out->base.mac_length = sizeof(xtt_chacha_mac);
@@ -316,24 +316,24 @@ xtt_initialize_client_handshake_context(struct xtt_client_handshake_context* ctx
             ctx_out->base.tx_sequence_num = 0;
             ctx_out->base.rx_sequence_num = 0;
 
-            ctx_out->verify_server_signature = verify_server_signature_ed25519;
+            ctx_out->verify_server_signature = verify_server_signature_ecdsap256;
 
-            ctx_out->copy_longterm_key = copy_longterm_key_ed25519;
-            
-            ctx_out->compare_longterm_keys = compare_longterm_keys_ed25519;
+            ctx_out->copy_longterm_key = copy_longterm_key_ecdsap256;
+
+            ctx_out->compare_longterm_keys = compare_longterm_keys_ecdsap256;
 
             if (0 != xtt_crypto_create_x25519_key_pair(&ctx_out->base.dh_pub_key.x25519, &ctx_out->base.dh_priv_key.x25519))
                 return XTT_RETURN_CRYPTO;
 
-            ctx_out->longterm_sign = longterm_sign_ed25519;
+            ctx_out->longterm_sign = longterm_sign_ecdsap256;
 
             ctx_out->copy_in_my_pseudonym = copy_in_pseudonym_client_lrsw;
 
-            if (0 != xtt_crypto_create_ed25519_key_pair(&ctx_out->longterm_key.ed25519, &ctx_out->longterm_private_key.ed25519))
+            if (0 != xtt_crypto_create_ecdsap256_key_pair(&ctx_out->longterm_key.ecdsap256, &ctx_out->longterm_private_key.ecdsap256))
                 return XTT_RETURN_CRYPTO;
 
             return XTT_RETURN_SUCCESS;
-        case XTT_X25519_LRSW_ED25519_AES256GCM_SHA512:
+        case XTT_X25519_LRSW_ECDSAP256_AES256GCM_SHA512:
             ctx_out->base.copy_dh_pubkey = copy_dh_pubkey_x25519;
 
             ctx_out->base.do_diffie_hellman = do_diffie_hellman_x25519;
@@ -345,8 +345,8 @@ xtt_initialize_client_handshake_context(struct xtt_client_handshake_context* ctx
 
             ctx_out->base.hash = xtt_crypto_hash_sha512;
 
-            ctx_out->base.longterm_key_length = sizeof(xtt_ed25519_pub_key);
-            ctx_out->base.longterm_key_signature_length = sizeof(xtt_ed25519_signature);
+            ctx_out->base.longterm_key_length = sizeof(xtt_ecdsap256_pub_key);
+            ctx_out->base.longterm_key_signature_length = sizeof(xtt_ecdsap256_signature);
             ctx_out->base.shared_secret_length = sizeof(xtt_x25519_shared_secret);
             ctx_out->base.hash_length = sizeof(xtt_sha512);
             ctx_out->base.mac_length = sizeof(xtt_aes256_mac);
@@ -356,24 +356,24 @@ xtt_initialize_client_handshake_context(struct xtt_client_handshake_context* ctx
             ctx_out->base.tx_sequence_num = 0;
             ctx_out->base.rx_sequence_num = 0;
 
-            ctx_out->verify_server_signature = verify_server_signature_ed25519;
+            ctx_out->verify_server_signature = verify_server_signature_ecdsap256;
 
-            ctx_out->copy_longterm_key = copy_longterm_key_ed25519;
-            
-            ctx_out->compare_longterm_keys = compare_longterm_keys_ed25519;
+            ctx_out->copy_longterm_key = copy_longterm_key_ecdsap256;
+
+            ctx_out->compare_longterm_keys = compare_longterm_keys_ecdsap256;
 
             if (0 != xtt_crypto_create_x25519_key_pair(&ctx_out->base.dh_pub_key.x25519, &ctx_out->base.dh_priv_key.x25519))
                 return XTT_RETURN_CRYPTO;
 
-            ctx_out->longterm_sign = longterm_sign_ed25519;
+            ctx_out->longterm_sign = longterm_sign_ecdsap256;
 
             ctx_out->copy_in_my_pseudonym = copy_in_pseudonym_client_lrsw;
 
-            if (0 != xtt_crypto_create_ed25519_key_pair(&ctx_out->longterm_key.ed25519, &ctx_out->longterm_private_key.ed25519))
+            if (0 != xtt_crypto_create_ecdsap256_key_pair(&ctx_out->longterm_key.ecdsap256, &ctx_out->longterm_private_key.ecdsap256))
                 return XTT_RETURN_CRYPTO;
 
             return XTT_RETURN_SUCCESS;
-        case XTT_X25519_LRSW_ED25519_AES256GCM_BLAKE2B:
+        case XTT_X25519_LRSW_ECDSAP256_AES256GCM_BLAKE2B:
             ctx_out->base.copy_dh_pubkey = copy_dh_pubkey_x25519;
 
             ctx_out->base.do_diffie_hellman = do_diffie_hellman_x25519;
@@ -385,8 +385,8 @@ xtt_initialize_client_handshake_context(struct xtt_client_handshake_context* ctx
 
             ctx_out->base.hash = xtt_crypto_hash_blake2b;
 
-            ctx_out->base.longterm_key_length = sizeof(xtt_ed25519_pub_key);
-            ctx_out->base.longterm_key_signature_length = sizeof(xtt_ed25519_signature);
+            ctx_out->base.longterm_key_length = sizeof(xtt_ecdsap256_pub_key);
+            ctx_out->base.longterm_key_signature_length = sizeof(xtt_ecdsap256_signature);
             ctx_out->base.shared_secret_length = sizeof(xtt_x25519_shared_secret);
             ctx_out->base.hash_length = sizeof(xtt_blake2b);
             ctx_out->base.mac_length = sizeof(xtt_aes256_mac);
@@ -396,20 +396,20 @@ xtt_initialize_client_handshake_context(struct xtt_client_handshake_context* ctx
             ctx_out->base.tx_sequence_num = 0;
             ctx_out->base.rx_sequence_num = 0;
 
-            ctx_out->verify_server_signature = verify_server_signature_ed25519;
+            ctx_out->verify_server_signature = verify_server_signature_ecdsap256;
 
-            ctx_out->copy_longterm_key = copy_longterm_key_ed25519;
-            
-            ctx_out->compare_longterm_keys = compare_longterm_keys_ed25519;
+            ctx_out->copy_longterm_key = copy_longterm_key_ecdsap256;
+
+            ctx_out->compare_longterm_keys = compare_longterm_keys_ecdsap256;
 
             if (0 != xtt_crypto_create_x25519_key_pair(&ctx_out->base.dh_pub_key.x25519, &ctx_out->base.dh_priv_key.x25519))
                 return XTT_RETURN_CRYPTO;
 
-            ctx_out->longterm_sign = longterm_sign_ed25519;
+            ctx_out->longterm_sign = longterm_sign_ecdsap256;
 
             ctx_out->copy_in_my_pseudonym = copy_in_pseudonym_client_lrsw;
 
-            if (0 != xtt_crypto_create_ed25519_key_pair(&ctx_out->longterm_key.ed25519, &ctx_out->longterm_private_key.ed25519))
+            if (0 != xtt_crypto_create_ecdsap256_key_pair(&ctx_out->longterm_key.ecdsap256, &ctx_out->longterm_private_key.ecdsap256))
                 return XTT_RETURN_CRYPTO;
 
             return XTT_RETURN_SUCCESS;
@@ -427,36 +427,36 @@ xtt_initialize_server_cookie_context(struct xtt_server_cookie_context* ctx)
 }
 
 xtt_return_code_type
-xtt_initialize_server_certificate_context_ed25519(struct xtt_server_certificate_context *ctx_out,
+xtt_initialize_server_certificate_context_ecdsap256(struct xtt_server_certificate_context *ctx_out,
                                                   const unsigned char *serialized_certificate,
-                                                  const xtt_ed25519_priv_key *private_key)
+                                                  const xtt_ecdsap256_priv_key *private_key)
 {
-    ctx_out->sign = sign_server_ed25519;
+    ctx_out->sign = sign_server_ecdsap256;
 
-    ctx_out->signature_length = sizeof(xtt_ed25519_signature);
+    ctx_out->signature_length = sizeof(xtt_ecdsap256_signature);
 
-    ctx_out->private_key.ed25519 = *private_key;
+    ctx_out->private_key.ecdsap256 = *private_key;
 
     ctx_out->serialized_certificate = (struct xtt_server_certificate_raw_type*)ctx_out->serialized_certificate_raw;
     memcpy(ctx_out->serialized_certificate_raw,
            serialized_certificate,
-           xtt_server_certificate_length_fromsignaturetype(XTT_SERVER_SIGNATURE_TYPE_ED25519));
+           xtt_server_certificate_length_fromsignaturetype(XTT_SERVER_SIGNATURE_TYPE_ECDSAP256));
 
     return XTT_RETURN_SUCCESS;
 }
 
 xtt_return_code_type
-xtt_initialize_server_root_certificate_context_ed25519(struct xtt_server_root_certificate_context *cert_out,
+xtt_initialize_server_root_certificate_context_ecdsap256(struct xtt_server_root_certificate_context *cert_out,
                                                        xtt_certificate_root_id *id,
-                                                       xtt_ed25519_pub_key *public_key)
+                                                       xtt_ecdsap256_pub_key *public_key)
 {
-    cert_out->verify_signature = verify_root_ed25519;
+    cert_out->verify_signature = verify_root_ecdsap256;
 
-    cert_out->type = XTT_SERVER_SIGNATURE_TYPE_ED25519;
+    cert_out->type = XTT_SERVER_SIGNATURE_TYPE_ECDSAP256;
 
     cert_out->id = *id;
 
-    cert_out->public_key.ed25519 = *public_key;
+    cert_out->public_key.ecdsap256 = *public_key;
 
     return XTT_RETURN_SUCCESS;
 }
@@ -568,10 +568,10 @@ xtt_get_suite_spec(xtt_suite_spec *suite_spec_out,
 {
     // TODO: Check state
     switch (handshake_context->base.suite_spec) {
-        case XTT_X25519_LRSW_ED25519_CHACHA20POLY1305_SHA512:
-        case XTT_X25519_LRSW_ED25519_CHACHA20POLY1305_BLAKE2B:
-        case XTT_X25519_LRSW_ED25519_AES256GCM_SHA512:
-        case XTT_X25519_LRSW_ED25519_AES256GCM_BLAKE2B:
+        case XTT_X25519_LRSW_ECDSAP256_CHACHA20POLY1305_SHA512:
+        case XTT_X25519_LRSW_ECDSAP256_CHACHA20POLY1305_BLAKE2B:
+        case XTT_X25519_LRSW_ECDSAP256_AES256GCM_SHA512:
+        case XTT_X25519_LRSW_ECDSAP256_AES256GCM_BLAKE2B:
             *suite_spec_out = handshake_context->base.suite_spec;
             return XTT_RETURN_SUCCESS;
         default:
@@ -580,13 +580,13 @@ xtt_get_suite_spec(xtt_suite_spec *suite_spec_out,
 }
 
 xtt_return_code_type
-xtt_get_clients_longterm_key_ed25519(xtt_ed25519_pub_key *longterm_key_out,
+xtt_get_clients_longterm_key_ecdsap256(xtt_ecdsap256_pub_key *longterm_key_out,
                                      const struct xtt_server_handshake_context *handshake_context)
 {
     // TODO: Check state
     memcpy(longterm_key_out,
-           handshake_context->clients_longterm_key.ed25519.data,
-           sizeof(xtt_ed25519_pub_key));
+           handshake_context->clients_longterm_key.ecdsap256.data,
+           sizeof(xtt_ecdsap256_pub_key));
 
     return XTT_RETURN_SUCCESS;
 }
@@ -616,25 +616,25 @@ xtt_get_clients_pseudonym_lrsw(xtt_daa_pseudonym_lrsw *pseudonym_out,
 }
 
 xtt_return_code_type
-xtt_get_my_longterm_key_ed25519(xtt_ed25519_pub_key *longterm_key_out,
+xtt_get_my_longterm_key_ecdsap256(xtt_ecdsap256_pub_key *longterm_key_out,
                                 const struct xtt_client_handshake_context *handshake_context)
 {
     // TODO: Check state
     memcpy(longterm_key_out->data,
-           handshake_context->longterm_key.ed25519.data,
-           sizeof(xtt_ed25519_pub_key));
+           handshake_context->longterm_key.ecdsap256.data,
+           sizeof(xtt_ecdsap256_pub_key));
 
     return XTT_RETURN_SUCCESS;
 }
 
 xtt_return_code_type
-xtt_get_my_longterm_private_key_ed25519(xtt_ed25519_priv_key *longterm_key_priv_out,
+xtt_get_my_longterm_private_key_ecdsap256(xtt_ecdsap256_priv_key *longterm_key_priv_out,
                                         const struct xtt_client_handshake_context *handshake_context)
 {
     // TODO: Check state
     memcpy(longterm_key_priv_out->data,
-           handshake_context->longterm_private_key.ed25519.data,
-           sizeof(xtt_ed25519_priv_key));
+           handshake_context->longterm_private_key.ecdsap256.data,
+           sizeof(xtt_ecdsap256_priv_key));
 
     return XTT_RETURN_SUCCESS;
 }

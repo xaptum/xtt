@@ -42,3 +42,4 @@ set(CURRENT_TEST_BINARY_DIR ${CMAKE_BINARY_DIR}/testBin/)
 
 add_test_case("wrapper_sanity-test.c" "")
 add_test_case("integration_test.c" "1;2;3;4")
+add_test_case("certificate_test.c" "")
