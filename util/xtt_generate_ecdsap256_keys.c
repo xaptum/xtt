@@ -1,13 +1,13 @@
 /******************************************************************************
  *
  * Copyright 2018 Xaptum, Inc.
- * 
+ *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
  *    You may obtain a copy of the License at
- * 
+ *
  *        http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  *    Unless required by applicable law or agreed to in writing, software
  *    distributed under the License is distributed on an "AS IS" BASIS,
  *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -37,21 +37,21 @@ int main(int argc, char *argv[])
     struct cli_args args;
     parse_cli(argc, argv, &args);
 
-    printf("Generating Ed25519 keys to files '%s' and '%s'...\n", args.pubkey_out_filename, args.privkey_out_filename);
-    xtt_ed25519_pub_key pub;
-    xtt_ed25519_priv_key priv;
-    if (0 != xtt_crypto_create_ed25519_key_pair(&pub, &priv)) {
-        fprintf(stderr, "Error creating Ed25519 keypair\n");
+    printf("Generating ecdsap256 keys to files '%s' and '%s'...\n", args.pubkey_out_filename, args.privkey_out_filename);
+    xtt_ecdsap256_pub_key pub;
+    xtt_ecdsap256_priv_key priv;
+    if (0 != xtt_crypto_create_ecdsap256_key_pair(&pub, &priv)) {
+        fprintf(stderr, "Error creating ecdsap256 keypair\n");
         ret = 1;
         goto finish;
     }
 
-    if (0 != save_to_file(pub.data, sizeof(xtt_ed25519_pub_key), args.pubkey_out_filename)) {
+    if (0 != save_to_file(pub.data, sizeof(xtt_ecdsap256_pub_key), args.pubkey_out_filename)) {
         ret = 1;
         goto finish;
     }
 
-    if (0 != save_to_file(priv.data, sizeof(xtt_ed25519_priv_key), args.privkey_out_filename)) {
+    if (0 != save_to_file(priv.data, sizeof(xtt_ecdsap256_priv_key), args.privkey_out_filename)) {
         ret = 1;
         goto finish;
     }

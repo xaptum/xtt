@@ -1,13 +1,13 @@
 /******************************************************************************
  *
  * Copyright 2018 Xaptum, Inc.
- * 
+ *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
  *    You may obtain a copy of the License at
- * 
+ *
  *        http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  *    Unless required by applicable law or agreed to in writing, software
  *    distributed under the License is distributed on an "AS IS" BASIS,
  *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -238,19 +238,18 @@ verify_server_signature(const unsigned char *signature,
     xtt_certificate_root_id *claimed_root
         = (xtt_certificate_root_id*)xtt_server_certificate_access_rootid(xtt_encrypted_serverinitandattest_access_certificate(server_initandattest_encryptedpart_uptosignature,
                                                                                                   handshake_ctx->base.version));
+
     if (0 != xtt_crypto_memcmp(root_server_certificate->id.data, claimed_root->data, sizeof(xtt_certificate_root_id)))
         return XTT_RETURN_BAD_CERTIFICATE;
 
     // 4) Check that the root signature in the server cert verifies using that root cert.
     struct xtt_server_certificate_raw_type *certificate = xtt_encrypted_serverinitandattest_access_certificate(server_initandattest_encryptedpart_uptosignature,
-                                                                                                               handshake_ctx->base.version);
-    rc = root_server_certificate->verify_signature(xtt_server_certificate_access_rootsignature(certificate,
-                                                                                               handshake_ctx->base.suite_spec),
-                                                   certificate,
-                                                   root_server_certificate);
+                                                                                                           handshake_ctx->base.version);
+    rc = root_server_certificate->verify_signature(xtt_server_certificate_access_rootsignature(certificate, handshake_ctx->base.suite_spec),
+                                                                                               certificate,
+                                                                                               root_server_certificate);
     if (XTT_RETURN_SUCCESS != rc)
         return rc;
-
     // 5) Check that the server signature verifies using the server cert.
     rc = generate_server_sig_hash(handshake_ctx->base.hash_out_buffer,
                                   client_init,
@@ -302,7 +301,7 @@ generate_server_sig_hash(unsigned char *hash_out,
                                                           handshake_ctx->suite_spec));
     hash_input += xtt_serverinitandattest_unencrypted_part_length(handshake_ctx->version,
                                                                  handshake_ctx->suite_spec);
-                                                                                            
+
     // 1iv) Copy in the ServerInitAndAttest encrypted-part-up-to-signature to the hash input buffer.
     memcpy(hash_input,
            server_initandattest_encryptedpart_uptosignature,
@@ -330,6 +329,7 @@ is_expiry_passed(const xtt_certificate_expiry *expiry)
     struct tm *now = gmtime(&now_timet);
 
     int year, month, day;
+
     if (3 != sscanf(expiry->data, "%4d%2d%2d", &year, &month, &day))
         return XTT_RETURN_BAD_EXPIRY;
 

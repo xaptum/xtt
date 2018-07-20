@@ -1,13 +1,13 @@
 /******************************************************************************
  *
  * Copyright 2018 Xaptum, Inc.
- * 
+ *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
  *    You may obtain a copy of the License at
- * 
+ *
  *        http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  *    Unless required by applicable law or agreed to in writing, software
  *    distributed under the License is distributed on an "AS IS" BASIS,
  *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -57,22 +57,22 @@ int main(int argc, char *argv[])
         goto finish;
     }
 
-    xtt_ed25519_pub_key pubkey_buf;
-    if (read_from_file(args.pubkey_in_filename, pubkey_buf.data, sizeof(xtt_ed25519_pub_key))) {
+    xtt_ecdsap256_pub_key pubkey_buf;
+    if (read_from_file(args.pubkey_in_filename, pubkey_buf.data, sizeof(xtt_ecdsap256_pub_key))) {
         fprintf(stderr, "Error reading public key in from file '%s'\n", args.pubkey_in_filename);
         ret = 1;
         goto finish;
     }
 
-    xtt_ed25519_priv_key privkey_buf;
-    if (read_from_file(args.privkey_in_filename, privkey_buf.data, sizeof(xtt_ed25519_priv_key))) {
+    xtt_ecdsap256_priv_key privkey_buf;
+    if (read_from_file(args.privkey_in_filename, privkey_buf.data, sizeof(xtt_ecdsap256_priv_key))) {
         fprintf(stderr, "Error reading private key in from file '%s'\n", args.privkey_in_filename);
         ret = 1;
         goto finish;
     }
 
     unsigned char cert_buf[XTT_X509_CERTIFICATE_LENGTH];
-    if (0 != xtt_x509_from_ed25519_keypair(&pubkey_buf, &privkey_buf, &name_buf, cert_buf, sizeof(cert_buf))) {
+    if (0 != xtt_x509_from_ecdsap256_keypair(&pubkey_buf, &privkey_buf, &name_buf, cert_buf, sizeof(cert_buf))) {
         fprintf(stderr, "Error creating X509 certificate\n");
         ret = 1;
         goto finish;
@@ -85,7 +85,7 @@ int main(int argc, char *argv[])
     }
 
     unsigned char asn1_priv_buf[XTT_ASN1_PRIVATE_KEY_LENGTH];
-    if (0 != xtt_asn1_from_ed25519_private_key(&privkey_buf, asn1_priv_buf, sizeof(asn1_priv_buf))) {
+    if (0 != xtt_asn1_from_ecdsap256_private_key(&privkey_buf, &pubkey_buf, asn1_priv_buf, sizeof(asn1_priv_buf))) {
         fprintf(stderr, "Error creating ASN.1 private key\n");
         ret = 1;
         goto finish;
@@ -107,10 +107,10 @@ void parse_cli(int argc, char *argv[], struct cli_args *args)
 {
     const char *usage = "usage: %s <identity-file> <public-key-in-file> <private-key-in-file> [certificate-out-file] [private-key-out-file]\n"
                         "\tidentity-file            - File with XTT identity\n"
-                        "\tpublic-key-in-file       - File with raw Ed25519 public key\n"
-                        "\tprivate-key-in-file      - File with raw Ed25519 private key\n"
+                        "\tpublic-key-in-file       - File with raw ecdsap256 public key\n"
+                        "\tprivate-key-in-file      - File with raw ecdsap256 private key\n"
                         "\tcertificate-out-file     - Location to save X509 self-signed certificate         (default: 'cert.bin')\n"
-                        "\tprivate-key-out-file     - Location to save ASN.1-encoded Ed25519 private key    (default: 'priv_asn1.bin')\n"
+                        "\tprivate-key-out-file     - Location to save ASN.1-encoded ecdsap256 private key    (default: 'priv_asn1.bin')\n"
                         "\t\tIf either cert-out-file or private-key-out-file is given, BOTH must be given\n";
 
     if (6 == argc) {
@@ -178,4 +178,3 @@ cleanup:
 
     return ret;
 }
-

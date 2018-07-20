@@ -1,13 +1,13 @@
 /******************************************************************************
  *
  * Copyright 2018 Xaptum, Inc.
- * 
+ *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
  *    You may obtain a copy of the License at
- * 
+ *
  *        http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  *    Unless required by applicable law or agreed to in writing, software
  *    distributed under the License is distributed on an "AS IS" BASIS,
  *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -60,10 +60,10 @@ uint16_t xtt_clientinit_length(xtt_version version,
     switch (version) {
         case XTT_VERSION_ONE:
             switch (suite_spec) {
-                case XTT_X25519_LRSW_ED25519_CHACHA20POLY1305_SHA512:
-                case XTT_X25519_LRSW_ED25519_CHACHA20POLY1305_BLAKE2B:
-                case XTT_X25519_LRSW_ED25519_AES256GCM_SHA512:
-                case XTT_X25519_LRSW_ED25519_AES256GCM_BLAKE2B:
+                case XTT_X25519_LRSW_ECDSAP256_CHACHA20POLY1305_SHA512:
+                case XTT_X25519_LRSW_ECDSAP256_CHACHA20POLY1305_BLAKE2B:
+                case XTT_X25519_LRSW_ECDSAP256_AES256GCM_SHA512:
+                case XTT_X25519_LRSW_ECDSAP256_AES256GCM_BLAKE2B:
                     return sizeof(xtt_msg_type_raw)
                            + sizeof(xtt_length)
                            + sizeof(xtt_version_raw)
@@ -133,10 +133,10 @@ uint16_t xtt_serverinitandattest_unencrypted_part_length(xtt_version version,
     switch (version) {
         case XTT_VERSION_ONE:
             switch (suite_spec) {
-                case XTT_X25519_LRSW_ED25519_CHACHA20POLY1305_SHA512:
-                case XTT_X25519_LRSW_ED25519_CHACHA20POLY1305_BLAKE2B:
-                case XTT_X25519_LRSW_ED25519_AES256GCM_SHA512:
-                case XTT_X25519_LRSW_ED25519_AES256GCM_BLAKE2B:
+                case XTT_X25519_LRSW_ECDSAP256_CHACHA20POLY1305_SHA512:
+                case XTT_X25519_LRSW_ECDSAP256_CHACHA20POLY1305_BLAKE2B:
+                case XTT_X25519_LRSW_ECDSAP256_AES256GCM_SHA512:
+                case XTT_X25519_LRSW_ECDSAP256_AES256GCM_BLAKE2B:
                     return sizeof(xtt_msg_type_raw)
                            + sizeof(xtt_length)
                            + sizeof(xtt_version_raw)
@@ -156,12 +156,12 @@ uint16_t xtt_serverinitandattest_encrypted_part_length(xtt_version version,
     switch (version) {
         case XTT_VERSION_ONE:
             switch (suite_spec) {
-                case XTT_X25519_LRSW_ED25519_CHACHA20POLY1305_SHA512:
-                case XTT_X25519_LRSW_ED25519_CHACHA20POLY1305_BLAKE2B:
-                case XTT_X25519_LRSW_ED25519_AES256GCM_SHA512:
-                case XTT_X25519_LRSW_ED25519_AES256GCM_BLAKE2B:
+                case XTT_X25519_LRSW_ECDSAP256_CHACHA20POLY1305_SHA512:
+                case XTT_X25519_LRSW_ECDSAP256_CHACHA20POLY1305_BLAKE2B:
+                case XTT_X25519_LRSW_ECDSAP256_AES256GCM_SHA512:
+                case XTT_X25519_LRSW_ECDSAP256_AES256GCM_BLAKE2B:
                     return xtt_server_certificate_length(suite_spec)
-                           + sizeof(xtt_ed25519_signature);
+                           + sizeof(xtt_ecdsap256_signature);
             }
     }
 
@@ -179,11 +179,11 @@ xtt_serverinitandattest_total_length(xtt_version version,
     switch (version) {
         case XTT_VERSION_ONE:
             switch (suite_spec) {
-                case XTT_X25519_LRSW_ED25519_CHACHA20POLY1305_SHA512:
-                case XTT_X25519_LRSW_ED25519_CHACHA20POLY1305_BLAKE2B:
+                case XTT_X25519_LRSW_ECDSAP256_CHACHA20POLY1305_SHA512:
+                case XTT_X25519_LRSW_ECDSAP256_CHACHA20POLY1305_BLAKE2B:
                     return body_length + sizeof(xtt_chacha_mac);
-                case XTT_X25519_LRSW_ED25519_AES256GCM_SHA512:
-                case XTT_X25519_LRSW_ED25519_AES256GCM_BLAKE2B:
+                case XTT_X25519_LRSW_ECDSAP256_AES256GCM_SHA512:
+                case XTT_X25519_LRSW_ECDSAP256_AES256GCM_BLAKE2B:
                     return body_length + sizeof(xtt_aes256_mac);
                     return body_length;
             }
@@ -200,10 +200,10 @@ xtt_serverinitandattest_uptosignature_length(xtt_version version,
     switch (version) {
         case XTT_VERSION_ONE:
             switch (suite_spec) {
-                case XTT_X25519_LRSW_ED25519_CHACHA20POLY1305_SHA512:
-                case XTT_X25519_LRSW_ED25519_CHACHA20POLY1305_BLAKE2B:
-                case XTT_X25519_LRSW_ED25519_AES256GCM_SHA512:
-                case XTT_X25519_LRSW_ED25519_AES256GCM_BLAKE2B:
+                case XTT_X25519_LRSW_ECDSAP256_CHACHA20POLY1305_SHA512:
+                case XTT_X25519_LRSW_ECDSAP256_CHACHA20POLY1305_BLAKE2B:
+                case XTT_X25519_LRSW_ECDSAP256_AES256GCM_SHA512:
+                case XTT_X25519_LRSW_ECDSAP256_AES256GCM_BLAKE2B:
                     return xtt_serverinitandattest_unencrypted_part_length(version,
                                                                           suite_spec)
                            + xtt_server_certificate_length(suite_spec);
@@ -221,10 +221,10 @@ xtt_serverinitandattest_encrypted_part_uptosignature_length(xtt_version version,
     switch (version) {
         case XTT_VERSION_ONE:
             switch (suite_spec) {
-                case XTT_X25519_LRSW_ED25519_CHACHA20POLY1305_SHA512:
-                case XTT_X25519_LRSW_ED25519_CHACHA20POLY1305_BLAKE2B:
-                case XTT_X25519_LRSW_ED25519_AES256GCM_SHA512:
-                case XTT_X25519_LRSW_ED25519_AES256GCM_BLAKE2B:
+                case XTT_X25519_LRSW_ECDSAP256_CHACHA20POLY1305_SHA512:
+                case XTT_X25519_LRSW_ECDSAP256_CHACHA20POLY1305_BLAKE2B:
+                case XTT_X25519_LRSW_ECDSAP256_AES256GCM_SHA512:
+                case XTT_X25519_LRSW_ECDSAP256_AES256GCM_BLAKE2B:
                     return xtt_server_certificate_length(suite_spec);
             }
     }
@@ -240,10 +240,10 @@ xtt_serverinitandattest_uptocookie_length(xtt_version version,
     switch (version) {
         case XTT_VERSION_ONE:
             switch (suite_spec) {
-                case XTT_X25519_LRSW_ED25519_CHACHA20POLY1305_SHA512:
-                case XTT_X25519_LRSW_ED25519_CHACHA20POLY1305_BLAKE2B:
-                case XTT_X25519_LRSW_ED25519_AES256GCM_SHA512:
-                case XTT_X25519_LRSW_ED25519_AES256GCM_BLAKE2B:
+                case XTT_X25519_LRSW_ECDSAP256_CHACHA20POLY1305_SHA512:
+                case XTT_X25519_LRSW_ECDSAP256_CHACHA20POLY1305_BLAKE2B:
+                case XTT_X25519_LRSW_ECDSAP256_AES256GCM_SHA512:
+                case XTT_X25519_LRSW_ECDSAP256_AES256GCM_BLAKE2B:
                     return sizeof(xtt_msg_type_raw)
                            + sizeof(xtt_length)
                            + sizeof(xtt_version_raw)
@@ -297,10 +297,10 @@ xtt_serverinitandattest_access_server_cookie(const unsigned char* msg_start,
     switch (version) {
         case XTT_VERSION_ONE:
             switch (suite_spec) {
-                case XTT_X25519_LRSW_ED25519_CHACHA20POLY1305_SHA512:
-                case XTT_X25519_LRSW_ED25519_CHACHA20POLY1305_BLAKE2B:
-                case XTT_X25519_LRSW_ED25519_AES256GCM_SHA512:
-                case XTT_X25519_LRSW_ED25519_AES256GCM_BLAKE2B:
+                case XTT_X25519_LRSW_ECDSAP256_CHACHA20POLY1305_SHA512:
+                case XTT_X25519_LRSW_ECDSAP256_CHACHA20POLY1305_BLAKE2B:
+                case XTT_X25519_LRSW_ECDSAP256_AES256GCM_SHA512:
+                case XTT_X25519_LRSW_ECDSAP256_AES256GCM_BLAKE2B:
                     return (xtt_server_cookie*)(msg_start
                                                   + sizeof(xtt_msg_type_raw)
                                                   + sizeof(xtt_length)
@@ -335,10 +335,10 @@ xtt_encrypted_serverinitandattest_access_signature(const unsigned char* encrypte
     switch (version) {
         case XTT_VERSION_ONE:
             switch (suite_spec) {
-                case XTT_X25519_LRSW_ED25519_CHACHA20POLY1305_SHA512:
-                case XTT_X25519_LRSW_ED25519_CHACHA20POLY1305_BLAKE2B:
-                case XTT_X25519_LRSW_ED25519_AES256GCM_SHA512:
-                case XTT_X25519_LRSW_ED25519_AES256GCM_BLAKE2B:
+                case XTT_X25519_LRSW_ECDSAP256_CHACHA20POLY1305_SHA512:
+                case XTT_X25519_LRSW_ECDSAP256_CHACHA20POLY1305_BLAKE2B:
+                case XTT_X25519_LRSW_ECDSAP256_AES256GCM_SHA512:
+                case XTT_X25519_LRSW_ECDSAP256_AES256GCM_BLAKE2B:
                     return (unsigned char*)(encrypted_start
                                             + xtt_server_certificate_length(suite_spec));
             }
@@ -369,12 +369,12 @@ uint16_t xtt_identityclientattest_encrypted_part_length(xtt_version version,
     switch (version) {
         case XTT_VERSION_ONE:
             switch (suite_spec) {
-                case XTT_X25519_LRSW_ED25519_CHACHA20POLY1305_SHA512:
-                case XTT_X25519_LRSW_ED25519_CHACHA20POLY1305_BLAKE2B:
-                case XTT_X25519_LRSW_ED25519_AES256GCM_SHA512:
-                case XTT_X25519_LRSW_ED25519_AES256GCM_BLAKE2B:
-                    return sizeof(xtt_ed25519_pub_key)
-                           + sizeof(xtt_ed25519_signature)
+                case XTT_X25519_LRSW_ECDSAP256_CHACHA20POLY1305_SHA512:
+                case XTT_X25519_LRSW_ECDSAP256_CHACHA20POLY1305_BLAKE2B:
+                case XTT_X25519_LRSW_ECDSAP256_AES256GCM_SHA512:
+                case XTT_X25519_LRSW_ECDSAP256_AES256GCM_BLAKE2B:
+                    return sizeof(xtt_ecdsap256_pub_key)
+                           + sizeof(xtt_ecdsap256_signature)
                            + sizeof(xtt_group_id)
                            + sizeof(xtt_identity_type)
                            + sizeof(xtt_daa_signature_lrsw);
@@ -395,11 +395,11 @@ xtt_identityclientattest_total_length(xtt_version version,
     switch (version) {
         case XTT_VERSION_ONE:
             switch (suite_spec) {
-                case XTT_X25519_LRSW_ED25519_CHACHA20POLY1305_SHA512:
-                case XTT_X25519_LRSW_ED25519_CHACHA20POLY1305_BLAKE2B:
+                case XTT_X25519_LRSW_ECDSAP256_CHACHA20POLY1305_SHA512:
+                case XTT_X25519_LRSW_ECDSAP256_CHACHA20POLY1305_BLAKE2B:
                     return body_length + sizeof(xtt_chacha_mac);
-                case XTT_X25519_LRSW_ED25519_AES256GCM_SHA512:
-                case XTT_X25519_LRSW_ED25519_AES256GCM_BLAKE2B:
+                case XTT_X25519_LRSW_ECDSAP256_AES256GCM_SHA512:
+                case XTT_X25519_LRSW_ECDSAP256_AES256GCM_BLAKE2B:
                     return body_length + sizeof(xtt_aes256_mac);
                     return body_length;
             }
@@ -416,16 +416,16 @@ xtt_identityclientattest_uptofirstsignature_length(xtt_version version,
     switch (version) {
         case XTT_VERSION_ONE:
             switch (suite_spec) {
-                case XTT_X25519_LRSW_ED25519_CHACHA20POLY1305_SHA512:
-                case XTT_X25519_LRSW_ED25519_CHACHA20POLY1305_BLAKE2B:
-                case XTT_X25519_LRSW_ED25519_AES256GCM_SHA512:
-                case XTT_X25519_LRSW_ED25519_AES256GCM_BLAKE2B:
+                case XTT_X25519_LRSW_ECDSAP256_CHACHA20POLY1305_SHA512:
+                case XTT_X25519_LRSW_ECDSAP256_CHACHA20POLY1305_BLAKE2B:
+                case XTT_X25519_LRSW_ECDSAP256_AES256GCM_SHA512:
+                case XTT_X25519_LRSW_ECDSAP256_AES256GCM_BLAKE2B:
                     return sizeof(xtt_msg_type_raw)
                            + sizeof(xtt_length)
                            + sizeof(xtt_version_raw)
                            + sizeof(xtt_suite_spec_raw)
                            + sizeof(xtt_server_cookie)
-                           + sizeof(xtt_ed25519_pub_key)
+                           + sizeof(xtt_ecdsap256_pub_key)
                            + sizeof(xtt_group_id)
                            + sizeof(xtt_identity_type);
             }
@@ -442,11 +442,11 @@ xtt_identityclientattest_encrypted_part_uptofirstsignature_length(xtt_version ve
     switch (version) {
         case XTT_VERSION_ONE:
             switch (suite_spec) {
-                case XTT_X25519_LRSW_ED25519_CHACHA20POLY1305_SHA512:
-                case XTT_X25519_LRSW_ED25519_CHACHA20POLY1305_BLAKE2B:
-                case XTT_X25519_LRSW_ED25519_AES256GCM_SHA512:
-                case XTT_X25519_LRSW_ED25519_AES256GCM_BLAKE2B:
-                    return sizeof(xtt_ed25519_pub_key)
+                case XTT_X25519_LRSW_ECDSAP256_CHACHA20POLY1305_SHA512:
+                case XTT_X25519_LRSW_ECDSAP256_CHACHA20POLY1305_BLAKE2B:
+                case XTT_X25519_LRSW_ECDSAP256_AES256GCM_SHA512:
+                case XTT_X25519_LRSW_ECDSAP256_AES256GCM_BLAKE2B:
+                    return sizeof(xtt_ecdsap256_pub_key)
                            + sizeof(xtt_group_id)
                            + sizeof(xtt_identity_type);
             }
@@ -510,12 +510,12 @@ xtt_encrypted_identityclientattest_access_gid(const unsigned char *encrypted_sta
     switch (version) {
         case XTT_VERSION_ONE:
             switch (suite_spec) {
-                case XTT_X25519_LRSW_ED25519_CHACHA20POLY1305_SHA512:
-                case XTT_X25519_LRSW_ED25519_CHACHA20POLY1305_BLAKE2B:
-                case XTT_X25519_LRSW_ED25519_AES256GCM_SHA512:
-                case XTT_X25519_LRSW_ED25519_AES256GCM_BLAKE2B:
+                case XTT_X25519_LRSW_ECDSAP256_CHACHA20POLY1305_SHA512:
+                case XTT_X25519_LRSW_ECDSAP256_CHACHA20POLY1305_BLAKE2B:
+                case XTT_X25519_LRSW_ECDSAP256_AES256GCM_SHA512:
+                case XTT_X25519_LRSW_ECDSAP256_AES256GCM_BLAKE2B:
                     return (unsigned char*)(encrypted_start
-                                            + sizeof(xtt_ed25519_pub_key));
+                                            + sizeof(xtt_ecdsap256_pub_key));
             }
     }
 
@@ -531,12 +531,12 @@ xtt_encrypted_identityclientattest_access_id(const unsigned char *encrypted_star
     switch (version) {
         case XTT_VERSION_ONE:
             switch (suite_spec) {
-                case XTT_X25519_LRSW_ED25519_CHACHA20POLY1305_SHA512:
-                case XTT_X25519_LRSW_ED25519_CHACHA20POLY1305_BLAKE2B:
-                case XTT_X25519_LRSW_ED25519_AES256GCM_SHA512:
-                case XTT_X25519_LRSW_ED25519_AES256GCM_BLAKE2B:
+                case XTT_X25519_LRSW_ECDSAP256_CHACHA20POLY1305_SHA512:
+                case XTT_X25519_LRSW_ECDSAP256_CHACHA20POLY1305_BLAKE2B:
+                case XTT_X25519_LRSW_ECDSAP256_AES256GCM_SHA512:
+                case XTT_X25519_LRSW_ECDSAP256_AES256GCM_BLAKE2B:
                     return (unsigned char*)(encrypted_start
-                                            + sizeof(xtt_ed25519_pub_key)
+                                            + sizeof(xtt_ecdsap256_pub_key)
                                             + sizeof(xtt_group_id));
             }
     }
@@ -553,12 +553,12 @@ xtt_encrypted_identityclientattest_access_longtermsignature(const unsigned char 
     switch (version) {
         case XTT_VERSION_ONE:
             switch (suite_spec) {
-                case XTT_X25519_LRSW_ED25519_CHACHA20POLY1305_SHA512:
-                case XTT_X25519_LRSW_ED25519_CHACHA20POLY1305_BLAKE2B:
-                case XTT_X25519_LRSW_ED25519_AES256GCM_SHA512:
-                case XTT_X25519_LRSW_ED25519_AES256GCM_BLAKE2B:
+                case XTT_X25519_LRSW_ECDSAP256_CHACHA20POLY1305_SHA512:
+                case XTT_X25519_LRSW_ECDSAP256_CHACHA20POLY1305_BLAKE2B:
+                case XTT_X25519_LRSW_ECDSAP256_AES256GCM_SHA512:
+                case XTT_X25519_LRSW_ECDSAP256_AES256GCM_BLAKE2B:
                     return (unsigned char*)(encrypted_start
-                                            + sizeof(xtt_ed25519_pub_key)
+                                            + sizeof(xtt_ecdsap256_pub_key)
                                             + sizeof(xtt_group_id)
                                             + sizeof(xtt_identity_type));
             }
@@ -576,15 +576,15 @@ xtt_encrypted_identityclientattest_access_daasignature(const unsigned char *encr
     switch (version) {
         case XTT_VERSION_ONE:
             switch (suite_spec) {
-                case XTT_X25519_LRSW_ED25519_CHACHA20POLY1305_SHA512:
-                case XTT_X25519_LRSW_ED25519_CHACHA20POLY1305_BLAKE2B:
-                case XTT_X25519_LRSW_ED25519_AES256GCM_SHA512:
-                case XTT_X25519_LRSW_ED25519_AES256GCM_BLAKE2B:
+                case XTT_X25519_LRSW_ECDSAP256_CHACHA20POLY1305_SHA512:
+                case XTT_X25519_LRSW_ECDSAP256_CHACHA20POLY1305_BLAKE2B:
+                case XTT_X25519_LRSW_ECDSAP256_AES256GCM_SHA512:
+                case XTT_X25519_LRSW_ECDSAP256_AES256GCM_BLAKE2B:
                     return (unsigned char*)(encrypted_start
-                                            + sizeof(xtt_ed25519_pub_key)
+                                            + sizeof(xtt_ecdsap256_pub_key)
                                             + sizeof(xtt_group_id)
                                             + sizeof(xtt_identity_type)
-                                            + sizeof(xtt_ed25519_signature));
+                                            + sizeof(xtt_ecdsap256_signature));
             }
     }
 
@@ -612,12 +612,12 @@ uint16_t xtt_identityserverfinished_encrypted_part_length(xtt_version version,
     switch (version) {
         case XTT_VERSION_ONE:
             switch (suite_spec) {
-                case XTT_X25519_LRSW_ED25519_CHACHA20POLY1305_SHA512:
-                case XTT_X25519_LRSW_ED25519_CHACHA20POLY1305_BLAKE2B:
-                case XTT_X25519_LRSW_ED25519_AES256GCM_SHA512:
-                case XTT_X25519_LRSW_ED25519_AES256GCM_BLAKE2B:
+                case XTT_X25519_LRSW_ECDSAP256_CHACHA20POLY1305_SHA512:
+                case XTT_X25519_LRSW_ECDSAP256_CHACHA20POLY1305_BLAKE2B:
+                case XTT_X25519_LRSW_ECDSAP256_AES256GCM_SHA512:
+                case XTT_X25519_LRSW_ECDSAP256_AES256GCM_BLAKE2B:
                     return sizeof(xtt_identity_type)
-                           + sizeof(xtt_ed25519_pub_key);
+                           + sizeof(xtt_ecdsap256_pub_key);
             }
     }
 
@@ -635,11 +635,11 @@ xtt_identityserverfinished_total_length(xtt_version version,
     switch (version) {
         case XTT_VERSION_ONE:
             switch (suite_spec) {
-                case XTT_X25519_LRSW_ED25519_CHACHA20POLY1305_SHA512:
-                case XTT_X25519_LRSW_ED25519_CHACHA20POLY1305_BLAKE2B:
+                case XTT_X25519_LRSW_ECDSAP256_CHACHA20POLY1305_SHA512:
+                case XTT_X25519_LRSW_ECDSAP256_CHACHA20POLY1305_BLAKE2B:
                     return body_length + sizeof(xtt_chacha_mac);
-                case XTT_X25519_LRSW_ED25519_AES256GCM_SHA512:
-                case XTT_X25519_LRSW_ED25519_AES256GCM_BLAKE2B:
+                case XTT_X25519_LRSW_ECDSAP256_AES256GCM_SHA512:
+                case XTT_X25519_LRSW_ECDSAP256_AES256GCM_BLAKE2B:
                     return body_length + sizeof(xtt_aes256_mac);
                     return body_length;
             }
