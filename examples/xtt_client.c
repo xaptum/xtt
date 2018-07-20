@@ -1,13 +1,13 @@
 /******************************************************************************
  *
  * Copyright 2018 Xaptum, Inc.
- * 
+ *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
  *    You may obtain a copy of the License at
- * 
+ *
  *        http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  *    Unless required by applicable law or agreed to in writing, software
  *    distributed under the License is distributed on an "AS IS" BASIS,
  *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -223,7 +223,7 @@ void parse_cmd_args(int argc, char *argv[], xtt_suite_spec *suite_spec,
 {
 
     // Set defaults
-    *suite_spec = XTT_X25519_LRSW_ED25519_CHACHA20POLY1305_SHA512;
+    *suite_spec = XTT_X25519_LRSW_ECDSAP256_CHACHA20POLY1305_SHA512;
     strcpy(ip, "127.0.0.1");
     *port = 4444;
     *use_tpm = 0;
@@ -239,14 +239,14 @@ void parse_cmd_args(int argc, char *argv[], xtt_suite_spec *suite_spec,
                 *use_tpm = 1;
                 break;
             case 's':
-                if (0 == strcmp(optarg, "X25519_LRSW_ED25519_CHACHA20POLY1305_SHA512")) {
-                    *suite_spec = XTT_X25519_LRSW_ED25519_CHACHA20POLY1305_SHA512;
-                } else if (0 == strcmp(optarg, "X25519_LRSW_ED25519_CHACHA20POLY1305_BLAKE2B")) {
-                    *suite_spec = XTT_X25519_LRSW_ED25519_CHACHA20POLY1305_BLAKE2B;
-                } else if (0 == strcmp(optarg, "X25519_LRSW_ED25519_AES256GCM_SHA512")) {
-                    *suite_spec = XTT_X25519_LRSW_ED25519_AES256GCM_SHA512;
-                } else if (0 == strcmp(optarg, "X25519_LRSW_ED25519_AES256GCM_BLAKE2B")) {
-                    *suite_spec = XTT_X25519_LRSW_ED25519_AES256GCM_BLAKE2B;
+                if (0 == strcmp(optarg, "X25519_LRSW_ECDSAP256_CHACHA20POLY1305_SHA512")) {
+                    *suite_spec = XTT_X25519_LRSW_ECDSAP256_CHACHA20POLY1305_SHA512;
+                } else if (0 == strcmp(optarg, "X25519_LRSW_ECDSAP256_CHACHA20POLY1305_BLAKE2B")) {
+                    *suite_spec = XTT_X25519_LRSW_ECDSAP256_CHACHA20POLY1305_BLAKE2B;
+                } else if (0 == strcmp(optarg, "X25519_LRSW_ECDSAP256_AES256GCM_SHA512")) {
+                    *suite_spec = XTT_X25519_LRSW_ECDSAP256_AES256GCM_SHA512;
+                } else if (0 == strcmp(optarg, "X25519_LRSW_ECDSAP256_AES256GCM_BLAKE2B")) {
+                    *suite_spec = XTT_X25519_LRSW_ECDSAP256_AES256GCM_BLAKE2B;
                 } else {
                     fprintf(stderr, "Unknown suite_spec '%s'\n", optarg);
                     exit(1);
@@ -304,10 +304,10 @@ void parse_cmd_args(int argc, char *argv[], xtt_suite_spec *suite_spec,
             case 'h':
                 fprintf(stderr, "usage: %s [-m] [-i <requested_client_id>] [-s <suite_spec>] [-a <server_ip>] [-p <server_port>] [-t <tcti_type>] [-d <tcti_device_file>]\n", argv[0]);
                 fprintf(stderr, "\tsuite_spec can be one of the following:\n");
-                fprintf(stderr, "\t\tX25519_LRSW_ED25519_CHACHA20POLY1305_SHA512 (default)\n");
-                fprintf(stderr, "\t\tX25519_LRSW_ED25519_CHACHA20POLY1305_BLAKE2B\n");
-                fprintf(stderr, "\t\tX25519_LRSW_ED25519_AES256GCM_SHA512\n");
-                fprintf(stderr, "\t\tX25519_LRSW_ED25519_AES256GCM_BLAKE2B\n");
+                fprintf(stderr, "\t\tX25519_LRSW_ECDSAP256_CHACHA20POLY1305_SHA512 (default)\n");
+                fprintf(stderr, "\t\tX25519_LRSW_ECDSAP256_CHACHA20POLY1305_BLAKE2B\n");
+                fprintf(stderr, "\t\tX25519_LRSW_ECDSAP256_AES256GCM_SHA512\n");
+                fprintf(stderr, "\t\tX25519_LRSW_ECDSAP256_AES256GCM_BLAKE2B\n");
                 fprintf(stderr, "\trequested_client_id is the 32-byte ASCII-encoded client ID to request from the server\n");
                 fprintf(stderr, "\t\txtt_client_id_null (default)\n");
                 fprintf(stderr, "\tserver_ip is the dotted-decimal address of the XTT server to connect to\n");
@@ -553,7 +553,7 @@ int initialize_certs(int use_tpm)
 
     // 1) Read root cert stuff in from file
     xtt_certificate_root_id root_id;
-    xtt_ed25519_pub_key root_public_key;
+    xtt_ecdsap256_pub_key root_public_key;
     if (use_tpm) {
 #ifdef USE_TPM
         int nvram_ret;
@@ -567,7 +567,7 @@ int initialize_certs(int use_tpm)
         }
 
         nvram_ret = read_nvram(root_public_key.data,
-                               sizeof(xtt_ed25519_pub_key),
+                               sizeof(xtt_ecdsap256_pub_key),
                                root_pubkey_handle_g,
                                tcti_context);
         if (0 != nvram_ret) {
@@ -584,8 +584,8 @@ int initialize_certs(int use_tpm)
             fprintf(stderr, "Error reading root's id from file\n");
             return -1;
         }
-        read_ret = read_file_into_buffer(root_public_key.data, sizeof(xtt_ed25519_pub_key), root_pubkey_file);
-        if (sizeof(xtt_ed25519_pub_key) != read_ret) {
+        read_ret = read_file_into_buffer(root_public_key.data, sizeof(xtt_ecdsap256_pub_key), root_pubkey_file);
+        if (sizeof(xtt_ecdsap256_pub_key) != read_ret) {
             fprintf(stderr, "Error reading root's public key from file\n");
             return -1;
         }
@@ -595,7 +595,7 @@ int initialize_certs(int use_tpm)
     memcpy(certificate_db[0].root_id.data,
            root_id.data,
            sizeof(xtt_certificate_root_id));
-    rc = xtt_initialize_server_root_certificate_context_ed25519(&certificate_db[0].cert,
+    rc = xtt_initialize_server_root_certificate_context_ecdsap256(&certificate_db[0].cert,
                                                                 &root_id,
                                                                 &root_public_key);
     if (XTT_RETURN_SUCCESS != rc)
@@ -789,29 +789,29 @@ int report_results(xtt_identity_type *requested_client_id,
     }
 
     // Get longterm keypair
-    xtt_ed25519_pub_key my_longterm_key;
-    if (XTT_RETURN_SUCCESS != xtt_get_my_longterm_key_ed25519(&my_longterm_key, ctx)) {
+    xtt_ecdsap256_pub_key my_longterm_key;
+    if (XTT_RETURN_SUCCESS != xtt_get_my_longterm_key_ecdsap256(&my_longterm_key, ctx)) {
         printf("Error getting my longterm key!\n");
         return 1;
     }
     printf("My longterm key: {");
-    for (size_t i=0; i < sizeof(xtt_ed25519_pub_key); ++i) {
+    for (size_t i=0; i < sizeof(xtt_ecdsap256_pub_key); ++i) {
         printf("%#02X", my_longterm_key.data[i]);
-        if (i < (sizeof(xtt_ed25519_pub_key)-1)) {
+        if (i < (sizeof(xtt_ecdsap256_pub_key)-1)) {
             printf(", ");
         } else {
             printf("}\n");
         }
     }
-    xtt_ed25519_priv_key my_longterm_private_key;
-    if (XTT_RETURN_SUCCESS != xtt_get_my_longterm_private_key_ed25519(&my_longterm_private_key, ctx)) {
+    xtt_ecdsap256_priv_key my_longterm_private_key;
+    if (XTT_RETURN_SUCCESS != xtt_get_my_longterm_private_key_ecdsap256(&my_longterm_private_key, ctx)) {
         printf("Error getting my longterm private key!\n");
         return 1;
     }
 
     // Save longterm keypair as X509 certificate and ASN.1-encoded private key
     unsigned char cert_buf[XTT_X509_CERTIFICATE_LENGTH];
-    if (0 != xtt_x509_from_ed25519_keypair(&my_longterm_key, &my_longterm_private_key, &my_assigned_id, cert_buf, sizeof(cert_buf))) {
+    if (0 != xtt_x509_from_ecdsap256_keypair(&my_longterm_key, &my_longterm_private_key, &my_assigned_id, cert_buf, sizeof(cert_buf))) {
         fprintf(stderr, "Error creating X509 certificate\n");
         return 1;
     }
@@ -821,7 +821,7 @@ int report_results(xtt_identity_type *requested_client_id,
         return 1;
     }
     unsigned char asn1_priv_buf[XTT_ASN1_PRIVATE_KEY_LENGTH];
-    if (0 != xtt_asn1_from_ed25519_private_key(&my_longterm_private_key, asn1_priv_buf, sizeof(asn1_priv_buf))) {
+    if (0 != xtt_asn1_from_ecdsap256_private_key(&my_longterm_private_key, &my_longterm_key, asn1_priv_buf, sizeof(asn1_priv_buf))) {
         fprintf(stderr, "Error creating ASN.1 private key\n");
         return 1;
     }

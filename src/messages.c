@@ -1,13 +1,13 @@
 /******************************************************************************
  *
  * Copyright 2018 Xaptum, Inc.
- * 
+ *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
  *    You may obtain a copy of the License at
- * 
+ *
  *        http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  *    Unless required by applicable law or agreed to in writing, software
  *    distributed under the License is distributed on an "AS IS" BASIS,
  *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -499,7 +499,7 @@ xtt_handshake_client_start(uint16_t* io_bytes_requested,
 
     // 5) Generate nonce.
     xtt_crypto_get_random(xtt_clientinit_access_nonce(ctx->base.out_message_start, ctx->base.version)->data,
-                         sizeof(xtt_signing_nonce)); 
+                         sizeof(xtt_signing_nonce));
 
     // 6) Set Diffie-Hellman key pair.
     // Key pair is assumed to have been generated previously
@@ -639,7 +639,7 @@ xtt_handshake_server_build_serverattest(uint16_t* io_bytes_requested,
         goto finish;
 
     // 8) Copy own certificate.
-    memcpy(xtt_encrypted_serverinitandattest_access_certificate(ctx->base.buffer, 
+    memcpy(xtt_encrypted_serverinitandattest_access_certificate(ctx->base.buffer,
                                                                 ctx->base.version),
            certificate_ctx->serialized_certificate,
            xtt_server_certificate_length(ctx->base.suite_spec));
@@ -797,7 +797,6 @@ xtt_handshake_client_build_idclientattest(uint16_t *io_bytes_requested,
                                           struct xtt_client_handshake_context* handshake_ctx)
 {
     xtt_return_code_type rc;
-
     // 0i) Ensure we've read enough
     uint16_t bytes_io_performed_for_this_message = handshake_ctx->base.in_end - handshake_ctx->base.in_message_start;
     uint16_t message_length = xtt_serverinitandattest_total_length(handshake_ctx->base.version, handshake_ctx->base.suite_spec);
@@ -810,7 +809,6 @@ xtt_handshake_client_build_idclientattest(uint16_t *io_bytes_requested,
         *io_bytes_requested = message_length - bytes_io_performed_for_this_message;
         return XTT_RETURN_WANT_READ;
     }
-
     // 0ii) Ensure we're in the correct state
     if (XTT_CLIENT_HANDSHAKE_STATE_BUILDING_IDCLIENTATTEST != handshake_ctx->state) {
         rc = XTT_RETURN_BAD_HANDSHAKE_ORDER;

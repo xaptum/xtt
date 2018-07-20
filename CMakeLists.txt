@@ -45,6 +45,7 @@ set(CMAKE_C_FLAGS_RELWITHSANITIZE "${CMAKE_C_FLAGS_RELWITHSANITIZE} -O2 -g -fsan
 
 set(XTT_SRCS
         src/libsodium_wrapper.c
+	src/amcl_wrapper.c
         src/ecdaa_wrapper.c
         src/certificates.c
         src/context.c
