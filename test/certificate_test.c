@@ -17,7 +17,6 @@
  *****************************************************************************/
 
 #include <xtt.h>
-#include <amcl/x509.h>
 #include <assert.h>
 #include "test-utils.h"
 #include "../src/internal/asn1.h"
