@@ -128,6 +128,8 @@ int main(int argc, char *argv[])
         return 1;
     }
 
+    setbuf(stdout, NULL);
+
     int init_daa_ret = -1;
     int socket = -1;
 
