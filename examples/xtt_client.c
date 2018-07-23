@@ -696,7 +696,7 @@ int do_handshake(int socket,
                 fprintf(stderr, "Received error message from server\n");
                 return -1;
             default:
-                printf("Encountered error during client handshake: %d\n", rc);
+                printf("Encountered error during client handshake: %s (%d)\n", xtt_strerror(rc), rc);
                 unsigned char err_buffer[16];
                 (void)xtt_client_build_error_msg(&bytes_requested, &io_ptr, ctx);
                 int write_ret = write(socket, err_buffer, bytes_requested);
