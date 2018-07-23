@@ -31,9 +31,6 @@
 #include <unistd.h>
 #include <getopt.h>
 
-#define MAX_SERVER_IP_LENGTH 16
-#define MAX_TPM_DEV_FILE_LENGTH 128
-
 #ifdef USE_TPM
 #include <tss2/tss2_sys.h>
 #include <tss2/tss2_tcti_socket.h>
@@ -82,8 +79,8 @@ typedef enum {
     XTT_TCTI_DEVICE,
 } xtt_tcti_type;
 
-void parse_cmd_args(int argc, char *argv[], xtt_suite_spec *suite_spec, char *ip,
-        unsigned short *port, int *use_tpm, xtt_tcti_type *tcti_type, char *dev_file,
+void parse_cmd_args(int argc, char *argv[], xtt_suite_spec *suite_spec, char **ip,
+        unsigned short *port, int *use_tpm, xtt_tcti_type *tcti_type, char **dev_file,
         xtt_identity_type *requested_client_id);
 
 int connect_to_server(const char *ip, unsigned short port);
@@ -132,13 +129,13 @@ int main(int argc, char *argv[])
 
     // 0) Parse the command line args
     xtt_suite_spec suite_spec;
-    char server_ip[MAX_SERVER_IP_LENGTH];
+    char *server_ip;
     unsigned short server_port;
     int use_tpm;
     xtt_tcti_type tcti_type;
-    char tcti_dev_file[MAX_TPM_DEV_FILE_LENGTH];
+    char *tcti_dev_file;
     xtt_identity_type requested_client_id;
-    parse_cmd_args(argc, argv, &suite_spec, server_ip, &server_port, &use_tpm, &tcti_type, tcti_dev_file, &requested_client_id);
+    parse_cmd_args(argc, argv, &suite_spec, &server_ip, &server_port, &use_tpm, &tcti_type, &tcti_dev_file, &requested_client_id);
 
     // 1) Setup the needed XTT contexts (from files).
     struct xtt_client_group_context group_ctx;
@@ -218,17 +215,17 @@ finish:
 }
 
 void parse_cmd_args(int argc, char *argv[], xtt_suite_spec *suite_spec,
-        char *ip, unsigned short *port, int *use_tpm, xtt_tcti_type *tcti_type, char *dev_file,
+        char **ip, unsigned short *port, int *use_tpm, xtt_tcti_type *tcti_type, char **dev_file,
         xtt_identity_type *requested_client_id)
 {
 
     // Set defaults
     *suite_spec = XTT_X25519_LRSW_ECDSAP256_CHACHA20POLY1305_SHA512;
-    strcpy(ip, "127.0.0.1");
+    *ip = "127.0.0.1";
     *port = 4444;
     *use_tpm = 0;
     *tcti_type = XTT_TCTI_DEVICE;
-    strcpy(dev_file, "/dev/tpm0");
+    *dev_file = "/dev/tpm0";
     *requested_client_id = xtt_null_identity;
 
     // Parse args
@@ -254,12 +251,7 @@ void parse_cmd_args(int argc, char *argv[], xtt_suite_spec *suite_spec,
                 break;
             case 'a':
             {
-                size_t ip_opt_len = strlen(optarg);
-                if (ip_opt_len > MAX_SERVER_IP_LENGTH) {
-                    fprintf(stderr, "Provided server IP address is too long (> %d)\n", MAX_SERVER_IP_LENGTH);
-                    exit(1);
-                }
-                strncpy(ip, optarg, MAX_SERVER_IP_LENGTH-1);
+                *ip = optarg;
                 break;
             }
             case 'p':
@@ -277,12 +269,7 @@ void parse_cmd_args(int argc, char *argv[], xtt_suite_spec *suite_spec,
                 break;
             case 'd':
             {
-                size_t dev_opt_len = strlen(optarg);
-                if (dev_opt_len > MAX_TPM_DEV_FILE_LENGTH) {
-                    fprintf(stderr, "Provided TPM TCTI device file is too long (> %d)\n", MAX_TPM_DEV_FILE_LENGTH);
-                    exit(1);
-                }
-                strncpy(dev_file, optarg, MAX_TPM_DEV_FILE_LENGTH-1);
+                *dev_file = optarg;
                 break;
             }
             case 'i':
