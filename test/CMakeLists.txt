@@ -8,11 +8,13 @@ function(add_test_case case_file test_args)
   if(BUILD_SHARED_LIBS)
     target_link_libraries(${case_name} PRIVATE xtt
             sodium
+            AMCL::AMCL
             ${ECDAA_LIBRARIES}
             ${XAPTUM_TPM_LIBRARIES})
   else()
     target_link_libraries(${case_name} PRIVATE xtt_static
             sodium
+            AMCL::AMCL
             ${ECDAA_LIBRARIES}
             ${XAPTUM_TPM_LIBRARIES})
   endif()
