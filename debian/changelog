@@ -1,3 +1,20 @@
+xtt (0.9.2-1) unstable; urgency=medium
+
+  [ Zane Beckwith ]
+  * Client: Don't strcpy CLI IPs, just set pointers.
+  * Client: Use xtt_strerror for stdout
+  * Client: Use getaddrinfo to allow DNS-resolvable server names
+  * Client: Turn-off stdout buffering
+
+  [ Kathryn Fejer ]
+  * Fixing for CPP
+
+  [ Zane Beckwith ]
+  * Bump patch number
+  * AMCL_WRAPPER: No need to included x509.h from AMCL
+
+ -- Zane Beckwith <zane.beckwith@xaptum.com>  Tue, 07 Aug 2018 16:34:49 +0000
+
 xtt (0.9.0-1) unstable; urgency=medium
 
   [ Kathryn Fejer ]
