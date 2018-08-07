@@ -1,3 +1,12 @@
+xtt (0.9.3-1) unstable; urgency=medium
+
+  [ Zane Beckwith ]
+  * CMake: Link AMCL::AMCL into tests.
+  * Example: In client, just initialize TCTI once.
+  * Examples: Use gid=sha(gpk | basename)
+
+ -- Zane Beckwith <zane.beckwith@xaptum.com>  Tue, 07 Aug 2018 18:14:22 +0000
+
 xtt (0.9.2-1) unstable; urgency=medium
 
   [ Zane Beckwith ]
