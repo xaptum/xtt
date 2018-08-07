@@ -16,6 +16,8 @@
  *
  *****************************************************************************/
 
+#define _POSIX_C_SOURCE 200112L
+
 #include "file_utils.h"
 
 #include <xtt.h>
@@ -26,13 +28,12 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
+#include <sys/types.h>
 #include <sys/socket.h>
+#include <netdb.h>
 #include <arpa/inet.h>
 #include <unistd.h>
 #include <getopt.h>
-
-#define MAX_SERVER_IP_LENGTH 16
-#define MAX_TPM_DEV_FILE_LENGTH 128
 
 #ifdef USE_TPM
 #include <tss2/tss2_sys.h>
@@ -82,11 +83,11 @@ typedef enum {
     XTT_TCTI_DEVICE,
 } xtt_tcti_type;
 
-void parse_cmd_args(int argc, char *argv[], xtt_suite_spec *suite_spec, char *ip,
-        unsigned short *port, int *use_tpm, xtt_tcti_type *tcti_type, char *dev_file,
+void parse_cmd_args(int argc, char *argv[], xtt_suite_spec *suite_spec, char **ip,
+        char **port, int *use_tpm, xtt_tcti_type *tcti_type, char **dev_file,
         xtt_identity_type *requested_client_id);
 
-int connect_to_server(const char *ip, unsigned short port);
+int connect_to_server(const char *ip, char *port);
 
 int initialize_server_id(xtt_identity_type *intended_server_id,
                          int use_tpm,
@@ -127,18 +128,20 @@ int main(int argc, char *argv[])
         return 1;
     }
 
+    setbuf(stdout, NULL);
+
     int init_daa_ret = -1;
     int socket = -1;
 
     // 0) Parse the command line args
     xtt_suite_spec suite_spec;
-    char server_ip[MAX_SERVER_IP_LENGTH];
-    unsigned short server_port;
+    char *server_ip;
+    char *server_port;
     int use_tpm;
     xtt_tcti_type tcti_type;
-    char tcti_dev_file[MAX_TPM_DEV_FILE_LENGTH];
+    char *tcti_dev_file;
     xtt_identity_type requested_client_id;
-    parse_cmd_args(argc, argv, &suite_spec, server_ip, &server_port, &use_tpm, &tcti_type, tcti_dev_file, &requested_client_id);
+    parse_cmd_args(argc, argv, &suite_spec, &server_ip, &server_port, &use_tpm, &tcti_type, &tcti_dev_file, &requested_client_id);
 
     // 1) Setup the needed XTT contexts (from files).
     struct xtt_client_group_context group_ctx;
@@ -163,7 +166,7 @@ int main(int argc, char *argv[])
     }
 
     // 3) Make TCP connection to server.
-    printf("Connecting to server at %s:%d ...\t", server_ip, server_port);
+    printf("Connecting to server at %s:%s ...\t", server_ip, server_port);
     socket = connect_to_server(server_ip, server_port);
     if (socket < 0) {
         ret = 1;
@@ -218,17 +221,17 @@ finish:
 }
 
 void parse_cmd_args(int argc, char *argv[], xtt_suite_spec *suite_spec,
-        char *ip, unsigned short *port, int *use_tpm, xtt_tcti_type *tcti_type, char *dev_file,
+        char **ip, char **port, int *use_tpm, xtt_tcti_type *tcti_type, char **dev_file,
         xtt_identity_type *requested_client_id)
 {
 
     // Set defaults
     *suite_spec = XTT_X25519_LRSW_ECDSAP256_CHACHA20POLY1305_SHA512;
-    strcpy(ip, "127.0.0.1");
-    *port = 4444;
+    *ip = "127.0.0.1";
+    *port = "4444";
     *use_tpm = 0;
     *tcti_type = XTT_TCTI_DEVICE;
-    strcpy(dev_file, "/dev/tpm0");
+    *dev_file = "/dev/tpm0";
     *requested_client_id = xtt_null_identity;
 
     // Parse args
@@ -254,16 +257,11 @@ void parse_cmd_args(int argc, char *argv[], xtt_suite_spec *suite_spec,
                 break;
             case 'a':
             {
-                size_t ip_opt_len = strlen(optarg);
-                if (ip_opt_len > MAX_SERVER_IP_LENGTH) {
-                    fprintf(stderr, "Provided server IP address is too long (> %d)\n", MAX_SERVER_IP_LENGTH);
-                    exit(1);
-                }
-                strncpy(ip, optarg, MAX_SERVER_IP_LENGTH-1);
+                *ip = optarg;
                 break;
             }
             case 'p':
-                *port = atoi(optarg);
+                *port = optarg;
                 break;
             case 't':
                 if (0 == strcmp(optarg, "device")) {
@@ -277,12 +275,7 @@ void parse_cmd_args(int argc, char *argv[], xtt_suite_spec *suite_spec,
                 break;
             case 'd':
             {
-                size_t dev_opt_len = strlen(optarg);
-                if (dev_opt_len > MAX_TPM_DEV_FILE_LENGTH) {
-                    fprintf(stderr, "Provided TPM TCTI device file is too long (> %d)\n", MAX_TPM_DEV_FILE_LENGTH);
-                    exit(1);
-                }
-                strncpy(dev_file, optarg, MAX_TPM_DEV_FILE_LENGTH-1);
+                *dev_file = optarg;
                 break;
             }
             case 'i':
@@ -302,7 +295,7 @@ void parse_cmd_args(int argc, char *argv[], xtt_suite_spec *suite_spec,
                 break;
             }
             case 'h':
-                fprintf(stderr, "usage: %s [-m] [-i <requested_client_id>] [-s <suite_spec>] [-a <server_ip>] [-p <server_port>] [-t <tcti_type>] [-d <tcti_device_file>]\n", argv[0]);
+                fprintf(stderr, "usage: %s [-m] [-i <requested_client_id>] [-s <suite_spec>] [-a <server_host>] [-p <server_port>] [-t <tcti_type>] [-d <tcti_device_file>]\n", argv[0]);
                 fprintf(stderr, "\tsuite_spec can be one of the following:\n");
                 fprintf(stderr, "\t\tX25519_LRSW_ECDSAP256_CHACHA20POLY1305_SHA512 (default)\n");
                 fprintf(stderr, "\t\tX25519_LRSW_ECDSAP256_CHACHA20POLY1305_BLAKE2B\n");
@@ -310,8 +303,8 @@ void parse_cmd_args(int argc, char *argv[], xtt_suite_spec *suite_spec,
                 fprintf(stderr, "\t\tX25519_LRSW_ECDSAP256_AES256GCM_BLAKE2B\n");
                 fprintf(stderr, "\trequested_client_id is the 32-byte ASCII-encoded client ID to request from the server\n");
                 fprintf(stderr, "\t\txtt_client_id_null (default)\n");
-                fprintf(stderr, "\tserver_ip is the dotted-decimal address of the XTT server to connect to\n");
-                fprintf(stderr, "\t\t127.0.0.1 (default)\n");
+                fprintf(stderr, "\tserver_host is the hostname of the XTT server to connect to\n");
+                fprintf(stderr, "\t\tlocalhost (default)\n");
                 fprintf(stderr, "\tserver_port is the TCP port of the XTT server to connect to\n");
                 fprintf(stderr, "\t\t4444 (default)\n");
                 fprintf(stderr, "\t-m indicates to use a TPM, not local files\n");
@@ -326,22 +319,34 @@ void parse_cmd_args(int argc, char *argv[], xtt_suite_spec *suite_spec,
     }
 }
 
-int connect_to_server(const char *ip, unsigned short port)
+int connect_to_server(const char *server_host, char *port)
 {
-    int sock_ret = socket(AF_INET, SOCK_STREAM, 0);
-    if (sock_ret == -1) {
-        fprintf(stderr, "Error opening client socket\n");
+    struct addrinfo *serverinfo;
+    if (0 != getaddrinfo(server_host, port, NULL, &serverinfo)) {
+        fprintf(stderr, "Error resolving server host '%s:%s'\n", server_host, port);
         return -1;
     }
 
-    struct sockaddr_in server_addr;
-    server_addr.sin_addr.s_addr = inet_addr(ip);
-    server_addr.sin_family = AF_INET;
-    server_addr.sin_port = htons(port);
+    struct addrinfo *addr = NULL;
+    int sock_ret = -1;
+    for (addr=serverinfo; addr!=NULL; addr=addr->ai_next) {
+        sock_ret = socket(addr->ai_family, SOCK_STREAM, addr->ai_protocol);
+        if (sock_ret == -1) {
+            fprintf(stderr, "Error opening client socket, trying next address\n");
+            continue;
+        }
 
-    if (connect(sock_ret, (struct sockaddr*)&server_addr, sizeof(server_addr)) < 0) {
-        fprintf(stderr, "Error connecting to server\n");
-        close(sock_ret);
+        if (connect(sock_ret, addr->ai_addr, addr->ai_addrlen) < 0) {
+            fprintf(stderr, "Error connecting to server, trying next address\n");
+            close(sock_ret);
+            continue;
+        }
+
+        break;
+    }
+
+    if (NULL == addr) {
+        fprintf(stderr, "Unable to connect to server\n");
         return -1;
     }
 
@@ -709,7 +714,7 @@ int do_handshake(int socket,
                 fprintf(stderr, "Received error message from server\n");
                 return -1;
             default:
-                printf("Encountered error during client handshake: %d\n", rc);
+                printf("Encountered error during client handshake: %s (%d)\n", xtt_strerror(rc), rc);
                 unsigned char err_buffer[16];
                 (void)xtt_client_build_error_msg(&bytes_requested, &io_ptr, ctx);
                 int write_ret = write(socket, err_buffer, bytes_requested);

@@ -301,7 +301,6 @@ int verify_root_ecdsap256(const unsigned char *signature, //equivalent to verify
                                         xtt_server_certificate_length_uptosignature_fromsignaturetype(XTT_SERVER_SIGNATURE_TYPE_ECDSAP256),
                                         &self->public_key.ecdsap256);
     if (0 != ret) {
-        printf("\n%d\n", ret);
         return XTT_RETURN_BAD_ROOT_SIGNATURE;
     } else {
         return XTT_RETURN_SUCCESS;

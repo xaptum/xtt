@@ -20,12 +20,11 @@
 #define XTT_CRYPTO_WRAPPER_H
 #pragma once
 
-#include <amcl/ecdh_NIST256.h>
-#include <xtt/crypto_types.h>
-
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+#include <xtt/crypto_types.h>
 
 int xtt_crypto_initialize_crypto();
 
