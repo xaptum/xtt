@@ -159,8 +159,18 @@ int initialize(struct xtt_server_certificate_context *cert_ctx,
     if (XTT_RETURN_SUCCESS != rc)
         return -1;
 
-    // 4) Generate GID from GPK (GID = SHA-256(GPK))
-    int hash_ret = crypto_hash_sha256(gpk_db[0].gid.data, gpk.data, sizeof(gpk));
+    // 4) Generate GID from GPK (GID = SHA-256(GPK | basename))
+    crypto_hash_sha256_state hash_state;
+    int hash_ret = crypto_hash_sha256_init(&hash_state);
+    if (0 != hash_ret)
+        return -1;
+    hash_ret = crypto_hash_sha256_update(&hash_state, gpk.data, sizeof(gpk));
+    if (0 != hash_ret)
+        return -1;
+    hash_ret = crypto_hash_sha256_update(&hash_state, basename, basename_len);
+    if (0 != hash_ret)
+        return -1;
+    hash_ret = crypto_hash_sha256_final(&hash_state, gpk_db[0].gid.data);
     if (0 != hash_ret)
         return -1;
 
