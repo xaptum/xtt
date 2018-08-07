@@ -39,7 +39,8 @@
 #include <tss2/tss2_sys.h>
 #include <tss2/tss2_tcti_socket.h>
 #include <tss2/tss2_tcti_device.h>
-unsigned char tcti_context_buffer_g[256];
+#else
+typedef int TSS2_TCTI_CONTEXT;
 #endif
 
 uint32_t key_handle_g = 0x81800000;
@@ -87,16 +88,20 @@ void parse_cmd_args(int argc, char *argv[], xtt_suite_spec *suite_spec, char **i
         char **port, int *use_tpm, xtt_tcti_type *tcti_type, char **dev_file,
         xtt_identity_type *requested_client_id);
 
+int initialize_tcti(TSS2_TCTI_CONTEXT **tcti_context, xtt_tcti_type tcti_type, char *dev_file);
+
 int connect_to_server(const char *ip, char *port);
 
 int initialize_server_id(xtt_identity_type *intended_server_id,
                          int use_tpm,
-                         xtt_tcti_type tcti_type,
-                         const char* dev_file);
+                         TSS2_TCTI_CONTEXT *tcti_context);
 
-int initialize_certs(int use_tpm);
+int initialize_certs(int use_tpm,
+                     TSS2_TCTI_CONTEXT *tcti_context);
 
-int initialize_daa(struct xtt_client_group_context *group_ctx, int use_tpm, xtt_tcti_type tcti_type, const char* dev_file);
+int initialize_daa(struct xtt_client_group_context *group_ctx,
+                   int use_tpm,
+                   TSS2_TCTI_CONTEXT *tcti_context);
 
 #ifdef USE_TPM
 int
@@ -144,14 +149,29 @@ int main(int argc, char *argv[])
     parse_cmd_args(argc, argv, &suite_spec, &server_ip, &server_port, &use_tpm, &tcti_type, &tcti_dev_file, &requested_client_id);
 
     // 1) Setup the needed XTT contexts (from files).
+    // 1i) Setup TPM TCTI, if using TPM
+    TSS2_TCTI_CONTEXT *tcti_context = NULL;
+#ifdef USE_TPM
+    int init_tcti_ret = 0;
+    if (use_tpm) {
+        init_tcti_ret = initialize_tcti(&tcti_context, tcti_type, tcti_dev_file);
+        if (0 != init_tcti_ret) {
+            fprintf(stderr, "Error initializing TPM TCTI context\n");
+            goto finish;
+        }
+    }
+#endif
+
+    // 1ii) Initialize DAA
     struct xtt_client_group_context group_ctx;
-    init_daa_ret = initialize_daa(&group_ctx, use_tpm, tcti_type, tcti_dev_file);
+    init_daa_ret = initialize_daa(&group_ctx, use_tpm, tcti_context);
     ret = init_daa_ret;
     if (0 != init_daa_ret) {
         fprintf(stderr, "Error initializing DAA context\n");
         goto finish;
     }
-    ret = initialize_certs(use_tpm);
+    // 1iii) Initialize Certificates
+    ret = initialize_certs(use_tpm, tcti_context);
     if (0 != ret) {
         fprintf(stderr, "Error initializing server/root certificate contexts\n");
         goto finish;
@@ -159,7 +179,7 @@ int main(int argc, char *argv[])
 
     // 2) Set the intended server id.
     xtt_identity_type intended_server_id;
-    ret = initialize_server_id(&intended_server_id, use_tpm, tcti_type, tcti_dev_file);
+    ret = initialize_server_id(&intended_server_id, use_tpm, tcti_context);
     if(0 != ret) {
         fprintf(stderr, "Error setting XTT server ID!\n");
         goto finish;
@@ -208,8 +228,7 @@ finish:
     if (socket > 0)
         close(socket);
 #ifdef USE_TPM
-    if (use_tpm && 0==init_daa_ret) {
-        TSS2_TCTI_CONTEXT *tcti_context = (TSS2_TCTI_CONTEXT*)tcti_context_buffer_g;
+    if (use_tpm && 0==init_tcti_ret) {
         tss2_tcti_finalize(tcti_context);
     }
 #endif
@@ -353,34 +372,39 @@ int connect_to_server(const char *server_host, char *port)
     return sock_ret;
 }
 
+int initialize_tcti(TSS2_TCTI_CONTEXT **tcti_context, xtt_tcti_type tcti_type, char *dev_file)
+{
+    static unsigned char tcti_context_buffer_s[256];
+    *tcti_context = (TSS2_TCTI_CONTEXT*)tcti_context_buffer_s;
+    switch (tcti_type) {
+        case XTT_TCTI_SOCKET:
+            assert(tss2_tcti_getsize_socket() < sizeof(tcti_context_buffer_s));
+            if (TSS2_RC_SUCCESS != tss2_tcti_init_socket(tpm_hostname_g, tpm_port_g, *tcti_context)) {
+                fprintf(stderr, "Error: Unable to initialize socket TCTI context\n");
+                return -1;
+            }
+            break;
+        case XTT_TCTI_DEVICE:
+            assert(tss2_tcti_getsize_device() < sizeof(tcti_context_buffer_s));
+            if (TSS2_RC_SUCCESS != tss2_tcti_init_device(dev_file, strlen(dev_file), *tcti_context)) {
+                fprintf(stderr, "Error: Unable to initialize device TCTI context\n");
+                return -1;
+            }
+            break;
+    }
+
+    return 0;
+}
+
 int initialize_server_id(xtt_identity_type *intended_server_id,
                          int use_tpm,
-                         xtt_tcti_type tcti_type,
-                         const char* dev_file)
+                         TSS2_TCTI_CONTEXT *tcti_context)
 {
     int read_ret;
 
     // Set server's id from file/NVRAM
     if (use_tpm) {
 #ifdef USE_TPM
-        TSS2_TCTI_CONTEXT *tcti_context = (TSS2_TCTI_CONTEXT*)tcti_context_buffer_g;
-        switch (tcti_type) {
-            case XTT_TCTI_SOCKET:
-                assert(tss2_tcti_getsize_socket() < sizeof(tcti_context_buffer_g));
-                if (TSS2_RC_SUCCESS != tss2_tcti_init_socket(tpm_hostname_g, tpm_port_g, tcti_context)) {
-                    fprintf(stderr, "Error: Unable to initialize socket TCTI context\n");
-                    return -1;
-                }
-                break;
-            case XTT_TCTI_DEVICE:
-                assert(tss2_tcti_getsize_device() < sizeof(tcti_context_buffer_g));
-                if (TSS2_RC_SUCCESS != tss2_tcti_init_device(dev_file, strlen(dev_file), tcti_context)) {
-                    fprintf(stderr, "Error: Unable to initialize device TCTI context\n");
-                    return -1;
-                }
-                break;
-        }
-
         int nvram_ret;
         nvram_ret = read_nvram(intended_server_id->data,
                                sizeof(xtt_identity_type),
@@ -405,33 +429,11 @@ int initialize_server_id(xtt_identity_type *intended_server_id,
     return 0;
 }
 
-int initialize_daa(struct xtt_client_group_context *group_ctx, int use_tpm, xtt_tcti_type tcti_type, const char* dev_file)
+int initialize_daa(struct xtt_client_group_context *group_ctx, int use_tpm, TSS2_TCTI_CONTEXT *tcti_context)
 {
     (void)write_buffer_to_file;
     xtt_return_code_type rc;
     int read_ret;
-
-#ifdef USE_TPM
-    TSS2_TCTI_CONTEXT *tcti_context;
-    if (use_tpm) {
-        tcti_context = (TSS2_TCTI_CONTEXT*)tcti_context_buffer_g;
-        switch (tcti_type) {
-            case XTT_TCTI_SOCKET:
-                assert(tss2_tcti_getsize_socket() < sizeof(tcti_context_buffer_g));
-                if (TSS2_RC_SUCCESS != tss2_tcti_init_socket(tpm_hostname_g, tpm_port_g, tcti_context)) {
-                    fprintf(stderr, "Error: Unable to initialize socket TCTI context\n");
-                    return -1;
-                }
-                break;
-            case XTT_TCTI_DEVICE:
-                assert(tss2_tcti_getsize_device() < sizeof(tcti_context_buffer_g));
-                if (TSS2_RC_SUCCESS != tss2_tcti_init_device(dev_file, strlen(dev_file), tcti_context)) {
-                    fprintf(stderr, "Error: Unable to initialize device TCTI context\n");
-                    return -1;
-                }
-        }
-    }
-#endif
 
     // 1) Read DAA-related things in from file/TPM-NVRAM
     xtt_daa_group_pub_key_lrsw gpk;
@@ -545,16 +547,12 @@ int initialize_daa(struct xtt_client_group_context *group_ctx, int use_tpm, xtt_
     return 0;
 }
 
-int initialize_certs(int use_tpm)
+int initialize_certs(int use_tpm,
+                     TSS2_TCTI_CONTEXT *tcti_context)
 {
     (void)write_buffer_to_file;
     xtt_return_code_type rc;
     int read_ret;
-
-#ifdef USE_TPM
-    // We assume initialize_daa() has already been called, so TCTI has been initialized
-    TSS2_TCTI_CONTEXT *tcti_context = (TSS2_TCTI_CONTEXT*)tcti_context_buffer_g;
-#endif
 
     // 1) Read root cert stuff in from file
     xtt_certificate_root_id root_id;
