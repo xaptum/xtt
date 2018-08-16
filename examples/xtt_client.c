@@ -364,6 +364,8 @@ int connect_to_server(const char *server_host, char *port)
         break;
     }
 
+    freeaddrinfo(serverinfo);
+
     if (NULL == addr) {
         fprintf(stderr, "Unable to connect to server\n");
         return -1;
