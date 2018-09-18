@@ -132,27 +132,6 @@ derive_handshake_keys(struct xtt_handshake_context *handshake_ctx,
                                     handshake_ctx->handshake_secret,
                                     handshake_ctx->hash_length);
 
-// if (is_client) {
-// printf("Client's server_handshake_key: {");
-// for (size_t i=0; i<handshake_ctx->key_length; ++i) {
-//     printf("%#02X", out_ptr[i]);
-//     if (i < (handshake_ctx->key_length-1)) {
-//         printf(", ");
-//     } else {
-//         printf("}\n");
-//     }
-// }
-// } else {
-// printf("Server's server_handshake_key: {");
-// for (size_t i=0; i<handshake_ctx->key_length; ++i) {
-//     printf("%#02X", out_ptr[i]);
-//     if (i < (handshake_ctx->key_length-1)) {
-//         printf(", ");
-//     } else {
-//         printf("}\n");
-//     }
-// }
-// }
         if (XTT_RETURN_SUCCESS != prf_rc)
             return prf_rc;
     }
