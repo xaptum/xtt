@@ -1,12 +1,12 @@
 #!/bin/bash
 # Copyright 2017 Xaptum, Inc.
-# 
+#
 #    Licensed under the Apache License, Version 2.0 (the "License");
 #    you may not use this file except in compliance with the License.
 #    You may obtain a copy of the License at
-# 
+#
 #        http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 #    Unless required by applicable law or agreed to in writing, software
 #    distributed under the License is distributed on an "AS IS" BASIS,
 #    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -24,7 +24,7 @@ version=1.0.11
 source_dir="$1"
 mkdir -p ${source_dir}
 pushd ${source_dir}
-wget https://download.libsodium.org/libsodium/releases/old/libsodium-${version}.tar.gz
+wget https://download.libsodium.org/libsodium/releases/old/unsupported/libsodium-${version}.tar.gz
 tar xvfz libsodium-${version}.tar.gz
 pushd libsodium-${version}
 ./configure --prefix=${INSTALL_PREFIX}
