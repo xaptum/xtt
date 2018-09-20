@@ -68,7 +68,7 @@ typedef struct {unsigned char data[32];} xtt_signing_nonce;
 typedef struct {unsigned char data[8];} xtt_session_id_seed;
 typedef struct {unsigned char data[16];} xtt_session_id;
 typedef struct {unsigned char data[16];} xtt_identity_type;
-typedef struct {char data[33];} xtt_identity_string;
+typedef struct {char data[40];} xtt_identity_string;
 extern const xtt_identity_type xtt_null_identity;
 typedef struct {unsigned char data[130];} xtt_server_cookie;
 

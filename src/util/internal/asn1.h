@@ -49,7 +49,7 @@ extern const unsigned char UTF8STRING_ATTRTYPE;
 extern const int VALIDITY_YEARS;
 
 enum { UTC_LENGTH = 13 };                                                               // YYMMDDhhssmm'Z'
-enum { NAME_LENGTH = 32 };
+enum { NAME_LENGTH = 39 };
 enum { RAW_PRIVATE_KEY_LENGTH = 32 };
 enum { PUBLIC_KEY_LENGTH = 65 };
 enum { SIGNATURE_LENGTH = 64 };
@@ -77,7 +77,7 @@ enum { curve_def_length = 1 + 1 + prime256v1_oid_length + ecpublickey_oid_length
 enum { pubkey_bitstring_length = 1 + 1 + 1 + PUBLIC_KEY_LENGTH };                       // tag(1) + length(1) + padding(1) + content(65)
 enum { subjectpublickeyinfo_length = 1 + 1 + curve_def_length + pubkey_bitstring_length };    // tag(1) + length(1) + ecdsa_algid_length + pubkey_bitstring_length
 
-enum { tbs_certificate_length = 1 + 2 + serial_num_length + ecdsap256_algid_length + name_length + validity_length + name_length + subjectpublickeyinfo_length};
+enum { tbs_certificate_length = 1 + 3 + serial_num_length + ecdsap256_algid_length + name_length + validity_length + name_length + subjectpublickeyinfo_length};
 
 enum { signature_algorithm_length = ecdsap256_algid_length };
 
