@@ -15,7 +15,7 @@
  *    limitations under the License
  *
  *****************************************************************************/
- 
+
 #ifndef XTT_SERVER_SETUP_H
 #define XTT_SERVER_SETUP_H
 #pragma once

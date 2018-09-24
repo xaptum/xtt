@@ -15,13 +15,14 @@
  *    limitations under the License
  *
  *****************************************************************************/
-
 #include <xtt/certificates.h>
-
 #include <xtt/crypto_wrapper.h>
-
+#include <xtt/util/util_errors.h>
+#include <time.h>
 #include <assert.h>
 #include <string.h>
+#include <stdio.h>
+
 
 //used to test creation of certificates in /example
 xtt_return_code_type
@@ -188,5 +189,31 @@ xtt_server_certificate_access_rootsignature(const struct xtt_server_certificate_
     }
 
     assert(0);
+    return 0;
+}
+
+int
+xtt_check_expiry(const xtt_certificate_expiry *expiry)
+{
+    time_t now_timet = time(NULL);
+    struct tm *now = gmtime(&now_timet);
+
+    int year, month, day;
+
+    if (3 != sscanf(expiry->data, "%4d%2d%2d", &year, &month, &day))
+        return EXPIRY_PASSED;
+
+    if ((year-1900) < now->tm_year) {
+        return EXPIRY_PASSED;
+    } else if ((year-1900) == now->tm_year) {
+        if ((month-1) < now->tm_mon) {
+            return EXPIRY_PASSED;
+        } else if ((month-1) == now->tm_mon) {
+            if (day <= now->tm_mday) {
+                return EXPIRY_PASSED;
+            }
+        }
+    }
+
     return 0;
 }

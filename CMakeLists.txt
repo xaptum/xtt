@@ -18,7 +18,7 @@ option(USE_TPM "use a TPM" ON)
 
 option(BUILD_SHARED_LIBS "Build as a shared library" ON)
 option(BUILD_STATIC_LIBS "Build as a static library" OFF)
-option(BUILD_UTILS "build utility programs" ON)
+option(BUILD_TOOL "Build XTT tool" ON)
 
 find_package(ecdaa 0.9.0 REQUIRED QUIET)
 find_package(sodium 1.0.11 REQUIRED QUIET)
@@ -45,21 +45,27 @@ set(CMAKE_C_FLAGS_RELWITHSANITIZE "${CMAKE_C_FLAGS_RELWITHSANITIZE} -O2 -g -fsan
 
 set(XTT_SRCS
         src/libsodium_wrapper.c
-	src/amcl_wrapper.c
+        src/amcl_wrapper.c
         src/ecdaa_wrapper.c
         src/certificates.c
         src/context.c
         src/crypto_types.c
         src/messages.c
         src/return_codes.c
-        src/asn1_utilities.c
+        src/util/asn1.c
+        src/util/file_io.c
+        src/util/generate_ecdsap256_keys.c
+        src/util/root.c
+        src/util/generate_server_certificate.c
+        src/util/generate_x509_certificate.c
+        src/util/wrap_keys_asn1.c
         src/internal/byte_utils.c
         src/internal/key_derivation.c
         src/internal/crypto_utils.c
         src/internal/message_utils.c
         src/internal/server_cookie.c
         src/internal/signatures.c
-        src/internal/asn1.c
+        src/util/internal/asn1.c
         )
 
 ################################################################################
@@ -185,19 +191,19 @@ install(FILES
 # Examples
 ################################################################################
 if(BUILD_EXAMPLES)
-        add_subdirectory(examples)
+    add_subdirectory(examples)
 endif()
 
 ################################################################################
 # Tests
 ################################################################################
 if(BUILD_TESTING)
- add_subdirectory(test)
+    add_subdirectory(test)
 endif()
 
 ################################################################################
-# Util
+# Tool
 ################################################################################
-if(BUILD_UTILS)
-  add_subdirectory(util)
+if(BUILD_TOOL)
+    add_subdirectory(tool)
 endif()

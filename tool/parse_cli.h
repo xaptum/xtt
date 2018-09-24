@@ -16,24 +16,49 @@
  *
  *****************************************************************************/
 
-#ifndef XTT_H
-#define XTT_H
+#ifndef PARSE_CLI_H
+#define PARSE_CLI_H
 #pragma once
 
-#include <xtt/certificates.h>
-#include <xtt/context.h>
-#include <xtt/crypto_wrapper.h>
-#include <xtt/crypto_types.h>
-#include <xtt/daa_wrapper.h>
-#include <xtt/return_codes.h>
-#include <xtt/messages.h>
-#include <xtt/util/asn1.h>
-#include <xtt/util/generate_ecdsap256_keys.h>
-#include <xtt/util/generate_x509_certificate.h>
-#include <xtt/util/wrap_keys_asn1.h>
-#include <xtt/util/root.h>
-#include <xtt/util/generate_server_certificate.h>
-#include <xtt/util/file_io.h>
-#include <xtt/util/util_errors.h>
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#include <stdint.h>
+#include <getopt.h>
+#include <stdlib.h>
+#include <stdio.h>
+
+typedef enum {
+    action_genkey,
+    action_genx509cert,
+    action_wrapkeys,
+    action_genrootcert,
+    action_genservercert,
+    action_help
+} action;
+
+struct cli_params{
+    action command;
+    const char* privkey;
+    const char* pubkey;
+    const char* id;
+    const char* cert;
+    const char* asn1;
+    const char* server_id;
+    const char* time;
+    const char* rootcert;
+    const char* rootpriv;
+    const char* servercert;
+    const char* serverpriv;
+    const char* serverpub;
+    const char* basename;
+};
+
+void parse_cli(int argc, char **argv, struct cli_params *params);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

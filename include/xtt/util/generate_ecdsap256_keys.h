@@ -16,24 +16,27 @@
  *
  *****************************************************************************/
 
-#ifndef XTT_H
-#define XTT_H
+#ifndef XTT_UTIL_GEN_KEY_H
+#define XTT_UTIL_GEN_KEY_H
 #pragma once
 
-#include <xtt/certificates.h>
-#include <xtt/context.h>
-#include <xtt/crypto_wrapper.h>
-#include <xtt/crypto_types.h>
-#include <xtt/daa_wrapper.h>
-#include <xtt/return_codes.h>
-#include <xtt/messages.h>
-#include <xtt/util/asn1.h>
-#include <xtt/util/generate_ecdsap256_keys.h>
-#include <xtt/util/generate_x509_certificate.h>
-#include <xtt/util/wrap_keys_asn1.h>
-#include <xtt/util/root.h>
-#include <xtt/util/generate_server_certificate.h>
-#include <xtt/util/file_io.h>
-#include <xtt/util/util_errors.h>
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/*
+ * Generates a ECDSA keypair and saves the public key to public_key_file
+ * saves private key to private_key_file
+ *
+ * Returns:
+ *      0   on success
+ *      SAVE_TO_FILE_ERROR   an error occurred writing to a file
+ *      KEY_CREATION_ERROR   an error occurred creating the keypair
+*/
+int xtt_generate_ecdsap256_keys(const char *private_key_file, const char *public_key_file);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
