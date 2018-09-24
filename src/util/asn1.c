@@ -16,8 +16,8 @@
  *
  *****************************************************************************/
 
-#include <xtt/asn1_utilities.h>
-
+#include <xtt/util/asn1.h>
+#include <xtt/util/util_errors.h>
 #include "internal/asn1.h"
 
 #include <xtt/crypto_wrapper.h>
@@ -51,11 +51,11 @@ int xtt_x509_from_ecdsap256_keypair(const xtt_ecdsap256_pub_key *pub_key_in,
     xtt_identity_string common_name_as_string;
 
     if (certificate_out_length < XTT_X509_CERTIFICATE_LENGTH)
-      return -1;
+      return CERT_CREATION_ERROR;
 
     int convert_ret = xtt_identity_to_string(common_name, &common_name_as_string);
     if (0 != convert_ret)
-        return -1;
+        return CERT_CREATION_ERROR;
 
     build_x509_skeleton(certificate_out, &pub_key_location, &signature_location, &signature_input_location, &signature_input_length, common_name_as_string.data);
 
@@ -64,7 +64,7 @@ int xtt_x509_from_ecdsap256_keypair(const xtt_ecdsap256_pub_key *pub_key_in,
     int sign_ret = xtt_crypto_sign_ecdsap256(signature_location, signature_input_location, signature_input_length, priv_key_in);
 
     if (0 != sign_ret) {
-        return -1;
+        return CERT_CREATION_ERROR;
     } else {
         return 0;
     }
@@ -81,7 +81,7 @@ int xtt_asn1_from_ecdsap256_private_key(const xtt_ecdsap256_priv_key *priv_key_i
     unsigned char *pubkey_location;
 
     if (asn1_out_length < XTT_ASN1_PRIVATE_KEY_LENGTH)
-      return -1;
+      return ASN1_CREATION_ERROR;
 
     build_asn1_key_skeleton(asn1_out, &privkey_location, &pubkey_location);
 

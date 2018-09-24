@@ -17,10 +17,8 @@
  *****************************************************************************/
 
 #include <amcl/ecdh_NIST256.h>
-// #include <amcl/x509.h>
 #include <sodium.h>
 #include <xtt.h>
-#include <xtt/crypto_wrapper.h>
 #include <assert.h>
 
 int xtt_crypto_create_ecdsap256_key_pair(xtt_ecdsap256_pub_key *pub_key, xtt_ecdsap256_priv_key *priv_key) {
