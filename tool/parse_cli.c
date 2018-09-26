@@ -30,7 +30,7 @@ void parse_genkey_cli(int argc, char **argv, struct cli_params *params)
     params->pubkey = "pub.bin";
     params->privkey = "priv.bin";
     const char *usage_str = "Generate ECDSA keys for XTT.\n\n"
-        "Usage: ./xtt-tool genkey [-h] [-v <file>] [-b <file>]\n"
+        "Usage: %s %s [-h] [-v <file>] [-b <file>]\n"
         "\tOptions:\n"
         "\t\t-h --help             Display this message.\n"
         "\t\t-v --privkey          Private key output location [default = priv.bin]\n"
@@ -54,7 +54,7 @@ void parse_genkey_cli(int argc, char **argv, struct cli_params *params)
                 params->pubkey=optarg;
                 break;
             case 'h':
-                fprintf(stderr, usage_str, argv[0]);
+                fprintf(stderr, usage_str, argv[0], argv[1]);
                 exit(1);
         }
     }
@@ -70,7 +70,7 @@ void parse_genx509cert_cli(int argc, char **argv, struct cli_params *params)
     params->pubkey = "pub.bin";
 
     const char *usage_str = "Generate x509 certificate.\n\n"
-        "Usage: %s [-h] [-v <file>] [-b <file>] [-d <file>] [-c <file>]\n"
+        "Usage: %s %s [-h] [-v <file>] [-b <file>] [-d <file>] [-c <file>]\n"
         "\tOptions:\n"
         "\t\t-h --help             Display this message.\n"
         "\t\t-v --privkey          Private key input location [default = priv.bin]\n"
@@ -104,7 +104,7 @@ void parse_genx509cert_cli(int argc, char **argv, struct cli_params *params)
                 params->cert = optarg;
                 break;
             case 'h':
-                fprintf(stderr, usage_str, argv[0]);
+                fprintf(stderr, usage_str, argv[0], argv[1]);
                 exit(1);
         }
     }
@@ -117,8 +117,8 @@ void parse_wrapkeys_cli(int argc, char **argv, struct cli_params *params)
     params->privkey = "priv.bin";
     params->pubkey = "pub.bin";
     params->asn1 = "priv.asn1.bin";
-    const char *usage_str = "Generate ASN.1 wrapped keys.\n\n"
-        "Usage: ./xtt-tool wrapkeys [-h] [-v <file>] [-b <file>] [-a <file>]\n"
+    const char *usage_str = "Wrap keys in ASN.1 formatting.\n\n"
+        "Usage: %s %s [-h] [-v <file>] [-b <file>] [-a <file>]\n"
         "\tOptions:\n"
         "\t\t-h --help              Display this message.\n"
         "\t\t-v --priv              Private key input location [default = priv.bin]\n"
@@ -148,7 +148,7 @@ void parse_wrapkeys_cli(int argc, char **argv, struct cli_params *params)
                 params->asn1 = optarg;
                 break;
             case 'h':
-                fprintf(stderr, usage_str, argv[0]);
+                fprintf(stderr, usage_str, argv[0], argv[1]);
                 exit(1);
         }
     }
@@ -163,13 +163,13 @@ void parse_genroot_cli(int argc, char **argv, struct cli_params *params)
     params->id = NULL;
     params->rootcert = "root_cert.bin";
     const char *usage_str = "Generate a root certificate.\n\n"
-        "Usage: %s [-h] [-v <file>] [-b <file>] [-d <file>] [-c <file>]\n"
+        "Usage: %s %s [-h] [-v <file>] [-b <file>] [-d <file>] [-c <file>]\n"
         "\tOptions:\n"
         "\t\t-h --help                      Display this message.\n"
         "\t\t-v --rpriv                     Root's private key output location [default = root_priv.bin]\n"
         "\t\t-b --rpub                      Root's public key output location [default = root_pub.bin]\n"
         "\t\t-d --rid                       Root's ID input location [default generates a random ID]\n"
-        "\t\t-b --rcert                     Root's public key output location [default = root_cert.bin]\n"
+        "\t\t-c --rcert                     Root's public key output location [default = root_cert.bin]\n"
         ;
 
     static struct option cli_options[] =
@@ -198,7 +198,7 @@ void parse_genroot_cli(int argc, char **argv, struct cli_params *params)
                 params->rootcert = optarg;
                 break;
             case 'h':
-                fprintf(stderr, usage_str, argv[0]);
+                fprintf(stderr, usage_str, argv[0], argv[1]);
                 exit(1);
         }
     }
@@ -216,7 +216,7 @@ void parse_genservercert_cli(int argc, char **argv, struct cli_params *params)
     params->serverpub = "server_pub.bin";
     params->time = NULL;
     const char *usage_str = "Generate server's certificate.\n\n"
-        "Usage: %s [-h] [-r <file>] [-p <file>] [-v <file>] [-b <file>] [-s <file>] [-e 'YYYYMMDD'][-c <file>]\n"
+        "Usage: %s %s [-h] [-r <file>] [-p <file>] [-v <file>] [-b <file>] [-s <file>] [-e 'YYYYMMDD'][-c <file>]\n"
         "\tOptions:\n"
         "\t\t-h --help                    Display this message.\n"
         "\t\t-r --rcert                   Root certificate input location [default = root_cert.bin]\n"
@@ -264,7 +264,7 @@ void parse_genservercert_cli(int argc, char **argv, struct cli_params *params)
                 params->servercert = optarg;
                 break;
             case 'h':
-                fprintf(stderr, usage_str, argv[0]);
+                fprintf(stderr, usage_str, argv[0], argv[1]);
                 exit(1);
         }
     }
@@ -275,7 +275,8 @@ void parse_genservercert_cli(int argc, char **argv, struct cli_params *params)
 void parse_cli(int argc, char** argv, struct cli_params *params)
 {
     const char *usage_str =
-        "Options:\n"
+        "Usage: %s [command] --command_options\n"
+        "Commands:\n"
         "\tgenkey                   Generate ECDSA keys for XTT.\n"
         "\tgenx509cert              Generate x509 certificate.\n"
         "\twrapkeys                 Generate ASN.1 wrapped keys.\n"
@@ -284,7 +285,7 @@ void parse_cli(int argc, char** argv, struct cli_params *params)
         ;
 
     if(argc <=1 || strcmp(argv[1], "-h")==0 || strcmp(argv[1], "--help")==0) {
-        printf("%s", usage_str);
+        fprintf(stderr, usage_str, argv[0]);
         exit(1);
     }
 
@@ -310,7 +311,8 @@ void parse_cli(int argc, char** argv, struct cli_params *params)
         parse_genservercert_cli(argc, argv, params);
     } else
     {
-        printf("'%s' is not an option for the XTT tool.\n%s", argv[1], usage_str);
+        printf("'%s' is not an option for the XTT tool.\n", argv[1]);
+        fprintf(stderr, usage_str, argv[0]);
         exit(1);
     }
 }
