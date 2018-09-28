@@ -62,6 +62,12 @@ cleanup:
         goto cleanup;
      }
 
+     fgetc(file_ptr);
+     if(!feof(file_ptr)){
+         ret = READ_FROM_FILE_ERROR;
+         goto cleanup;
+     }
+
      ret = (int)bytes_read;
 
 cleanup:
