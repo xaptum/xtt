@@ -16,12 +16,9 @@
  *
  *****************************************************************************/
 
-#include <stdint.h>
 #include <getopt.h>
-#include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <xtt.h>
 #include "parse_cli.h"
 
 static
@@ -271,6 +268,41 @@ void parse_genservercert_cli(int argc, char **argv, struct cli_params *params)
 
 }
 
+static
+void parse_infocert_cli(int argc, char** argv, struct cli_params *params){
+    params->rootcert = NULL;
+    params->servercert = NULL;
+    const char *usage_str = "Parse certificates and print out important information.\n\n"
+        "Usage: %s %s [-h] [-r <file>] [-s <file>]\n"
+        "\tOptions:\n"
+        "\t\t-h --help              Display this message.\n"
+        "\t\t-r --rootcert          Root certificate to be parsed\n"
+        "\t\t-s --servercert        Server certificate to be parsed\n"
+        ;
+
+    static struct option cli_options[] =
+    {
+        {"rootcert", required_argument, NULL, 'r'},
+        {"servercert", required_argument, NULL, 's'},
+        {"help", no_argument, NULL, 'h'},
+        {NULL, 0, NULL, 0}
+    };
+    int c;
+    while ((c = getopt_long(argc, argv, "r:s:h", cli_options, NULL)) != -1) {
+        switch (c) {
+            case 'r':
+                params->rootcert=optarg;
+                break;
+            case 's':
+                params->servercert=optarg;
+                break;
+            case 'h':
+                fprintf(stderr, usage_str, argv[0], argv[1]);
+                exit(1);
+        }
+    }
+}
+
 
 void parse_cli(int argc, char** argv, struct cli_params *params)
 {
@@ -282,6 +314,7 @@ void parse_cli(int argc, char** argv, struct cli_params *params)
         "\twrapkeys                 Generate ASN.1 wrapped keys.\n"
         "\tgenrootcert              Generate root certificate.\n"
         "\tgenservercert            Generate server certificate and server private key.\n"
+        "\tinfocert                 Get information about a certificate.\n"
         ;
 
     if(argc <=1 || strcmp(argv[1], "-h")==0 || strcmp(argv[1], "--help")==0) {
@@ -309,6 +342,10 @@ void parse_cli(int argc, char** argv, struct cli_params *params)
     {
         params->command=action_genservercert;
         parse_genservercert_cli(argc, argv, params);
+    } else if (strcmp(argv[1], "infocert")==0)
+    {
+        params->command=action_infocert;
+        parse_infocert_cli(argc, argv, params);
     } else
     {
         printf("'%s' is not an option for the XTT tool.\n", argv[1]);

@@ -2,11 +2,14 @@
 #define XTT_UTIL_ERRORS_H
 #pragma once
 
+#define SUCCESS 0
 #define SAVE_TO_FILE_ERROR -1
 #define READ_FROM_FILE_ERROR -2
 #define KEY_CREATION_ERROR -3
 #define CERT_CREATION_ERROR -4
 #define ASN1_CREATION_ERROR -5
 #define EXPIRY_PASSED -6
+#define PARSE_CERT_ERROR -7
+#define VOID_SUCCESS -8
 
 #endif

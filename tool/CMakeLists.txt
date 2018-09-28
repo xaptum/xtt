@@ -19,7 +19,8 @@ cmake_minimum_required(VERSION 3.0 FATAL_ERROR)
 ################################################################################
 SET(TOOL_SRCS
         xtt.c
-        parse_cli.c)
+        parse_cli.c
+        infocert.c)
 add_executable(xtt-tool ${TOOL_SRCS})
 set_target_properties(xtt-tool PROPERTIES OUTPUT_NAME xtt)
 if(BUILD_SHARED_LIBS)
