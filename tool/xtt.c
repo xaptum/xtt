@@ -22,6 +22,7 @@
 #include <xtt/util/generate_server_certificate.h>
 #include <xtt/util/util_errors.h>
 #include "parse_cli.h"
+#include "infocert.h"
 #include <getopt.h>
 #include <stdio.h>
 #include <string.h>
@@ -34,7 +35,7 @@ int main(int argc, char **argv)
                                 .rootcert = NULL, .servercert = NULL, .basename = NULL, .serverpub = NULL, .serverpriv = NULL};
     parse_cli(argc, argv, &params);
     int out = 0;
-    switch(params.command){
+    switch(params.command) {
         case action_genkey:
             out = xtt_generate_ecdsap256_keys(params.privkey, params.pubkey);
             break;
@@ -51,32 +52,49 @@ int main(int argc, char **argv)
             out = xtt_generate_server_certificate(params.rootcert, params.rootpriv, params.serverpriv,
                                                 params.serverpub, params.server_id, params.time, params.servercert);
             break;
+        case action_infocert: {
+            enum infocert_type type;
+            if (params.servercert != NULL) {
+                type = infocert_type_server;
+                out = info_cert(params.servercert, type);
+            } else if (params.rootcert != NULL) {
+                type = infocert_type_root;
+                out = info_cert(params.rootcert, type);
+            } else {
+                out = PARSE_CERT_ERROR;
+            }
+            break;
+        }
         case action_help:
             break;
     }
 
-    if(out != 0){
-        switch(out){
-            case SAVE_TO_FILE_ERROR:
-                printf("Error writing to a file\n");
-                break;
-            case READ_FROM_FILE_ERROR:
-                printf("Error reading from a file\n");
-                break;
-            case KEY_CREATION_ERROR:
-                printf("Error creating ecdsap256 keypair\n");
-                break;
-            case CERT_CREATION_ERROR:
-                printf("Error creating certificate\n");
-                break;
-            case ASN1_CREATION_ERROR:
-                printf("Error creating ASN.1 wrapped keys\n");
-                break;
-            case EXPIRY_PASSED:
-                printf("Expiry has already passed.\n");
-                break;
-        }
-    } else {
-        printf("ok\n");
+    switch(out){
+        case SAVE_TO_FILE_ERROR:
+            printf("Error writing to a file\n");
+            break;
+        case READ_FROM_FILE_ERROR:
+            printf("Error reading from a file\n");
+            break;
+        case KEY_CREATION_ERROR:
+            printf("Error creating ecdsap256 keypair\n");
+            break;
+        case CERT_CREATION_ERROR:
+            printf("Error creating certificate\n");
+            break;
+        case ASN1_CREATION_ERROR:
+            printf("Error creating ASN.1 wrapped keys\n");
+            break;
+        case EXPIRY_PASSED:
+            printf("Expiry has already passed\n");
+            break;
+        case PARSE_CERT_ERROR:
+            printf("Error parsing certificate: must pass in a certificate\n");
+            break;
+        case SUCCESS:
+            printf("ok\n");
+            break;
+        case VOID_SUCCESS:
+            break;
     }
 }

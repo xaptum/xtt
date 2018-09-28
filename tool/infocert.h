@@ -16,47 +16,28 @@
  *
  *****************************************************************************/
 
-#ifndef PARSE_CLI_H
-#define PARSE_CLI_H
+#ifndef XTT_UTIL_INFO_CERT_H
+#define XTT_UTIL_INFO_CERT_H
 #pragma once
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#include <stdint.h>
-#include <getopt.h>
-#include <stdlib.h>
-#include <stdio.h>
-
-typedef enum {
-    action_genkey,
-    action_genx509cert,
-    action_wrapkeys,
-    action_genrootcert,
-    action_genservercert,
-    action_infocert,
-    action_help
-} action;
-
-struct cli_params {
-    action command;
-    const char* privkey;
-    const char* pubkey;
-    const char* id;
-    const char* cert;
-    const char* asn1;
-    const char* server_id;
-    const char* time;
-    const char* rootcert;
-    const char* rootpriv;
-    const char* servercert;
-    const char* serverpriv;
-    const char* serverpub;
-    const char* basename;
+enum infocert_type {
+    infocert_type_server,
+    infocert_type_root
 };
 
-void parse_cli(int argc, char **argv, struct cli_params *params);
+/*
+ * Parses certificate and prints important info to screen
+ *
+ * Returns:
+ * 0                        on success
+ * PARSE_CERT_ERROR         if infocert_type is not set
+ * READ_FROM_FILE_ERROR     error while reading in file
+*/
+int info_cert(const char* filename, enum infocert_type type);
 
 #ifdef __cplusplus
 }
