@@ -24,10 +24,7 @@
 extern "C" {
 #endif
 
-#include <stdint.h>
-#include <getopt.h>
-#include <stdlib.h>
-#include <stdio.h>
+#include <stdbool.h>
 
 typedef enum {
     action_genkey,
@@ -35,6 +32,8 @@ typedef enum {
     action_wrapkeys,
     action_genrootcert,
     action_genservercert,
+    action_runserver,
+    action_runclient,
     action_infocert,
     action_help
 } action;
@@ -50,10 +49,25 @@ struct cli_params {
     const char* time;
     const char* rootcert;
     const char* rootpriv;
-    const char* servercert;
     const char* serverpriv;
     const char* serverpub;
+    const char* servercert;
     const char* basename;
+    const char* daagpk;
+    const char* portstr;
+    unsigned short port;
+    bool usetpm;
+    const char* tcti;
+    const char* suitespec;
+    const char* serverhost;
+    const char* devfile;
+    const char* daacred;
+    const char* daasecretkey;
+    const char* requestid;
+    const char* longtermcert;
+    const char* longtermpriv;
+    const char* assignedid;
+
 };
 
 void parse_cli(int argc, char **argv, struct cli_params *params);

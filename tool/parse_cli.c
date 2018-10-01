@@ -18,6 +18,7 @@
 
 #include <getopt.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include "parse_cli.h"
 
@@ -303,6 +304,206 @@ void parse_infocert_cli(int argc, char** argv, struct cli_params *params){
     }
 }
 
+static
+void parse_runserver_cli(int argc, char** argv, struct cli_params *params){
+    params->port=4444;
+    params->servercert = "server_cert.bin";
+    params->basename = "basename.bin";
+    params->privkey = "server_priv.bin";
+    params->daagpk = "daa_gpk.bin";
+
+    const char *usage_str = "Run XTT server.\n\n"
+        "Usage: %s %s [-h] [-p ####] [-d <file>] [-v <file>] [-b <file>][-c <file>]\n"
+        "\tOptions:\n"
+        "\t\t-h --help                    Display this message.\n"
+        "\t\t-p --port                    Specifies which port to start the server on [default port: 4444]\n"
+        "\t\t-d --daagpk                  Specifies where DAA GPK can be found [default = daa_gpk.bin]\n"
+        "\t\t-v --privkey                 Specifies where server private key can be found [default = server_priv.bin]\n"
+        "\t\t-b --basename                Specifies where the basename can be found [default = basename.bin]\n"
+        "\t\t-c --servercert              Specifies where server certificate can be found [default = server_cert.bin]\n"
+        ;
+
+    static struct option cli_options[] =
+    {
+        {"port", required_argument, NULL, 'p'},
+        {"daagpk", required_argument, NULL, 'd'},
+        {"privkey", required_argument, NULL, 'v'},
+        {"basename", required_argument, NULL, 'b'},
+        {"servercert", required_argument, NULL, 'c'},
+        {"help", no_argument, NULL, 'h'},
+        {NULL, 0, NULL, 0}
+    };
+    int c;
+    while ((c = getopt_long(argc, argv, "p:d:v:b:c:h", cli_options, NULL)) != -1) {
+        switch (c) {
+            case 'p':
+                params->port = atoi(optarg);
+                break;
+            case 'd':
+                params->daagpk = optarg;
+                break;
+            case 'v':
+                params->privkey = optarg;
+                break;
+            case 'b':
+                params->basename = optarg;
+                break;
+            case 'c':
+                params->servercert = optarg;
+                break;
+            case 'h':
+                printf(usage_str, argv[0], argv[1]);
+                exit(1);
+        }
+    }
+}
+
+static
+void parse_runclient_cli(int argc, char** argv, struct cli_params *params){
+    params->portstr = "4444";
+    params->serverhost = "127.0.0.1";
+    params->longtermcert = "longterm_cert.bin";
+    params->longtermpriv = "longterm_priv.bin";
+    params->assignedid = "client_id.bin";
+    params->server_id = "server_id.bin";
+    params->basename = "basename.bin";
+    params->rootcert = "root_cert.bin";
+    params->daagpk = "daa_gpk.bin";
+    params->daacred = "daa_cred.bin";
+    params->daasecretkey = "daa_secretkey.bin";
+    params->usetpm = 0;
+    params->suitespec = "X25519_LRSW_ECDSAP256_CHACHA20POLY1305_SHA512";
+    params->tcti = "device";
+    const char *usage_str = "Run XTT client.\n\n"
+        "Usage: %s %s [-h] [-p <file>] [-s option] [-a <file>] [-q <file>] [-r <file>] [-d <file>] [-c <file>] [-k <file>]"
+        "[-e <file>] [-n <file>] [-m <file>] [-t <file>] [-f <file>] [-i <file>] [b <file>][-v <file>]\n"
+        "\tOptions:\n"
+        "\t\t-h --help                    Display this message.\n"
+        "\t\t-p --port                    Port to connect to [default port: 4444]\n"
+        "\t\t-s --suitespec               Suite Spec:\n"
+        "\t\t\tX25519_LRSW_ECDSAP256_CHACHA20POLY1305_SHA512 (default)\n"
+        "\t\t\tX25519_LRSW_ECDSAP256_CHACHA20POLY1305_BLAKE2B\n"
+        "\t\t\tX25519_LRSW_ECDSAP256_AES256GCM_SHA512\n"
+        "\t\t\tX25519_LRSW_ECDSAP256_AES256GCM_BLAKE2B\n"
+        "\t\t-a --serverhost              Specifies what host server to connect to\n"
+        "\t\t-q --requestid               Requested client ID [default = server_id.bin]\n"
+        "\t\t-r --serverid                Server ID input location [default = server_id.bin]\n"
+        "\t\t-d --daagpk                  DAA GPK input location [default = daa_gpk.bin]\n"
+        "\t\t-c --daacred                 DAA Credential input location [default = daa_cred.bin]\n"
+        "\t\t-k --daasecret               DAA Secret Key input location [default = daa_secretkey.bin]\n"
+        "\t\t-e --rcert                   Root Certificate input location [default = root_cert.bin]\n"
+        "\t\t-n --basename                Basename input location [default = basename.bin]\n"
+        "\t\t-m --tpmuse                  Indicates to use TPM\n"
+        "\t\t-t --tctitype                Which TCTI socket is used ('device' or 'socket') [default = device]\n"
+        "\t\t-f --devfile                 Device file input location if tcti == device\n"
+        "\t\t-i --assignedid              Assigned ID output location [default = client_id.bin]\n"
+        "\t\t-b --longtermpub             Longterm Public Key output location [default = longterm_cert.bin]\n"
+        "\t\t-v --longtermpriv            Longterm Private Key output location [default = longterm_priv.bin]\n"
+        ;
+
+    static struct option cli_options[] =
+    {
+        {"port", required_argument, NULL, 'p'},
+        {"suitespec", required_argument, NULL, 's'},
+        {"serverhost", required_argument, NULL, 'a'},
+        {"requestid", required_argument, NULL, 'q'},
+        {"serverid", required_argument, NULL, 'r'},
+        {"daagpk", required_argument, NULL, 'd'},
+        {"daacred", required_argument, NULL, 'c'},
+        {"daasecret", required_argument, NULL, 'k'},
+        {"rcert", required_argument, NULL, 'e'},
+        {"basename", required_argument, NULL, 'n'},
+        {"tpmuse", no_argument, NULL, 'm'},
+        {"tctitype", required_argument, NULL, 't'},
+        {"devfile", required_argument, NULL, 'f'},
+        {"assignedid", required_argument, NULL, 'i'},
+        {"longtermpub", required_argument, NULL, 'b'},
+        {"longtermpriv", required_argument, NULL, 'v'},
+        {"help", no_argument, NULL, 'h'},
+
+        {NULL, 0, NULL, 0}
+    };
+    int c;
+    while ((c = getopt_long(argc, argv, "p:s:a:q:r:d:c:k:e:n:mt:f:i:b:v:h", cli_options, NULL)) != -1) {
+        switch (c) {
+            case 'p':
+                params->portstr = optarg;
+                break;
+            case 's':
+                params->suitespec = optarg;
+                break;
+            case 'a':
+            {
+                params->serverhost = optarg;
+                break;
+            }
+            case 'q':
+            {
+                params->requestid = optarg;
+                break;
+            }
+            case 'r':
+            {
+                params->server_id = optarg;
+                break;
+            }
+            case 'd':
+            {
+                params->daagpk = optarg;
+                break;
+            }
+            case 'c':
+            {
+                params->daacred = optarg;
+                break;
+            }
+            case 'k':
+            {
+                params->daasecretkey = optarg;
+                break;
+            }
+            case 'e':
+            {
+                params->rootcert = optarg;
+                break;
+            }
+            case 'n':
+            {
+                params->basename = optarg;
+                break;
+            }
+            case 'm':
+                params->usetpm = 1;
+                break;
+            case 't':
+                params->tcti = optarg;
+                break;
+            case 'f':
+            {
+                params->devfile = optarg;
+                break;
+            }
+            case 'i':
+            {
+                params->assignedid = optarg;
+                break;
+            }
+            case 'b':
+            {
+                params->longtermcert = optarg;
+                break;
+            }
+            case 'v':
+            {
+                params->longtermpriv = optarg;
+                break;
+            }
+            case 'h':
+            printf(usage_str, argv[0], argv[1]);
+            exit(1);
+        }
+    }
+}
 
 void parse_cli(int argc, char** argv, struct cli_params *params)
 {
@@ -314,6 +515,8 @@ void parse_cli(int argc, char** argv, struct cli_params *params)
         "\twrapkeys                 Generate ASN.1 wrapped keys.\n"
         "\tgenrootcert              Generate root certificate.\n"
         "\tgenservercert            Generate server certificate and server private key.\n"
+        "\trunserver                Run a XTT server.\n"
+        "\trunclient                Run a XTT client.\n"
         "\tinfocert                 Get information about a certificate.\n"
         ;
 
@@ -342,6 +545,14 @@ void parse_cli(int argc, char** argv, struct cli_params *params)
     {
         params->command=action_genservercert;
         parse_genservercert_cli(argc, argv, params);
+    } else if (strcmp(argv[1], "runserver")==0)
+    {
+        params->command=action_runserver;
+        parse_runserver_cli(argc, argv, params);
+    } else if (strcmp(argv[1], "runclient")==0)
+    {
+        params->command=action_runclient;
+        parse_runclient_cli(argc, argv, params);
     } else if (strcmp(argv[1], "infocert")==0)
     {
         params->command=action_infocert;
