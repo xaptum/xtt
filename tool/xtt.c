@@ -71,28 +71,28 @@ int main(int argc, char **argv)
 
     switch(out){
         case SAVE_TO_FILE_ERROR:
-            printf("Error writing to a file\n");
+            fprintf(stderr, "Error writing to a file\n");
             break;
         case READ_FROM_FILE_ERROR:
-            printf("Error reading from a file\n");
+            fprintf(stderr, "Error reading from a file\n");
             break;
         case KEY_CREATION_ERROR:
-            printf("Error creating ecdsap256 keypair\n");
+            fprintf(stderr, "Error creating ecdsap256 keypair\n");
             break;
         case CERT_CREATION_ERROR:
-            printf("Error creating certificate\n");
+            fprintf(stderr, "Error creating certificate\n");
             break;
         case ASN1_CREATION_ERROR:
-            printf("Error creating ASN.1 wrapped keys\n");
+            fprintf(stderr, "Error creating ASN.1 wrapped keys\n");
             break;
         case EXPIRY_PASSED:
-            printf("Expiry has already passed\n");
+            fprintf(stderr, "Expiry has already passed\n");
             break;
         case PARSE_CERT_ERROR:
-            printf("Error parsing certificate: must pass in a certificate\n");
+            fprintf(stderr, "Error parsing certificate: must pass in a certificate\n");
             break;
         case SUCCESS:
-            printf("ok\n");
+            fprintf(stderr, "ok\n");
             break;
         case VOID_SUCCESS:
             break;

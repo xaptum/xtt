@@ -51,7 +51,7 @@ void parse_genkey_cli(int argc, char **argv, struct cli_params *params)
                 params->pubkey=optarg;
                 break;
             case 'h':
-                fprintf(stderr, usage_str, argv[0], argv[1]);
+                printf(usage_str, argv[0], argv[1]);
                 exit(1);
         }
     }
@@ -101,7 +101,7 @@ void parse_genx509cert_cli(int argc, char **argv, struct cli_params *params)
                 params->cert = optarg;
                 break;
             case 'h':
-                fprintf(stderr, usage_str, argv[0], argv[1]);
+                printf(usage_str, argv[0], argv[1]);
                 exit(1);
         }
     }
@@ -145,7 +145,7 @@ void parse_wrapkeys_cli(int argc, char **argv, struct cli_params *params)
                 params->asn1 = optarg;
                 break;
             case 'h':
-                fprintf(stderr, usage_str, argv[0], argv[1]);
+                printf(usage_str, argv[0], argv[1]);
                 exit(1);
         }
     }
@@ -195,7 +195,7 @@ void parse_genroot_cli(int argc, char **argv, struct cli_params *params)
                 params->rootcert = optarg;
                 break;
             case 'h':
-                fprintf(stderr, usage_str, argv[0], argv[1]);
+                printf(usage_str, argv[0], argv[1]);
                 exit(1);
         }
     }
@@ -261,7 +261,7 @@ void parse_genservercert_cli(int argc, char **argv, struct cli_params *params)
                 params->servercert = optarg;
                 break;
             case 'h':
-                fprintf(stderr, usage_str, argv[0], argv[1]);
+                printf(usage_str, argv[0], argv[1]);
                 exit(1);
         }
     }
@@ -297,7 +297,7 @@ void parse_infocert_cli(int argc, char** argv, struct cli_params *params){
                 params->servercert=optarg;
                 break;
             case 'h':
-                fprintf(stderr, usage_str, argv[0], argv[1]);
+                printf(usage_str, argv[0], argv[1]);
                 exit(1);
         }
     }
@@ -318,7 +318,7 @@ void parse_cli(int argc, char** argv, struct cli_params *params)
         ;
 
     if(argc <=1 || strcmp(argv[1], "-h")==0 || strcmp(argv[1], "--help")==0) {
-        fprintf(stderr, usage_str, argv[0]);
+        printf(usage_str, argv[0]);
         exit(1);
     }
 
@@ -348,7 +348,7 @@ void parse_cli(int argc, char** argv, struct cli_params *params)
         parse_infocert_cli(argc, argv, params);
     } else
     {
-        printf("'%s' is not an option for the XTT tool.\n", argv[1]);
+        fprintf(stderr, "'%s' is not an option for the XTT tool.\n", argv[1]);
         fprintf(stderr, usage_str, argv[0]);
         exit(1);
     }
