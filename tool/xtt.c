@@ -21,6 +21,8 @@
 #include <xtt/util/root.h>
 #include <xtt/util/generate_server_certificate.h>
 #include <xtt/util/util_errors.h>
+#include "server.h"
+#include "client.h"
 #include "parse_cli.h"
 #include "infocert.h"
 #include <getopt.h>
@@ -29,10 +31,13 @@
 #include <stdlib.h>
 #include <assert.h>
 
+
 int main(int argc, char **argv)
 {
     struct cli_params params = {.privkey = NULL, .pubkey = NULL, .id = NULL, .cert = NULL, .asn1 = NULL, .server_id = NULL, .time=NULL,
-                                .rootcert = NULL, .servercert = NULL, .basename = NULL, .serverpub = NULL, .serverpriv = NULL};
+                                .rootcert = NULL, .servercert = NULL, .basename = NULL, .daagpk = NULL, .port = 0, .usetpm = 0, .tcti = NULL,
+                                .suitespec = NULL, .serverhost = NULL, .devfile = NULL, .daacred = NULL, .daasecretkey = NULL, .requestid = NULL,
+                                .longtermcert = NULL, .longtermpriv = NULL, .serverpriv = NULL, .serverpub = NULL};
     parse_cli(argc, argv, &params);
     int out = 0;
     switch(params.command) {
@@ -49,8 +54,13 @@ int main(int argc, char **argv)
             out = xtt_generate_root(params.privkey, params.pubkey, params.id, params.rootcert);
             break;
         case action_genservercert:
-            out = xtt_generate_server_certificate(params.rootcert, params.rootpriv, params.serverpriv,
-                                                params.serverpub, params.server_id, params.time, params.servercert);
+            out = xtt_generate_server_certificate(params.rootcert, params.rootpriv, params.serverpriv, params.serverpub, params.server_id, params.time, params.servercert);
+            break;
+        case action_runserver:
+            out = run_server(&params);
+            break;
+        case action_runclient:
+            out = run_client(&params);
             break;
         case action_infocert: {
             enum infocert_type type;
@@ -87,6 +97,18 @@ int main(int argc, char **argv)
             break;
         case EXPIRY_PASSED:
             fprintf(stderr, "Expiry has already passed\n");
+            break;
+        case SERVER_ERROR:
+            fprintf(stderr, "Error while server is running xtt\n");
+            break;
+        case CLIENT_ERROR:
+            fprintf(stderr, "Error while client is running xtt\n");
+            break;
+        case TPM_ERROR:
+            fprintf(stderr, "Error while trying to use TPM\n");
+            break;
+        case CRYPTO_HASH_ERROR:
+            fprintf(stderr, "Error while generating the gid\n");
             break;
         case PARSE_CERT_ERROR:
             fprintf(stderr, "Error parsing certificate: must pass in a certificate\n");

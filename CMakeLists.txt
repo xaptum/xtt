@@ -59,13 +59,13 @@ set(XTT_SRCS
         src/util/generate_server_certificate.c
         src/util/generate_x509_certificate.c
         src/util/wrap_keys_asn1.c
+        src/util/internal/asn1.c
         src/internal/byte_utils.c
         src/internal/key_derivation.c
         src/internal/crypto_utils.c
         src/internal/message_utils.c
         src/internal/server_cookie.c
         src/internal/signatures.c
-        src/util/internal/asn1.c
         )
 
 ################################################################################
@@ -185,7 +185,6 @@ install(FILES
   ${CMAKE_CURRENT_BINARY_DIR}/xtt-config-version.cmake
   DESTINATION ${INSTALL_CONFIGDIR}
 )
-
 
 ################################################################################
 # Examples
