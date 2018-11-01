@@ -37,6 +37,7 @@
 #include <xtt/util/file_io.h>
 #include <xtt/util/asn1.h>
 #include <xtt/util/root.h>
+#include <xtt/tpm/handles.h>
 
 #ifdef USE_TPM
 #include <tss2/tss2_sys.h>
@@ -46,15 +47,6 @@
 typedef int TSS2_TCTI_CONTEXT;
 #endif
 
-
-uint32_t key_handle_g = 0x81800000;
-uint32_t gpk_handle_g = 0x1410000;
-uint32_t cred_handle_g = 0x1410001;
-uint32_t root_id_handle_g = 0x1410003;
-uint32_t root_pubkey_handle_g = 0x1410004;
-uint32_t basename_size_handle_g = 0x1410006;
-uint32_t basename_handle_g = 0x1410007;
-uint32_t server_id_handle_g = 0x1410008;
 const char *tpm_hostname_g = "localhost";
 const char *tpm_port_g = "2321";
 const size_t tpm_devfile_length_g = 9;
@@ -360,7 +352,7 @@ int initialize_server_id(xtt_identity_type *intended_server_id,
         int nvram_ret = 0;
         nvram_ret = read_nvram(intended_server_id->data,
                                sizeof(xtt_identity_type),
-                               server_id_handle_g,
+                               XTT_SERVER_ID_HANDLE,
                                tcti_context);
         if (0 != nvram_ret) {
             fprintf(stderr, "Error reading server id from TPM NVRAM");
@@ -397,7 +389,7 @@ int initialize_daa(struct xtt_client_group_context *group_ctx, int use_tpm, TSS2
         uint8_t basename_len_from_tpm = 0;
         nvram_ret = read_nvram((unsigned char*)&basename_len_from_tpm,
                                1,
-                               basename_size_handle_g,
+                               XTT_BASENAME_SIZE_HANDLE,
                                tcti_context);
         if (0 != nvram_ret) {
             fprintf(stderr, "Error reading basename size from TPM NVRAM\n");
@@ -406,7 +398,7 @@ int initialize_daa(struct xtt_client_group_context *group_ctx, int use_tpm, TSS2
         basename_len = basename_len_from_tpm;
         nvram_ret = read_nvram(basename,
                                basename_len,
-                               basename_handle_g,
+                               XTT_BASENAME_HANDLE,
                                tcti_context);
         if (0 != nvram_ret) {
             fprintf(stderr, "Error reading basename from TPM NVRAM\n");
@@ -415,7 +407,7 @@ int initialize_daa(struct xtt_client_group_context *group_ctx, int use_tpm, TSS2
 
         nvram_ret = read_nvram(gpk.data,
                                sizeof(xtt_daa_group_pub_key_lrsw),
-                               gpk_handle_g,
+                               XTT_GPK_HANDLE,
                                tcti_context);
         if (0 != nvram_ret) {
             fprintf(stderr, "Error reading GPK from TPM NVRAM");
@@ -424,7 +416,7 @@ int initialize_daa(struct xtt_client_group_context *group_ctx, int use_tpm, TSS2
 
         nvram_ret = read_nvram(cred.data,
                                sizeof(xtt_daa_credential_lrsw),
-                               cred_handle_g,
+                               XTT_CRED_HANDLE,
                                tcti_context);
         if (0 != nvram_ret) {
             fprintf(stderr, "Error reading credential from TPM NVRAM");
@@ -482,7 +474,7 @@ int initialize_daa(struct xtt_client_group_context *group_ctx, int use_tpm, TSS2
                                                          &cred,
                                                          (unsigned char*)basename,
                                                          basename_len,
-                                                         key_handle_g,
+                                                         XTT_KEY_HANDLE,
                                                          tpm_password,
                                                          tpm_password_len,
                                                          tcti_context);
@@ -521,7 +513,7 @@ int initialize_certs(int use_tpm,
         int nvram_ret;
         nvram_ret = read_nvram(root_id.data,
                                sizeof(xtt_certificate_root_id),
-                               root_id_handle_g,
+                               XTT_ROOT_ID_HANDLE,
                                tcti_context);
         if (0 != nvram_ret) {
             fprintf(stderr, "Error reading root ID from TPM NVRAM");
@@ -530,7 +522,7 @@ int initialize_certs(int use_tpm,
 
         nvram_ret = read_nvram(root_public_key.data,
                                sizeof(xtt_ecdsap256_pub_key),
-                               root_pubkey_handle_g,
+                               XTT_ROOT_PUBKEY_HANDLE,
                                tcti_context);
         if (0 != nvram_ret) {
             fprintf(stderr, "Error reading root's public key from TPM NVRAM");
