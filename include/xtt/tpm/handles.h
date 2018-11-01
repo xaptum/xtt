@@ -16,25 +16,34 @@
  *
  *****************************************************************************/
 
-#ifndef XTT_H
-#define XTT_H
+#ifndef XTT_TPM_HANDLES_H
+#define XTT_TPM_HANDLES_H
 #pragma once
 
-#include <xtt/certificates.h>
-#include <xtt/context.h>
-#include <xtt/crypto_wrapper.h>
-#include <xtt/crypto_types.h>
-#include <xtt/daa_wrapper.h>
-#include <xtt/return_codes.h>
-#include <xtt/messages.h>
-#include <xtt/util/asn1.h>
-#include <xtt/util/generate_ecdsap256_keys.h>
-#include <xtt/util/generate_x509_certificate.h>
-#include <xtt/util/wrap_keys_asn1.h>
-#include <xtt/util/root.h>
-#include <xtt/util/generate_server_certificate.h>
-#include <xtt/util/file_io.h>
-#include <xtt/util/util_errors.h>
-#include <xtt/tpm/handles.h>
+#include <stdint.h>
+
+#define XTT_KEY_HANDLE 0x81800000
+uint32_t xtt_key_handle(void);
+
+#define XTT_GPK_HANDLE 0x1410000
+uint32_t xtt_gpk_handle(void);
+
+#define XTT_CRED_HANDLE 0x1410001
+uint32_t xtt_cred_handle(void);
+
+#define XTT_ROOT_ID_HANDLE 0x1410003
+uint32_t xtt_root_id_handle(void);
+
+#define XTT_ROOT_PUBKEY_HANDLE 0x1410004
+uint32_t xtt_root_pubkey_handle(void);
+
+#define XTT_BASENAME_SIZE_HANDLE 0x1410006
+uint32_t xtt_basename_size_handle(void);
+
+#define XTT_BASENAME_HANDLE 0x1410007
+uint32_t xtt_basename_handle(void);
+
+#define XTT_SERVER_ID_HANDLE 0x1410008
+uint32_t xtt_server_id_handle(void);
 
 #endif

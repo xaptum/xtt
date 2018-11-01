@@ -66,6 +66,7 @@ set(XTT_SRCS
         src/internal/message_utils.c
         src/internal/server_cookie.c
         src/internal/signatures.c
+        src/tpm/handles.c
         )
 
 ################################################################################
