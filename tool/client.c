@@ -435,7 +435,7 @@ int initialize_daa(struct xtt_client_group_context *group_ctx, int use_tpm, TSS2
         return TPM_ERROR;
 #endif
     } else {
-        int read_ret = xtt_read_from_file(basename_file, basename, 8);
+        int read_ret = xtt_read_from_file(basename_file, basename, sizeof(basename));
         if (read_ret < 0) {
             return READ_FROM_FILE_ERROR;
         }
