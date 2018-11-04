@@ -29,9 +29,6 @@ if(USE_TPM)
         find_package(ecdaa 0.9.0 COMPONENTS tpm REQUIRED QUIET)
 endif()
 
-configure_file(${PROJECT_SOURCE_DIR}/include/xtt/context.h.in ${CMAKE_BINARY_DIR}/include/xtt/context.h)
-configure_file(${PROJECT_SOURCE_DIR}/include/xtt/daa_wrapper.h.in ${CMAKE_BINARY_DIR}/include/xtt/daa_wrapper.h)
-
 # If not building as a shared library, force build as a static.  This
 # is to match the CMake default semantics of using
 # BUILD_SHARED_LIBS = OFF to indicate a static build.
