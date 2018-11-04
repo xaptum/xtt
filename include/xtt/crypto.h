@@ -16,26 +16,43 @@
  *
  *****************************************************************************/
 
-#ifndef XTT_H
-#define XTT_H
 #pragma once
 
-#include <xtt/certificates.h>
-#include <xtt/context.h>
-#include <xtt/crypto.h>
-#include <xtt/crypto_wrapper.h>
-#include <xtt/crypto_types.h>
-#include <xtt/daa_wrapper.h>
-#include <xtt/return_codes.h>
-#include <xtt/messages.h>
-#include <xtt/util/asn1.h>
-#include <xtt/util/generate_ecdsap256_keys.h>
-#include <xtt/util/generate_x509_certificate.h>
-#include <xtt/util/wrap_keys_asn1.h>
-#include <xtt/util/root.h>
-#include <xtt/util/generate_server_certificate.h>
-#include <xtt/util/file_io.h>
-#include <xtt/util/util_errors.h>
-#include <xtt/tpm/handles.h>
+#ifndef XTT_CRYPTO_H
+#define XTT_CRYPTO_H
+
+#include "crypto_types.h"
+#include "crypto/hmac.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/**
+ * A generic interface for XTT cipher suite algorithms.
+ *
+ * A cipher suite specifies algorithms for key exchange, attestation,
+ * signing, AEAD, and HMAC.
+ *
+ * Note: Currently only the HMAC algorithm is exposed.
+ */
+struct xtt_suite_ops {
+    struct xtt_crypto_hmac_ops *hmac;
+};
+
+
+/**
+ * Gets the :xtt_suite_ops: for the given suite spec.
+ *
+ * @suite_spec the suite spec
+ * @returns pointer to the suite ops or :NULL: if the suite spec is
+ * not found
+ */
+const struct xtt_suite_ops*
+xtt_suite_ops_get(xtt_suite_spec suite_spec);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

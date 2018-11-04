@@ -45,6 +45,7 @@ set(XTT_SRCS
         src/ecdaa_wrapper.c
         src/certificates.c
         src/context.c
+        src/crypto.c
         src/crypto_types.c
         src/messages.c
         src/return_codes.c
