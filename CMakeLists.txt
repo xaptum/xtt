@@ -25,7 +25,6 @@ find_package(sodium 1.0.11 REQUIRED QUIET)
 
 if(USE_TPM)
         add_definitions(-DUSE_TPM)
-        set(USE_TPM_DEFINE "#define USE_TPM")
         find_package(xaptum-tpm 0.5.0 REQUIRED QUIET)
         find_package(ecdaa 0.9.0 COMPONENTS tpm REQUIRED QUIET)
 endif()
