@@ -57,7 +57,7 @@ generate_server_signature(unsigned char* signature_out,
 {
     xtt_return_code_type rc;
 
-    rc = generate_server_sig_hash(handshake_ctx->hash_out_buffer,
+    rc = generate_server_sig_hash(&handshake_ctx->hash_out.buf,
                                   client_init,
                                   server_initandattest_unencrypted_part,
                                   server_initandattest_encryptedpart_uptosignature,
@@ -66,8 +66,8 @@ generate_server_signature(unsigned char* signature_out,
         return rc;
 
     rc = certificate_ctx->sign(signature_out,
-                               handshake_ctx->hash_out_buffer,
-                               handshake_ctx->hash_length,
+                               &handshake_ctx->hash_out.buf,
+                               handshake_ctx->hash_out.len,
                                certificate_ctx);
     if (XTT_RETURN_SUCCESS != rc)
         return rc;
@@ -87,7 +87,7 @@ generate_daa_signature(unsigned char *signature_out,
 {
     xtt_return_code_type rc;
 
-    rc = generate_client_sig_hash(handshake_ctx->hash_out_buffer,
+    rc = generate_client_sig_hash(&handshake_ctx->hash_out.buf,
                                   server_cookie,
                                   certificate,
                                   server_signature,
@@ -99,9 +99,9 @@ generate_daa_signature(unsigned char *signature_out,
         return rc;
 
     rc = group_ctx->sign(signature_out,
-                       handshake_ctx->hash_out_buffer,
-                       handshake_ctx->hash_length,
-                       group_ctx);
+                         &handshake_ctx->hash_out.buf,
+                         handshake_ctx->hash_out.len,
+                         group_ctx);
     if (XTT_RETURN_SUCCESS != rc)
         return rc;
 
@@ -120,7 +120,7 @@ verify_daa_signature(unsigned char *signature,
 {
     xtt_return_code_type rc;
 
-    rc = generate_client_sig_hash(handshake_ctx->hash_out_buffer,
+    rc = generate_client_sig_hash(&handshake_ctx->hash_out.buf,
                                   server_cookie,
                                   server_certificate_ctx->serialized_certificate,
                                   server_signature,
@@ -132,9 +132,9 @@ verify_daa_signature(unsigned char *signature,
         return rc;
 
     rc = group_pub_key_ctx->verify_signature(signature,
-                                                 handshake_ctx->hash_out_buffer,
-                                                 handshake_ctx->hash_length,
-                                                 group_pub_key_ctx);
+                                             &handshake_ctx->hash_out.buf,
+                                             handshake_ctx->hash_out.len,
+                                             group_pub_key_ctx);
     if (XTT_RETURN_SUCCESS != rc)
         return rc;
 
@@ -152,7 +152,7 @@ generate_client_longterm_signature(unsigned char *signature_out,
 {
     xtt_return_code_type rc;
 
-    rc = generate_client_sig_hash(handshake_ctx->base.hash_out_buffer,
+    rc = generate_client_sig_hash(&handshake_ctx->base.hash_out.buf,
                                   server_cookie,
                                   certificate,
                                   server_signature,
@@ -164,8 +164,8 @@ generate_client_longterm_signature(unsigned char *signature_out,
         return rc;
 
     rc = handshake_ctx->longterm_sign(signature_out,
-                                      handshake_ctx->base.hash_out_buffer,
-                                      handshake_ctx->base.hash_length,
+                                      &handshake_ctx->base.hash_out.buf,
+                                      handshake_ctx->base.hash_out.len,
                                       handshake_ctx);
     if (XTT_RETURN_SUCCESS != rc)
         return rc;
@@ -184,7 +184,7 @@ verify_client_longterm_signature(unsigned char *signature,
 {
     xtt_return_code_type rc;
 
-    rc = generate_client_sig_hash(handshake_ctx->base.hash_out_buffer,
+    rc = generate_client_sig_hash(&handshake_ctx->base.hash_out.buf,
                                   server_cookie,
                                   server_certificate_ctx->serialized_certificate,
                                   server_signature,
@@ -198,8 +198,8 @@ verify_client_longterm_signature(unsigned char *signature,
     unsigned char *client_longterm_key = xtt_encrypted_identityclientattest_access_longtermkey(identityclientattest_encryptedpart_uptosignature,
                                                                                                handshake_ctx->base.version);
     rc = handshake_ctx->verify_client_longterm_signature(signature,
-                                                         handshake_ctx->base.hash_out_buffer,
-                                                         handshake_ctx->base.hash_length,
+                                                         &handshake_ctx->base.hash_out.buf,
+                                                         handshake_ctx->base.hash_out.len,
                                                          client_longterm_key);
     if (XTT_RETURN_SUCCESS != rc)
         return rc;
@@ -234,7 +234,7 @@ verify_server_signature(const unsigned char *signature,
     if (XTT_RETURN_SUCCESS != rc)
         return rc;
     // 3) Check that the server signature verifies using the server cert.
-    rc = generate_server_sig_hash(handshake_ctx->base.hash_out_buffer,
+    rc = generate_server_sig_hash(&handshake_ctx->base.hash_out.buf,
                                   client_init,
                                   server_initandattest_unencrypted_part,
                                   server_initandattest_encryptedpart_uptosignature,
@@ -242,8 +242,8 @@ verify_server_signature(const unsigned char *signature,
     if (XTT_RETURN_SUCCESS != rc)
         return rc;
     rc = handshake_ctx->verify_server_signature(signature,
-                                                handshake_ctx->base.hash_out_buffer,
-                                                handshake_ctx->base.hash_length,
+                                                &handshake_ctx->base.hash_out.buf,
+                                                handshake_ctx->base.hash_out.len,
                                                 xtt_server_certificate_access_pubkey(xtt_encrypted_serverinitandattest_access_certificate(server_initandattest_encryptedpart_uptosignature,
                                                                                                             handshake_ctx->base.version)));
     if (XTT_RETURN_SUCCESS != rc)
@@ -259,6 +259,8 @@ generate_server_sig_hash(unsigned char *hash_out,
                          const unsigned char *server_initandattest_encryptedpart_uptosignature,
                          struct xtt_handshake_context *handshake_ctx)
 {
+    const struct xtt_crypto_hmac_ops* hmac = handshake_ctx->suite_ops->hmac;
+
     uint16_t client_init_length = xtt_clientinit_length(handshake_ctx->version, handshake_ctx->suite_spec);
     uint16_t server_initandattest_up_to_signature_length = xtt_serverinitandattest_uptosignature_length(handshake_ctx->version,
                                                                                                        handshake_ctx->suite_spec);
@@ -295,10 +297,10 @@ generate_server_sig_hash(unsigned char *hash_out,
 
     // 1v) Hash the hash input buffer to get the inner hash.
     uint16_t inner_hash_length;
-    int hash_ret = handshake_ctx->hash(hash_out,
-                                            &inner_hash_length,
-                                            handshake_ctx->hash_buffer,
-                                            inner_hash_input_length + sizeof(inner_hash_input_length));
+    int hash_ret = hmac->hash(hash_out,
+                              &inner_hash_length,
+                              handshake_ctx->hash_buffer,
+                              inner_hash_input_length + sizeof(inner_hash_input_length));
     if (0 != hash_ret)
         return XTT_RETURN_CRYPTO;
 
@@ -316,10 +318,12 @@ generate_client_sig_hash(unsigned char *hash_out,
                          int is_daa,
                          struct xtt_handshake_context *handshake_ctx)
 {
+    const struct xtt_crypto_hmac_ops* hmac = handshake_ctx->suite_ops->hmac;
+
     // ClientSigHash = hash_ext(inner-hash || server_cookie || certificate || signature_s || Identity_ClientAttest-up-to-sig)
     //      inner-hash = 'inner-hash' from HandshakeKeyHash (saved during HandshakeKeyHash generation)
 
-    uint16_t outer_hash_input_length = handshake_ctx->hash_length
+    uint16_t outer_hash_input_length = hmac->outlen
                                             + sizeof(*server_cookie)
                                             + xtt_identityclientattest_uptofirstsignature_length(handshake_ctx->version,
                                                                                                  handshake_ctx->suite_spec);
@@ -334,8 +338,8 @@ generate_client_sig_hash(unsigned char *hash_out,
     hash_input += sizeof(outer_hash_input_length);
 
     // 2) Copy the inner hash to the hash input buffer.
-    memcpy(hash_input, handshake_ctx->inner_hash, handshake_ctx->hash_length);
-    hash_input += handshake_ctx->hash_length;
+    memcpy(hash_input, &handshake_ctx->inner_hash.buf, handshake_ctx->inner_hash.len);
+    hash_input += handshake_ctx->inner_hash.len;
 
     // 3) Copy the server_cookie to the hash input buffer.
     memcpy(hash_input, server_cookie, sizeof(xtt_server_cookie));
@@ -370,10 +374,10 @@ generate_client_sig_hash(unsigned char *hash_out,
 
     // 7) Hash the hash input buffer to get the ClientSigHash.
     uint16_t outer_hash_length;
-    int hash_rc = handshake_ctx->hash(hash_out,
-                                           &outer_hash_length,
-                                           handshake_ctx->hash_buffer,
-                                           outer_hash_input_length + sizeof(outer_hash_input_length));
+    int hash_rc = hmac->hash(hash_out,
+                             &outer_hash_length,
+                             handshake_ctx->hash_buffer,
+                             outer_hash_input_length + sizeof(outer_hash_input_length));
     if (0 != hash_rc)
         return XTT_RETURN_CRYPTO;
 
