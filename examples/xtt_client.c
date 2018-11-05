@@ -366,6 +366,7 @@ int connect_to_server(const char *server_host, char *port)
     return sock_ret;
 }
 
+#ifdef USE_TPM
 int initialize_tcti(TSS2_TCTI_CONTEXT **tcti_context, xtt_tcti_type tcti_type, char *dev_file)
 {
     static unsigned char tcti_context_buffer_s[256];
@@ -389,6 +390,7 @@ int initialize_tcti(TSS2_TCTI_CONTEXT **tcti_context, xtt_tcti_type tcti_type, c
 
     return 0;
 }
+#endif
 
 int initialize_server_id(xtt_identity_type *intended_server_id,
                          int use_tpm,
@@ -397,7 +399,7 @@ int initialize_server_id(xtt_identity_type *intended_server_id,
     int read_ret;
 
     // Set server's id from file/NVRAM
-    if (use_tpm) {
+    if (use_tpm && tcti_context) {
 #ifdef USE_TPM
         int nvram_ret;
         nvram_ret = read_nvram(intended_server_id->data,
@@ -435,7 +437,7 @@ int initialize_daa(struct xtt_client_group_context *group_ctx, int use_tpm, TSS2
     xtt_daa_priv_key_lrsw daa_priv_key;
     unsigned char basename[1024];
     uint16_t basename_len = 0;
-    if (use_tpm) {
+    if (use_tpm && tcti_context) {
 #ifdef USE_TPM
         int nvram_ret;
         uint8_t basename_len_from_tpm = 0;
@@ -561,7 +563,7 @@ int initialize_certs(int use_tpm,
     // 1) Read root cert stuff in from file
     xtt_certificate_root_id root_id;
     xtt_ecdsap256_pub_key root_public_key;
-    if (use_tpm) {
+    if (use_tpm && tcti_context) {
 #ifdef USE_TPM
         int nvram_ret;
         nvram_ret = read_nvram(root_id.data,

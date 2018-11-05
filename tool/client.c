@@ -43,8 +43,6 @@
 #include <tss2/tss2_sys.h>
 #include <tss2/tss2_tcti_socket.h>
 #include <tss2/tss2_tcti_device.h>
-#else
-typedef int TSS2_TCTI_CONTEXT;
 #endif
 
 const char *tpm_hostname_g = "localhost";
@@ -58,7 +56,9 @@ xtt_version version_g_client = XTT_VERSION_ONE;
 char* stored_root_id[sizeof(xtt_certificate_root_id)];
 struct xtt_server_root_certificate_context stored_cert;
 
+#ifdef USE_TPM
 static int initialize_tcti(TSS2_TCTI_CONTEXT **tcti_context, xtt_tcti_type tcti_type, const char *dev_file);
+#endif
 
 static int connect_to_server(const char *ip, char *port);
 
@@ -316,6 +316,7 @@ int connect_to_server(const char *server_host, char *port)
     return sock_ret;
 }
 
+#ifdef USE_TPM
 int initialize_tcti(TSS2_TCTI_CONTEXT **tcti_context, xtt_tcti_type tcti_type, const char *dev_file)
 {
     static unsigned char tcti_context_buffer_s[256];
@@ -339,6 +340,7 @@ int initialize_tcti(TSS2_TCTI_CONTEXT **tcti_context, xtt_tcti_type tcti_type, c
 
     return 0;
 }
+#endif
 
 static
 int initialize_server_id(xtt_identity_type *intended_server_id,
@@ -347,7 +349,7 @@ int initialize_server_id(xtt_identity_type *intended_server_id,
 {
     // Set server's id from file/NVRAM
     int read_ret = 0;
-    if (use_tpm) {
+    if (use_tpm && tcti_context) {
 #ifdef USE_TPM
         int nvram_ret = 0;
         nvram_ret = read_nvram(intended_server_id->data,
@@ -383,7 +385,7 @@ int initialize_daa(struct xtt_client_group_context *group_ctx, int use_tpm, TSS2
     xtt_daa_priv_key_lrsw daa_priv_key = {.data = {0}};
     unsigned char basename[1024] = {0};
     uint16_t basename_len = 0;
-    if (use_tpm) {
+    if (use_tpm && tcti_context) {
 #ifdef USE_TPM
         int nvram_ret = 0;
         uint8_t basename_len_from_tpm = 0;
@@ -508,7 +510,7 @@ int initialize_certs(int use_tpm,
     xtt_certificate_root_id root_id = {.data = {0}};
     xtt_ecdsap256_pub_key root_public_key = {.data = {0}};
 
-    if (use_tpm) {
+    if (use_tpm && tcti_context) {
 #ifdef USE_TPM
         int nvram_ret;
         nvram_ret = read_nvram(root_id.data,
