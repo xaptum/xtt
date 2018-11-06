@@ -148,6 +148,9 @@ install(DIRECTORY ${CMAKE_BINARY_DIR}/include/xtt DESTINATION "${CMAKE_INSTALL_I
 ################################################################################
 # pkgconfig
 ################################################################################
+if(USE_TPM)
+  set(PC_COMPILE_DEFINITIONS "-DUSE_TPM")
+endif()
 configure_file(xtt.pc.in xtt.pc @ONLY)
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/xtt.pc
         DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig
