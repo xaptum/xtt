@@ -25,13 +25,9 @@ find_package(sodium 1.0.11 REQUIRED QUIET)
 
 if(USE_TPM)
         add_definitions(-DUSE_TPM)
-        set(USE_TPM_DEFINE "#define USE_TPM")
         find_package(xaptum-tpm 0.5.0 REQUIRED QUIET)
         find_package(ecdaa 0.9.0 COMPONENTS tpm REQUIRED QUIET)
 endif()
-
-configure_file(${PROJECT_SOURCE_DIR}/include/xtt/context.h.in ${CMAKE_BINARY_DIR}/include/xtt/context.h)
-configure_file(${PROJECT_SOURCE_DIR}/include/xtt/daa_wrapper.h.in ${CMAKE_BINARY_DIR}/include/xtt/daa_wrapper.h)
 
 # If not building as a shared library, force build as a static.  This
 # is to match the CMake default semantics of using
@@ -152,6 +148,9 @@ install(DIRECTORY ${CMAKE_BINARY_DIR}/include/xtt DESTINATION "${CMAKE_INSTALL_I
 ################################################################################
 # pkgconfig
 ################################################################################
+if(USE_TPM)
+  set(PC_COMPILE_DEFINITIONS "-DUSE_TPM")
+endif()
 configure_file(xtt.pc.in xtt.pc @ONLY)
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/xtt.pc
         DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig
