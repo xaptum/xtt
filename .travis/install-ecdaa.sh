@@ -15,14 +15,15 @@
 
 set -e
 
-if [[ $# -ne 1 ]]; then
-        echo "usage: $0 <absolute-path-to-ecdaa-source-directory>"
+if [[ $# -ne 2 ]]; then
+        echo "usage: $0 <git-tag> <absolute-path-to-ecdaa-source-directory>"
         exit 1
 fi
 
-source_dir="$1"
-git clone https://github.com/xaptum/ecdaa "${source_dir}" 
-pushd "${source_dir}" 
+source_tag="$1"
+source_dir="$2"
+git clone --branch "${source_tag}" --depth 1 https://github.com/xaptum/ecdaa "${source_dir}"
+pushd "${source_dir}"
 mkdir -p build
 pushd build
 cmake .. -DCMAKE_INSTALL_PREFIX=${INSTALL_PREFIX} -DCMAKE_PREFIX_PATH=${local_install_dir}

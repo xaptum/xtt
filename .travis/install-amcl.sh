@@ -15,16 +15,16 @@
 
 set -e
 
-if [[ $# -ne 2 ]]; then
-        echo "usage: $0 <absolute-path-to-amcl-source-directory> <comma-separated-curve-list>"
+if [[ $# -ne 3 ]]; then
+        echo "usage: $0 <git-tag> <absolute-path-to-amcl-source-directory> <comma-separated-curve-list>"
         exit 1
 fi
 
 repo_url=https://github.com/milagro-crypto/milagro-crypto-c
-tag=4.7.0
-source_dir="$1"
-curves="$2"
-git clone -b $tag "${repo_url}" "${source_dir}"
+source_tag="$1"
+source_dir="$2"
+curves="$3"
+git clone --branch "${source_tag}" --depth 1 "${repo_url}" "${source_dir}"
 pushd "${source_dir}"
 mkdir -p build
 pushd build
