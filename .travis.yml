@@ -24,6 +24,7 @@ env:
     - AMCL_DIR=${TRAVIS_BUILD_DIR}/milagro-crypto-c/install
     - XAPTUM_TPM_DIR=${TRAVIS_BUILD_DIR}/xaptum-tpm/
     - AMCL_CURVES=FP256BN,NIST256
+    - ECDAA_TAG=v0.9.1
     - ECDAA_DIR=${TRAVIS_BUILD_DIR}/ecdaa
 
 jobs:
@@ -35,7 +36,7 @@ jobs:
       - .travis/install-libsodium.sh ${LIBSODIUM_DIR}
       - .travis/install-xaptum-tpm.sh ${XAPTUM_TPM_DIR}
       - .travis/install-amcl.sh ${AMCL_DIR} ${AMCL_CURVES}
-      - .travis/install-ecdaa.sh ${ECDAA_DIR}
+      - .travis/install-ecdaa.sh ${ECDAA_TAG} ${ECDAA_DIR}
       - cmake . -DCMAKE_BUILD_TYPE=Release -DBUILD_EXAMPLES=ON
     script:
       - cmake --build . -- -j2
