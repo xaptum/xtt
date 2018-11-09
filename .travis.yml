@@ -30,56 +30,35 @@ env:
     - ECDAA_TAG=v0.9.1
     - ECDAA_DIR=${TRAVIS_BUILD_DIR}/ecdaa
 
-jobs:
+before_script:
+  - .travis/install-libsodium.sh ${LIBSODIUM_TAG} ${LIBSODIUM_DIR}
+  - .travis/install-xaptum-tpm.sh ${XAPTUM_TPM_TAG} ${XAPTUM_TPM_DIR}
+  - .travis/install-amcl.sh ${AMCL_TAG} ${AMCL_DIR} ${AMCL_CURVES}
+  - .travis/install-ecdaa.sh ${ECDAA_TAG} ${ECDAA_DIR}
+  - cmake . -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DBUILD_EXAMPLES=ON
+
+script:
+  - cmake --build . -- -j2
+  - ctest -E tpm -VV
+
+matrix:
   include:
-
-  # Release build, gcc
-  - env: TYPE=RELEASE
-    before_script:
-      - .travis/install-libsodium.sh ${LIBSODIUM_TAG} ${LIBSODIUM_DIR}
-      - .travis/install-xaptum-tpm.sh ${XAPTUM_TPM_TAG} ${XAPTUM_TPM_DIR}
-      - .travis/install-amcl.sh ${AMCL_TAG} ${AMCL_DIR} ${AMCL_CURVES}
-      - .travis/install-ecdaa.sh ${ECDAA_TAG} ${ECDAA_DIR}
-      - cmake . -DCMAKE_BUILD_TYPE=Release -DBUILD_EXAMPLES=ON
-    script:
-      - cmake --build . -- -j2
-      - ctest -E tpm -VV
-
-  # Debug build
-  - env: TYPE=DEBUG
-    before_script:
-      - .travis/install-libsodium.sh ${LIBSODIUM_DIR}
-      - .travis/install-xaptum-tpm.sh ${XAPTUM_TPM_DIR}
-      - .travis/install-amcl.sh ${AMCL_DIR} ${AMCL_CURVES}
-      - .travis/install-ecdaa.sh ${ECDAA_DIR}
-      - cmake . -DCMAKE_BUILD_TYPE=Debug -DBUILD_EXAMPLES=ON
-    script:
-      - cmake --build . -- -j2
-      - ctest -E tpm -VV
-
-  # Release build, clang
-  - env: TYPE=RELEASE-WITH-CLANG
-    compiler: clang
-    before_script:
-      - .travis/install-libsodium.sh ${LIBSODIUM_DIR}
-      - .travis/install-xaptum-tpm.sh ${XAPTUM_TPM_DIR}
-      - .travis/install-amcl.sh ${AMCL_DIR} ${AMCL_CURVES}
-      - .travis/install-ecdaa.sh ${ECDAA_DIR}
-      - cmake . -DCMAKE_BUILD_TYPE=Release -DBUILD_EXAMPLES=ON
-    script:
-      - cmake --build . -- -j2
-      - ctest -E tpm -VV
-
-  # Sanitizers
-  - env: TYPE=SANITIZE
-    sudo: true
-    compiler: clang
-    before_script:
-      - .travis/install-libsodium.sh ${LIBSODIUM_DIR}
-      - .travis/install-xaptum-tpm.sh ${XAPTUM_TPM_DIR}
-      - .travis/install-amcl.sh ${AMCL_DIR} ${AMCL_CURVES}
-      - .travis/install-ecdaa.sh ${ECDAA_DIR}
-      - cmake . -DCMAKE_BUILD_TYPE=RelWithSanitize -DBUILD_EXAMPLES=ON
-    script:
-      - cmake --build . -- -j2
-      - ctest -E tpm -VV
+    - name: "Release build, gcc"
+      env:
+        - TYPE=RELEASE
+        - BUILD_TYPE=Release
+    - name: "Debug build, gcc"
+      env:
+        - TYPE=DEBUG
+        - BUILD_TYPE=Debug
+    - name: "Release build, clang"
+      compiler: clang
+      env:
+        - TYPE=RELEASE-WITH-CLANG
+        - BUILD_TYPE=Release
+    - name: "Sanitize build, clang"
+      sudo: true
+      compiler: clang
+      env:
+        - TYPE=SANITIZE
+        - BUILD_TYPE=RelWithSanitize
