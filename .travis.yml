@@ -20,6 +20,7 @@ env:
   global:
     - INSTALL_PREFIX=${TRAVIS_BUILD_DIR}/usr
     - CMAKE_PREFIX_PATH=${INSTALL_PREFIX}
+    - LIBSODIUM_TAG=1.0.11
     - LIBSODIUM_DIR=${TRAVIS_BUILD_DIR}/libsodium
     - AMCL_TAG=4.7.0
     - AMCL_DIR=${TRAVIS_BUILD_DIR}/milagro-crypto-c/install
@@ -35,7 +36,7 @@ jobs:
   # Release build, gcc
   - env: TYPE=RELEASE
     before_script:
-      - .travis/install-libsodium.sh ${LIBSODIUM_DIR}
+      - .travis/install-libsodium.sh ${LIBSODIUM_TAG} ${LIBSODIUM_DIR}
       - .travis/install-xaptum-tpm.sh ${XAPTUM_TPM_TAG} ${XAPTUM_TPM_DIR}
       - .travis/install-amcl.sh ${AMCL_TAG} ${AMCL_DIR} ${AMCL_CURVES}
       - .travis/install-ecdaa.sh ${ECDAA_TAG} ${ECDAA_DIR}

@@ -15,18 +15,18 @@
 
 set -e
 
-if [[ $# -ne 1 ]]; then
-        echo "usage: $0 <absolute-path-to-libsodium-source-directory>"
+if [[ $# -ne 2 ]]; then
+        echo "usage: $0 <version> <absolute-path-to-libsodium-source-directory>"
         exit 1
 fi
 
-version=1.0.11
-source_dir="$1"
+source_tag="$1"
+source_dir="$2"
 mkdir -p ${source_dir}
 pushd ${source_dir}
-wget https://download.libsodium.org/libsodium/releases/old/unsupported/libsodium-${version}.tar.gz
-tar xvfz libsodium-${version}.tar.gz
-pushd libsodium-${version}
+wget https://download.libsodium.org/libsodium/releases/old/unsupported/libsodium-${source_tag}.tar.gz
+tar xvfz libsodium-${source_tag}.tar.gz
+pushd libsodium-${source_tag}
 ./configure --prefix=${INSTALL_PREFIX}
 make
 make install
