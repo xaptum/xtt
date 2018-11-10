@@ -101,6 +101,32 @@ int xtt_crypto_do_x25519_diffie_hellman(unsigned char* shared_secret,
     return rc;
 }
 
+int xtt_crypto_kx_x25519_keypair(struct xtt_crypto_kx_public* public,
+                                 struct xtt_crypto_kx_secret* secret)
+{
+    public->len = sizeof(xtt_crypto_x25519_public);
+    secret->len = sizeof(xtt_crypto_x25519_secret);
+
+    randombytes_buf(&secret->buf, secret->len);
+    return crypto_scalarmult_base(&public->buf, &secret->buf);
+}
+
+int xtt_crypto_kx_x25519_exchange(struct xtt_crypto_kx_shared* shared,
+                                  const struct xtt_crypto_kx_public* other_public,
+                                  const struct xtt_crypto_kx_secret* my_secret)
+{
+    shared->len = sizeof(xtt_crypto_x25519_shared);
+
+    if (0 != crypto_scalarmult(&shared->buf, &my_secret->buf,
+                               &other_public->buf))
+        return XTT_RETURN_DIFFIE_HELLMAN;
+
+    if (sodium_is_zero(&shared->buf, shared->len))
+        return XTT_RETURN_DIFFIE_HELLMAN;
+
+    return 0;
+}
+
 int xtt_crypto_hash_sha512(unsigned char* out,
                            uint16_t outlen,
                            const unsigned char* in,

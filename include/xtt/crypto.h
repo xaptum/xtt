@@ -23,6 +23,7 @@
 
 #include "crypto_types.h"
 #include "crypto/hmac.h"
+#include "crypto/kx.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -34,9 +35,11 @@ extern "C" {
  * A cipher suite specifies algorithms for key exchange, attestation,
  * signing, AEAD, and HMAC.
  *
- * Note: Currently only the HMAC algorithm is exposed.
+ * Note: Currently only the key exchange and HMAC algorithms are
+ * exposed.
  */
 struct xtt_suite_ops {
+    struct xtt_crypto_kx_ops   *kx;
     struct xtt_crypto_hmac_ops *hmac;
 };
 

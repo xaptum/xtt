@@ -25,6 +25,7 @@ extern "C" {
 #endif
 
 #include <xtt/crypto_types.h>
+#include <xtt/crypto/kx.h>
 
 int xtt_crypto_initialize_crypto();
 

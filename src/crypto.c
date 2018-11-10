@@ -19,6 +19,16 @@
 #include "xtt/crypto.h"
 #include "xtt/crypto_wrapper.h"
 
+/** Key Exchange Ops **/
+static struct xtt_crypto_kx_ops x25519_ops =
+    {
+     .public_len = sizeof(xtt_crypto_x25519_public),
+     .shared_len = sizeof(xtt_crypto_x25519_shared),
+     .keypair  = xtt_crypto_kx_x25519_keypair,
+     .exchange = xtt_crypto_kx_x25519_exchange
+    };
+
+/** HMAC Ops **/
 static struct xtt_crypto_hmac_ops sha512_ops =
     {
      .outlen = sizeof(xtt_crypto_sha512),
@@ -44,15 +54,19 @@ struct xtt_suite_ops xtt_suite_ops[] =
      { // Suite Spec 0 is undefined
      },
      { // XTT_X25519_LRSW_ECDSAP256_CHACHA20POLY1305_SHA512
+      .kx   = &x25519_ops,
       .hmac = &sha512_ops
      },
      { // XTT_X25519_LRSW_ECDSAP256_CHACHA20POLY1305_BLAKE2B
+      .kx   = &x25519_ops,
       .hmac = &blake2b_ops
      },
      { // XTT_X25519_LRSW_ECDSAP256_AES256GCM_SHA512
+      .kx   = &x25519_ops,
       .hmac = &sha512_ops
      },
      { // XTT_X25519_LRSW_ECDSAP256_AES256GCM_BLAKE2B
+      .kx   = &x25519_ops,
       .hmac = &blake2b_ops
      }
     };
