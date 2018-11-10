@@ -21,6 +21,7 @@
 #pragma once
 
 #include <xtt/context.h>
+#include <xtt/crypto.h>
 #include <xtt/crypto_types.h>
 #include <xtt/return_codes.h>
 
@@ -33,7 +34,7 @@ derive_handshake_keys(struct xtt_handshake_context *handshake_ctx,
                       const unsigned char *client_init,
                       const unsigned char *server_initandattest_uptocookie,
                       const xtt_server_cookie *server_cookie,
-                      const unsigned char *others_pub_key,
+                      const struct xtt_crypto_kx_public* others_pubkey,
                       int is_client);
 
 #ifdef __cplusplus

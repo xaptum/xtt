@@ -55,7 +55,8 @@ xtt_access_version(const unsigned char* msg_start)
 }
 
 uint16_t xtt_clientinit_length(xtt_version version,
-                              xtt_suite_spec suite_spec)
+                               xtt_suite_spec suite_spec,
+                               const struct xtt_suite_ops* suite_ops)
 {
     switch (version) {
         case XTT_VERSION_ONE:
@@ -69,7 +70,7 @@ uint16_t xtt_clientinit_length(xtt_version version,
                            + sizeof(xtt_version_raw)
                            + sizeof(xtt_suite_spec_raw)
                            + sizeof(xtt_signing_nonce)
-                           + sizeof(xtt_x25519_pub_key);
+                           + suite_ops->kx->public_len;
             }
     }
 
@@ -128,7 +129,8 @@ xtt_clientinit_access_ecdhe_key(const unsigned char* msg_start,
 }
 
 uint16_t xtt_serverinitandattest_unencrypted_part_length(xtt_version version,
-                                                        xtt_suite_spec suite_spec)
+                                                         xtt_suite_spec suite_spec,
+                                                         const struct xtt_suite_ops* suite_ops)
 {
     switch (version) {
         case XTT_VERSION_ONE:
@@ -141,7 +143,7 @@ uint16_t xtt_serverinitandattest_unencrypted_part_length(xtt_version version,
                            + sizeof(xtt_length)
                            + sizeof(xtt_version_raw)
                            + sizeof(xtt_suite_spec_raw)
-                           + sizeof(xtt_x25519_pub_key)
+                           + suite_ops->kx->public_len
                            + sizeof(xtt_server_cookie);
             }
     }
@@ -171,9 +173,12 @@ uint16_t xtt_serverinitandattest_encrypted_part_length(xtt_version version,
 
 uint16_t
 xtt_serverinitandattest_total_length(xtt_version version,
-                                     xtt_suite_spec suite_spec)
+                                     xtt_suite_spec suite_spec,
+                                     const struct xtt_suite_ops* suite_ops)
 {
-    uint16_t body_length = xtt_serverinitandattest_unencrypted_part_length(version, suite_spec)
+    uint16_t body_length = xtt_serverinitandattest_unencrypted_part_length(version,
+                                                                           suite_spec,
+                                                                           suite_ops)
         + xtt_serverinitandattest_encrypted_part_length(version, suite_spec);
 
     switch (version) {
@@ -194,7 +199,8 @@ xtt_serverinitandattest_total_length(xtt_version version,
 
 uint16_t
 xtt_serverinitandattest_uptosignature_length(xtt_version version,
-                                            xtt_suite_spec suite_spec)
+                                             xtt_suite_spec suite_spec,
+                                             const struct xtt_suite_ops* suite_ops)
 {
     switch (version) {
         case XTT_VERSION_ONE:
@@ -204,7 +210,8 @@ xtt_serverinitandattest_uptosignature_length(xtt_version version,
                 case XTT_X25519_LRSW_ECDSAP256_AES256GCM_SHA512:
                 case XTT_X25519_LRSW_ECDSAP256_AES256GCM_BLAKE2B:
                     return xtt_serverinitandattest_unencrypted_part_length(version,
-                                                                          suite_spec)
+                                                                           suite_spec,
+                                                                           suite_ops)
                            + xtt_server_certificate_length(suite_spec);
             }
     }
@@ -234,7 +241,8 @@ xtt_serverinitandattest_encrypted_part_uptosignature_length(xtt_version version,
 
 uint16_t
 xtt_serverinitandattest_uptocookie_length(xtt_version version,
-                                         xtt_suite_spec suite_spec)
+                                          xtt_suite_spec suite_spec,
+                                          const struct xtt_suite_ops* suite_ops)
 {
     switch (version) {
         case XTT_VERSION_ONE:
@@ -247,7 +255,7 @@ xtt_serverinitandattest_uptocookie_length(xtt_version version,
                            + sizeof(xtt_length)
                            + sizeof(xtt_version_raw)
                            + sizeof(xtt_suite_spec_raw)
-                           + sizeof(xtt_x25519_pub_key);
+                           + suite_ops->kx->public_len;
             }
     }
 
@@ -290,8 +298,9 @@ xtt_serverinitandattest_access_ecdhe_key(const unsigned char* msg_start,
 
 xtt_server_cookie*
 xtt_serverinitandattest_access_server_cookie(const unsigned char* msg_start,
-                                            xtt_version version,
-                                            xtt_suite_spec suite_spec)
+                                             xtt_version version,
+                                             xtt_suite_spec suite_spec,
+                                             const struct xtt_suite_ops* suite_ops)
 {
     switch (version) {
         case XTT_VERSION_ONE:
@@ -305,7 +314,7 @@ xtt_serverinitandattest_access_server_cookie(const unsigned char* msg_start,
                                                   + sizeof(xtt_length)
                                                   + sizeof(xtt_version_raw)
                                                   + sizeof(xtt_suite_spec_raw)
-                                                  + sizeof(xtt_x25519_pub_key));
+                                                  + suite_ops->kx->public_len);
             }
     }
 

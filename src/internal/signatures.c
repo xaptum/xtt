@@ -261,9 +261,12 @@ generate_server_sig_hash(unsigned char *hash_out,
 {
     const struct xtt_crypto_hmac_ops* hmac = handshake_ctx->suite_ops->hmac;
 
-    uint16_t client_init_length = xtt_clientinit_length(handshake_ctx->version, handshake_ctx->suite_spec);
+    uint16_t client_init_length = xtt_clientinit_length(handshake_ctx->version,
+                                                        handshake_ctx->suite_spec,
+                                                        handshake_ctx->suite_ops);
     uint16_t server_initandattest_up_to_signature_length = xtt_serverinitandattest_uptosignature_length(handshake_ctx->version,
-                                                                                                       handshake_ctx->suite_spec);
+                                                                                                        handshake_ctx->suite_spec,
+                                                                                                        handshake_ctx->suite_ops);
 
     // 1) Create inner hash: hash_ext(ClientInit || ServerInitAndAttest-up-to-signature)
     uint16_t inner_hash_input_length = client_init_length + server_initandattest_up_to_signature_length;
@@ -283,17 +286,19 @@ generate_server_sig_hash(unsigned char *hash_out,
     memcpy(hash_input,
            server_initandattest_unencrypted_part,
            xtt_serverinitandattest_unencrypted_part_length(handshake_ctx->version,
-                                                          handshake_ctx->suite_spec));
+                                                           handshake_ctx->suite_spec,
+                                                           handshake_ctx->suite_ops));
     hash_input += xtt_serverinitandattest_unencrypted_part_length(handshake_ctx->version,
-                                                                 handshake_ctx->suite_spec);
+                                                                  handshake_ctx->suite_spec,
+                                                                  handshake_ctx->suite_ops);
 
     // 1iv) Copy in the ServerInitAndAttest encrypted-part-up-to-signature to the hash input buffer.
     memcpy(hash_input,
            server_initandattest_encryptedpart_uptosignature,
            xtt_serverinitandattest_encrypted_part_uptosignature_length(handshake_ctx->version,
-                                                                      handshake_ctx->suite_spec));
+                                                                       handshake_ctx->suite_spec));
     hash_input += xtt_serverinitandattest_encrypted_part_uptosignature_length(handshake_ctx->version,
-                                                                             handshake_ctx->suite_spec);
+                                                                              handshake_ctx->suite_spec);
 
     // 1v) Hash the hash input buffer to get the inner hash.
     int hash_ret = hmac->hash(hash_out,

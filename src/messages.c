@@ -86,7 +86,9 @@ xtt_handshake_client_handle_io(uint16_t bytes_written,
                 ctx->base.out_end += bytes_written;
                 uint16_t bytes_io_performed_for_this_message = ctx->base.out_end - ctx->base.out_message_start;
 
-                uint16_t message_length = xtt_clientinit_length(ctx->base.version, ctx->base.suite_spec);
+                uint16_t message_length = xtt_clientinit_length(ctx->base.version,
+                                                                ctx->base.suite_spec,
+                                                                ctx->base.suite_ops);
 
                 if (bytes_io_performed_for_this_message == message_length) {
                     ctx->state = XTT_CLIENT_HANDSHAKE_STATE_READING_SERVERATTESTHEADER;
@@ -126,7 +128,9 @@ xtt_handshake_client_handle_io(uint16_t bytes_written,
                     if (XTT_RETURN_SUCCESS != rc) {
                         return rc;
                     }
-                    if (message_length != xtt_serverinitandattest_total_length(ctx->base.version, ctx->base.suite_spec)) {
+                    if (message_length != xtt_serverinitandattest_total_length(ctx->base.version,
+                                                                               ctx->base.suite_spec,
+                                                                               ctx->base.suite_ops)) {
                         return XTT_RETURN_INCORRECT_LENGTH;
                     }
 
@@ -155,7 +159,9 @@ xtt_handshake_client_handle_io(uint16_t bytes_written,
                 ctx->base.in_end += bytes_read;
                 uint16_t bytes_io_performed_for_this_message = ctx->base.in_end - ctx->base.in_message_start;
 
-                uint16_t message_length = xtt_serverinitandattest_total_length(ctx->base.version, ctx->base.suite_spec);
+                uint16_t message_length = xtt_serverinitandattest_total_length(ctx->base.version,
+                                                                               ctx->base.suite_spec,
+                                                                               ctx->base.suite_ops);
 
                 if (bytes_io_performed_for_this_message >= message_length) {
                     ctx->state = XTT_CLIENT_HANDSHAKE_STATE_PREPARSING_SERVERATTEST;
@@ -358,7 +364,9 @@ xtt_handshake_server_handle_io(uint16_t bytes_written,
                 ctx->base.out_end += bytes_written;
                 uint16_t bytes_io_performed_for_this_message = ctx->base.out_end - ctx->base.out_message_start;
 
-                uint16_t message_length = xtt_serverinitandattest_total_length(ctx->base.version, ctx->base.suite_spec);
+                uint16_t message_length = xtt_serverinitandattest_total_length(ctx->base.version,
+                                                                               ctx->base.suite_spec,
+                                                                               ctx->base.suite_ops);
 
                 if (bytes_io_performed_for_this_message == message_length) {
                     ctx->state = XTT_SERVER_HANDSHAKE_STATE_READING_CLIENTATTESTHEADER;
@@ -487,7 +495,9 @@ xtt_handshake_client_start(uint16_t* io_bytes_requested,
     *xtt_access_msg_type(ctx->base.out_message_start) = XTT_CLIENTINIT_MSG;
 
     // 2) Set length.
-    short_to_bigendian(xtt_clientinit_length(ctx->base.version, ctx->base.suite_spec),
+    short_to_bigendian(xtt_clientinit_length(ctx->base.version,
+                                             ctx->base.suite_spec,
+                                             ctx->base.suite_ops),
                        xtt_access_length(ctx->base.out_message_start));
 
     // 3) Set version.
@@ -504,13 +514,15 @@ xtt_handshake_client_start(uint16_t* io_bytes_requested,
     // 6) Set Diffie-Hellman key pair.
     // Key pair is assumed to have been generated previously
     // by a call to the init function for the handshake context.
-    ctx->base.copy_dh_pubkey(xtt_clientinit_access_ecdhe_key(ctx->base.out_message_start,
-                                                             ctx->base.version),
-                             NULL,
-                             &ctx->base);
+    memcpy(xtt_clientinit_access_ecdhe_key(ctx->base.out_message_start,
+                                           ctx->base.version),
+           &ctx->base.kx_pubkey.buf,
+           ctx->base.kx_pubkey.len);
 
     // 7) Report ClientInit message length.
-    *io_bytes_requested = xtt_clientinit_length(ctx->base.version, ctx->base.suite_spec);
+    *io_bytes_requested = xtt_clientinit_length(ctx->base.version,
+                                                ctx->base.suite_spec,
+                                                ctx->base.suite_ops);
 
     // 8) Set io_ptr.
     *io_ptr = ctx->base.out_message_start;
@@ -613,7 +625,9 @@ xtt_handshake_server_build_serverattest(uint16_t* io_bytes_requested,
     *xtt_access_msg_type(ctx->base.out_message_start) = XTT_SERVERINITANDATTEST_MSG;
 
     // 3) Set length.
-    short_to_bigendian(xtt_serverinitandattest_total_length(ctx->base.version, ctx->base.suite_spec),
+    short_to_bigendian(xtt_serverinitandattest_total_length(ctx->base.version,
+                                                            ctx->base.suite_spec,
+                                                            ctx->base.suite_ops),
                        xtt_access_length(ctx->base.out_message_start));
 
     // 4) Set version.
@@ -624,15 +638,16 @@ xtt_handshake_server_build_serverattest(uint16_t* io_bytes_requested,
                        xtt_serverinitandattest_access_suite_spec(ctx->base.out_message_start, ctx->base.version));
 
     // 6) Copy own Diffie-Hellman public key.
-    ctx->base.copy_dh_pubkey(xtt_serverinitandattest_access_ecdhe_key(ctx->base.out_message_start,
-                                                                          ctx->base.version),
-                                 NULL,
-                                 &ctx->base);
+    memcpy(xtt_serverinitandattest_access_ecdhe_key(ctx->base.out_message_start,
+                                                    ctx->base.version),
+           &ctx->base.kx_pubkey.buf,
+           ctx->base.kx_pubkey.len);
 
     // 7) Generate ServerCookie
     rc = build_server_cookie(xtt_serverinitandattest_access_server_cookie(ctx->base.out_message_start,
                                                                           ctx->base.version,
-                                                                          ctx->base.suite_spec),
+                                                                          ctx->base.suite_spec,
+                                                                          ctx->base.suite_ops),
                              &ctx->base,
                              cookie_ctx);
     if (XTT_RETURN_SUCCESS != rc)
@@ -665,14 +680,21 @@ xtt_handshake_server_build_serverattest(uint16_t* io_bytes_requested,
 
     // 10) Run Diffie-Hellman and get handshake AEAD keys.
     // TODO: Move this earlier, in case it fails?
+    struct xtt_crypto_kx_public others_pk;
+    unsigned char* others_pk_raw =
+        xtt_clientinit_access_ecdhe_key(ctx->base.in_message_start,
+                                        ctx->base.version);
+    xtt_crypto_kx_public_set(&others_pk,
+                             others_pk_raw,
+                             ctx->base.suite_ops->kx->public_len);
     rc = derive_handshake_keys(&ctx->base,
                                ctx->base.in_message_start,
                                ctx->base.out_message_start,
                                xtt_serverinitandattest_access_server_cookie(ctx->base.out_message_start,
                                                                             ctx->base.version,
-                                                                            ctx->base.suite_spec),
-                               xtt_clientinit_access_ecdhe_key(ctx->base.in_message_start,
-                                                               ctx->base.version),
+                                                                            ctx->base.suite_spec,
+                                                                            ctx->base.suite_ops),
+                               &others_pk,
                                0);
     if (XTT_RETURN_SUCCESS != rc)
         goto finish;
@@ -680,14 +702,16 @@ xtt_handshake_server_build_serverattest(uint16_t* io_bytes_requested,
     // 11) AEAD encrypt the message
     uint16_t encrypted_len;
     rc = ctx->base.encrypt(ctx->base.out_message_start + xtt_serverinitandattest_unencrypted_part_length(ctx->base.version,
-                                                                                            ctx->base.suite_spec),
+                                                                                                         ctx->base.suite_spec,
+                                                                                                         ctx->base.suite_ops),
                                &encrypted_len,
                                ctx->base.buffer,
                                xtt_serverinitandattest_encrypted_part_length(ctx->base.version,
                                                                              ctx->base.suite_spec),
                                ctx->base.out_message_start,
                                xtt_serverinitandattest_unencrypted_part_length(ctx->base.version,
-                                                                               ctx->base.suite_spec),
+                                                                               ctx->base.suite_spec,
+                                                                               ctx->base.suite_ops),
                                &ctx->base);
     if (XTT_RETURN_SUCCESS != rc)
         goto finish;
@@ -695,15 +719,21 @@ xtt_handshake_server_build_serverattest(uint16_t* io_bytes_requested,
 finish:
     if (XTT_RETURN_SUCCESS == rc) {
         // 12) Report ServerInitAndAttest message length.
-        *io_bytes_requested = xtt_serverinitandattest_unencrypted_part_length(ctx->base.version, ctx->base.suite_spec)
+        *io_bytes_requested = xtt_serverinitandattest_unencrypted_part_length(ctx->base.version,
+                                                                              ctx->base.suite_spec,
+                                                                              ctx->base.suite_ops)
                         + encrypted_len;
-        assert(xtt_serverinitandattest_total_length(ctx->base.version, ctx->base.suite_spec) == *io_bytes_requested);
+        assert(xtt_serverinitandattest_total_length(ctx->base.version,
+                                                    ctx->base.suite_spec,
+                                                    ctx->base.suite_ops) == *io_bytes_requested);
 
         // 13) Set io_ptr
         *io_ptr = ctx->base.out_message_start;
 
         // 14) Reset input buffer pointers
-        ctx->base.in_message_start += xtt_clientinit_length(ctx->base.version, ctx->base.suite_spec);
+        ctx->base.in_message_start += xtt_clientinit_length(ctx->base.version,
+                                                            ctx->base.suite_spec,
+                                                            ctx->base.suite_ops);
         if (ctx->base.in_message_start >= ctx->base.in_end) {
             ctx->base.in_message_start = ctx->base.in_buffer_start;
             ctx->base.in_end = ctx->base.in_buffer_start;
@@ -735,7 +765,9 @@ xtt_handshake_client_preparse_serverattest(xtt_certificate_root_id *claimed_root
 
     // 0i) Ensure we've read enough
     uint16_t bytes_io_performed_for_this_message = handshake_ctx->base.in_end - handshake_ctx->base.in_message_start;
-    uint16_t message_length = xtt_serverinitandattest_total_length(handshake_ctx->base.version, handshake_ctx->base.suite_spec);
+    uint16_t message_length = xtt_serverinitandattest_total_length(handshake_ctx->base.version,
+                                                                   handshake_ctx->base.suite_spec,
+                                                                   handshake_ctx->base.suite_ops);
     if (XTT_RETURN_SUCCESS != parse_message_header(&message_length, &handshake_ctx->base)) {
         rc = XTT_RETURN_RECEIVED_ERROR_MSG;
         goto finish;
@@ -798,7 +830,9 @@ xtt_handshake_client_build_idclientattest(uint16_t *io_bytes_requested,
     xtt_return_code_type rc;
     // 0i) Ensure we've read enough
     uint16_t bytes_io_performed_for_this_message = handshake_ctx->base.in_end - handshake_ctx->base.in_message_start;
-    uint16_t message_length = xtt_serverinitandattest_total_length(handshake_ctx->base.version, handshake_ctx->base.suite_spec);
+    uint16_t message_length = xtt_serverinitandattest_total_length(handshake_ctx->base.version,
+                                                                   handshake_ctx->base.suite_spec,
+                                                                   handshake_ctx->base.suite_ops);
     if (XTT_RETURN_SUCCESS != parse_message_header(&message_length, &handshake_ctx->base)) {
         rc = XTT_RETURN_RECEIVED_ERROR_MSG;
         goto finish;
@@ -844,7 +878,8 @@ xtt_handshake_client_build_idclientattest(uint16_t *io_bytes_requested,
     memcpy(xtt_identityclientattest_access_servercookie(handshake_ctx->base.out_message_start, handshake_ctx->base.version),
            xtt_serverinitandattest_access_server_cookie(handshake_ctx->base.in_message_start,
                                                         handshake_ctx->base.version,
-                                                        handshake_ctx->base.suite_spec),
+                                                        handshake_ctx->base.suite_spec,
+                                                        handshake_ctx->base.suite_ops),
            sizeof(xtt_server_cookie));
 
     // 7) Copy longterm public key in.
@@ -859,7 +894,8 @@ xtt_handshake_client_build_idclientattest(uint16_t *io_bytes_requested,
                                                                                                         handshake_ctx->base.suite_spec),
                                 (unsigned char*)xtt_serverinitandattest_access_server_cookie(handshake_ctx->base.in_message_start,
                                                                                              handshake_ctx->base.version,
-                                                                                             handshake_ctx->base.suite_spec),
+                                                                                             handshake_ctx->base.suite_spec,
+                                                                                             handshake_ctx->base.suite_ops),
                                 xtt_encrypted_serverinitandattest_access_certificate(handshake_ctx->base.server_initandattest_buffer,
                                                                                      handshake_ctx->base.version),
                                 xtt_encrypted_serverinitandattest_access_signature(handshake_ctx->base.server_initandattest_buffer,
@@ -895,7 +931,8 @@ xtt_handshake_client_build_idclientattest(uint16_t *io_bytes_requested,
                                                                                        handshake_ctx->base.suite_spec),
                                 (unsigned char*)xtt_serverinitandattest_access_server_cookie(handshake_ctx->base.in_message_start,
                                                                                              handshake_ctx->base.version,
-                                                                                             handshake_ctx->base.suite_spec),
+                                                                                             handshake_ctx->base.suite_spec,
+                                                                                             handshake_ctx->base.suite_ops),
                                 xtt_encrypted_serverinitandattest_access_certificate(handshake_ctx->base.server_initandattest_buffer,
                                                                                      handshake_ctx->base.version),
                                 xtt_encrypted_serverinitandattest_access_signature(handshake_ctx->base.server_initandattest_buffer,
@@ -1420,7 +1457,12 @@ parse_client_init(struct xtt_server_handshake_context *ctx_out,
                                                         ctx_out->base.version),
                        &suite_spec_raw);
     ctx_out->base.suite_spec = suite_spec_raw;
-    if (client_init_length != xtt_clientinit_length(ctx_out->base.version, ctx_out->base.suite_spec))
+    ctx_out->base.suite_ops = xtt_suite_ops_get(suite_spec_raw);
+    if (NULL == ctx_out->base.suite_ops)
+        return XTT_RETURN_UNKNOWN_SUITE_SPEC;
+    if (client_init_length != xtt_clientinit_length(ctx_out->base.version,
+                                                    ctx_out->base.suite_spec,
+                                                    ctx_out->base.suite_ops))
         return XTT_RETURN_INCORRECT_LENGTH;
 
     // 2) Check message type.
@@ -1456,11 +1498,18 @@ parse_server_initandattest(struct xtt_client_handshake_context *handshake_ctx,
     xtt_version_raw claimed_version = *xtt_access_version(server_init_and_attest);
     xtt_suite_spec claimed_suite_spec;
     xtt_suite_spec_raw claimed_suite_spec_raw;
+    const struct xtt_suite_ops* claimed_suite_ops;
     bigendian_to_short(xtt_serverinitandattest_access_suite_spec(server_init_and_attest,
                                                                  claimed_version),
                        &claimed_suite_spec_raw);
     claimed_suite_spec = claimed_suite_spec_raw;
-    if (serverinitandattest_length != xtt_serverinitandattest_total_length(claimed_version, claimed_suite_spec))
+    claimed_suite_ops = xtt_suite_ops_get(claimed_suite_spec);
+    if (NULL == claimed_suite_ops)
+        return XTT_RETURN_UNKNOWN_SUITE_SPEC;
+
+    if (serverinitandattest_length != xtt_serverinitandattest_total_length(claimed_version,
+                                                                           claimed_suite_spec,
+                                                                           claimed_suite_ops))
         return XTT_RETURN_INCORRECT_LENGTH;
 
     // 2) Check message type.
@@ -1477,15 +1526,23 @@ parse_server_initandattest(struct xtt_client_handshake_context *handshake_ctx,
     xtt_return_code_type rc;
 
     // 4) Run Diffie-Hellman and get handshake AEAD keys.
+    struct xtt_crypto_kx_public others_pk;
+    unsigned char* others_pk_raw =
+        xtt_serverinitandattest_access_ecdhe_key(handshake_ctx->base.in_message_start,
+                                                 handshake_ctx->base.version);
+    xtt_crypto_kx_public_set(&others_pk,
+                             others_pk_raw,
+                             handshake_ctx->base.suite_ops->kx->public_len);
+
     rc = derive_handshake_keys(&handshake_ctx->base,
-                              handshake_ctx->base.client_init_buffer,
-                              server_init_and_attest,
-                              xtt_serverinitandattest_access_server_cookie(server_init_and_attest,
-                                                                                   handshake_ctx->base.version,
-                                                                                   handshake_ctx->base.suite_spec),
-                              xtt_serverinitandattest_access_ecdhe_key(server_init_and_attest,
-                                                                       handshake_ctx->base.version),
-                              1);
+                               handshake_ctx->base.client_init_buffer,
+                               server_init_and_attest,
+                               xtt_serverinitandattest_access_server_cookie(server_init_and_attest,
+                                                                            handshake_ctx->base.version,
+                                                                            handshake_ctx->base.suite_spec,
+                                                                            handshake_ctx->base.suite_ops),
+                               &others_pk,
+                               1);
     if (XTT_RETURN_SUCCESS != rc)
         return rc;
 
@@ -1496,13 +1553,15 @@ parse_server_initandattest(struct xtt_client_handshake_context *handshake_ctx,
     int decrypt_rc = handshake_ctx->base.decrypt(handshake_ctx->base.server_initandattest_buffer,
                                                  &decrypted_len,
                                                  server_init_and_attest + xtt_serverinitandattest_unencrypted_part_length(handshake_ctx->base.version,
-                                                                                                                          handshake_ctx->base.suite_spec),
+                                                                                                                          handshake_ctx->base.suite_spec,
+                                                                                                                          handshake_ctx->base.suite_ops),
                                                  xtt_serverinitandattest_encrypted_part_length(handshake_ctx->base.version,
                                                                                                handshake_ctx->base.suite_spec)
                                                        + handshake_ctx->base.mac_length,
                                                  server_init_and_attest,
                                                  xtt_serverinitandattest_unencrypted_part_length(handshake_ctx->base.version,
-                                                                                                 handshake_ctx->base.suite_spec),
+                                                                                                 handshake_ctx->base.suite_spec,
+                                                                                                 handshake_ctx->base.suite_ops),
                                                  &handshake_ctx->base);
     if (0 != decrypt_rc)
         return XTT_RETURN_CRYPTO;

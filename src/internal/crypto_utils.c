@@ -38,11 +38,11 @@ void copy_dh_pubkey_x25519(unsigned char* out,
                            const struct xtt_handshake_context* self)
 {
     memcpy(out,
-           self->dh_pub_key.x25519.data,
-           sizeof(xtt_x25519_pub_key));
+           &self->kx_pubkey.buf,
+           self->kx_pubkey.len);
 
     if (NULL != out_length)
-        *out_length = sizeof(xtt_x25519_pub_key);
+        *out_length = self->kx_pubkey.len;
 }
 
 int do_diffie_hellman_x25519(unsigned char* shared_secret,
@@ -50,7 +50,7 @@ int do_diffie_hellman_x25519(unsigned char* shared_secret,
                              const struct xtt_handshake_context* self)
 {
     return xtt_crypto_do_x25519_diffie_hellman(shared_secret,
-                                               &self->dh_priv_key.x25519,
+                                               (xtt_x25519_priv_key*)&self->kx_seckey.buf,
                                                (xtt_x25519_pub_key*)other_pk);
 }
 

@@ -36,10 +36,11 @@ derive_handshake_keys(struct xtt_handshake_context *handshake_ctx,
                       const unsigned char *client_init,
                       const unsigned char *server_initandattest_uptocookie,
                       const xtt_server_cookie *server_cookie,
-                      const unsigned char *others_pub_key,
+                      const struct xtt_crypto_kx_public* others_pubkey,
                       int is_client)
 {
     const struct xtt_crypto_hmac_ops* hmac = handshake_ctx->suite_ops->hmac;
+    struct xtt_crypto_kx_ops* kx = handshake_ctx ->suite_ops->kx;
     xtt_return_code_type rc;
 
     // 1) Create HandshakeKeyHash.
@@ -52,17 +53,17 @@ derive_handshake_keys(struct xtt_handshake_context *handshake_ctx,
         return rc;
 
     // 3) Run Diffie-Hellman
-    int dh_rc = handshake_ctx->do_diffie_hellman(handshake_ctx->shared_secret_buffer,
-                                                 others_pub_key,
-                                                 handshake_ctx);
-    if (0 != dh_rc)
+    int kx_rc = kx->exchange(&handshake_ctx->kx_shared,
+                             others_pubkey,
+                             &handshake_ctx->kx_seckey);
+    if (0 != kx_rc)
         return XTT_RETURN_DIFFIE_HELLMAN;
 
     // 4) Create handshake_secret: prf_key -> prf<hash_size>(shared_secret)
     int prf_rc = hmac->prf(&handshake_ctx->handshake_secret.buf,
                            handshake_ctx->handshake_secret.len,
-                           handshake_ctx->shared_secret_buffer,
-                           handshake_ctx->shared_secret_length,
+                           &handshake_ctx->kx_shared.buf,
+                           handshake_ctx->kx_shared.len,
                            &handshake_ctx->prf_key.buf,
                            handshake_ctx->prf_key.len);
     if (0 != prf_rc)
@@ -170,9 +171,12 @@ generate_handshake_key_hash(unsigned char *hash_out,
 {
     const struct xtt_crypto_hmac_ops* hmac = handshake_ctx->suite_ops->hmac;
 
-    uint16_t client_init_length = xtt_clientinit_length(handshake_ctx->version, handshake_ctx->suite_spec);
+    uint16_t client_init_length = xtt_clientinit_length(handshake_ctx->version,
+                                                        handshake_ctx->suite_spec,
+                                                        handshake_ctx->suite_ops);
     uint16_t server_initandattest_up_to_cookie_length = xtt_serverinitandattest_uptocookie_length(handshake_ctx->version,
-                                                                                                 handshake_ctx->suite_spec);
+                                                                                                  handshake_ctx->suite_spec,
+                                                                                                  handshake_ctx->suite_ops);
 
     // 1) Create inner hash: hash_ext(ClientInit || ServerInitAndAttest-up-to-cookie)
     uint16_t inner_hash_input_length = client_init_length + server_initandattest_up_to_cookie_length;
