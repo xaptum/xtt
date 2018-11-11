@@ -111,42 +111,6 @@ int xtt_crypto_aead_aes256gcm_decrypt(unsigned char* msg,
                                       const struct xtt_crypto_aead_nonce* nonce,
                                       const struct xtt_crypto_aead_key* key);
 
-int xtt_crypto_aead_chacha_encrypt(unsigned char* ciphertext,
-                                   uint16_t* ciphertext_len,
-                                   const unsigned char* message,
-                                   uint16_t msg_len,
-                                   const unsigned char* addl_data,
-                                   uint16_t addl_len,
-                                   const xtt_chacha_nonce* nonce,
-                                   const xtt_chacha_key* key);
-
-int xtt_crypto_aead_chacha_decrypt(unsigned char* decrypted,
-                                   uint16_t* decrypted_len,
-                                   const unsigned char* ciphertext,
-                                   uint16_t ciphertext_len,
-                                   const unsigned char* addl_data,
-                                   uint16_t addl_len,
-                                   const xtt_chacha_nonce* nonce,
-                                   const xtt_chacha_key* key);
-
-int xtt_crypto_aead_aes256_encrypt(unsigned char* ciphertext,
-                                   uint16_t* ciphertext_len,
-                                   const unsigned char* message,
-                                   uint16_t msg_len,
-                                   const unsigned char* addl_data,
-                                   uint16_t addl_len,
-                                   const xtt_aes256_nonce* nonce,
-                                   const xtt_aes256_key* key);
-
-int xtt_crypto_aead_aes256_decrypt(unsigned char* decrypted,
-                                   uint16_t* decrypted_len,
-                                   const unsigned char* ciphertext,
-                                   uint16_t ciphertext_len,
-                                   const unsigned char* addl_data,
-                                   uint16_t addl_len,
-                                   const xtt_aes256_nonce* nonce,
-                                   const xtt_aes256_key* key);
-
 #ifdef __cplusplus
 }
 #endif

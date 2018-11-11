@@ -95,15 +95,6 @@ typedef struct {unsigned char data[24];} xtt_certificate_reserved;
 typedef struct {unsigned char data[16];} xtt_certificate_root_id;
 extern const xtt_certificate_root_id xtt_null_server_root_id;
 
-/* AEAD key types */
-typedef struct {unsigned char data[32];} xtt_chacha_key;
-typedef struct {unsigned char data[12];} xtt_chacha_nonce;
-typedef struct {unsigned char data[16];} xtt_chacha_mac;
-
-typedef struct {unsigned char data[32];} xtt_aes256_key;
-typedef struct {unsigned char data[12];} xtt_aes256_nonce;
-typedef struct {unsigned char data[16];} xtt_aes256_mac;
-
 int
 xtt_identity_to_string(const xtt_identity_type *identity_in,
                        xtt_identity_string *string_out);
