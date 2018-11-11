@@ -27,14 +27,6 @@
 extern "C" {
 #endif
 
-void copy_dh_pubkey_x25519(unsigned char* out,
-                           uint16_t* out_length,
-                           const struct xtt_handshake_context* self);
-
-int do_diffie_hellman_x25519(unsigned char* shared_secret,
-                             const unsigned char* other_pk,
-                             const struct xtt_handshake_context* self);
-
 void copy_longterm_key_ecdsap256(unsigned char* out,
                                uint16_t* out_length,
                                const struct xtt_client_handshake_context* self);

@@ -33,27 +33,6 @@ void prepare_nonce(unsigned char* nonce,
                    const unsigned char* iv,
                    uint32_t length);
 
-void copy_dh_pubkey_x25519(unsigned char* out,
-                           uint16_t* out_length,
-                           const struct xtt_handshake_context* self)
-{
-    memcpy(out,
-           &self->kx_pubkey.buf,
-           self->kx_pubkey.len);
-
-    if (NULL != out_length)
-        *out_length = self->kx_pubkey.len;
-}
-
-int do_diffie_hellman_x25519(unsigned char* shared_secret,
-                             const unsigned char* other_pk,
-                             const struct xtt_handshake_context* self)
-{
-    return xtt_crypto_do_x25519_diffie_hellman(shared_secret,
-                                               (xtt_x25519_priv_key*)&self->kx_seckey.buf,
-                                               (xtt_x25519_pub_key*)other_pk);
-}
-
 void copy_longterm_key_ecdsap256(unsigned char* out,
                                uint16_t* out_length,
                                const struct xtt_client_handshake_context* self)

@@ -81,26 +81,6 @@ void xtt_crypto_get_random(unsigned char* buffer, uint16_t buffer_length)
     randombytes_buf(buffer, buffer_length);
 }
 
-int xtt_crypto_create_x25519_key_pair(xtt_x25519_pub_key *pub, xtt_x25519_priv_key *priv)
-{
-    randombytes_buf(priv->data, sizeof(xtt_x25519_priv_key));
-
-    return crypto_scalarmult_base(pub->data, priv->data);
-}
-
-int xtt_crypto_do_x25519_diffie_hellman(unsigned char* shared_secret,
-                                        const xtt_x25519_priv_key* my_sk,
-                                        const xtt_x25519_pub_key* other_pk)
-{
-    int rc = crypto_scalarmult(shared_secret,
-                               my_sk->data,
-                               other_pk->data);
-    if (sodium_is_zero(shared_secret, crypto_scalarmult_BYTES))
-        return XTT_RETURN_DIFFIE_HELLMAN;
-
-    return rc;
-}
-
 int xtt_crypto_kx_x25519_keypair(struct xtt_crypto_kx_public* public,
                                  struct xtt_crypto_kx_secret* secret)
 {

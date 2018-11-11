@@ -35,11 +35,12 @@ void xtt_crypto_secure_clear(unsigned char* memory, uint16_t memory_length);
 
 void xtt_crypto_get_random(unsigned char* buffer, uint16_t buffer_length);
 
-int xtt_crypto_create_x25519_key_pair(xtt_x25519_pub_key *pub, xtt_x25519_priv_key *priv);
+int xtt_crypto_kx_x25519_keypair(struct xtt_crypto_kx_public* public,
+                                 struct xtt_crypto_kx_secret* secret);
 
-int xtt_crypto_do_x25519_diffie_hellman(unsigned char* shared_secret,
-                                        const xtt_x25519_priv_key* my_sk,
-                                        const xtt_x25519_pub_key* other_pk);
+int xtt_crypto_kx_x25519_exchange(struct xtt_crypto_kx_shared* shared,
+                                  const struct xtt_crypto_kx_public* other_public,
+                                  const struct xtt_crypto_kx_secret* my_secret);
 
 int xtt_crypto_hash_sha512(unsigned char* out,
                            uint16_t outlen,

@@ -81,11 +81,6 @@ typedef struct {unsigned char data[258];} xtt_daa_group_pub_key_lrsw;
 typedef struct {unsigned char data[421];} xtt_daa_signature_lrsw;
 typedef struct {unsigned char data[65];} xtt_daa_pseudonym_lrsw;
 
-/* Diffie-Hellman */
-typedef struct {unsigned char data[32];} xtt_x25519_pub_key;
-typedef struct {unsigned char data[32];} xtt_x25519_priv_key;
-typedef struct {unsigned char data[32];} xtt_x25519_shared_secret;
-
 /* LongtermSignature types */
 typedef enum xtt_server_signature_type {
     XTT_SERVER_SIGNATURE_TYPE_ECDSAP256 = 1,
