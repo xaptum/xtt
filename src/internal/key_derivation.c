@@ -39,6 +39,7 @@ derive_handshake_keys(struct xtt_handshake_context *handshake_ctx,
                       const struct xtt_crypto_kx_public* others_pubkey,
                       int is_client)
 {
+    struct xtt_crypto_aead_ops* aead = handshake_ctx->suite_ops->aead;
     const struct xtt_crypto_hmac_ops* hmac = handshake_ctx->suite_ops->hmac;
     struct xtt_crypto_kx_ops* kx = handshake_ctx ->suite_ops->kx;
     xtt_return_code_type rc;
@@ -81,12 +82,12 @@ derive_handshake_keys(struct xtt_handshake_context *handshake_ctx,
         assert(strlen(client_handshake_context_string) == client_handshake_context_string_length);
         memcpy(context_cpy, client_handshake_context_string, client_handshake_context_string_length);
         if (is_client) {
-            out_ptr = (unsigned char*)&handshake_ctx->tx_key;
+            out_ptr = &handshake_ctx->tx_key.buf;
         } else {
-            out_ptr = (unsigned char*)&handshake_ctx->rx_key;
+            out_ptr = &handshake_ctx->rx_key.buf;
         }
         prf_rc = hmac->prf(out_ptr,
-                           handshake_ctx->key_length,
+                           aead->key_len,
                            handshake_ctx->hash_buffer,
                            hmac->outlen + client_handshake_context_string_length,
                            &handshake_ctx->handshake_secret.buf,
@@ -102,12 +103,12 @@ derive_handshake_keys(struct xtt_handshake_context *handshake_ctx,
         assert(strlen(client_handshake_context_iv_string) == client_handshake_context_iv_string_length);
         memcpy(context_cpy, client_handshake_context_iv_string, client_handshake_context_iv_string_length);
         if (is_client) {
-            out_ptr = (unsigned char*)&handshake_ctx->tx_iv;
+            out_ptr = &handshake_ctx->tx_iv.buf;
         } else {
-            out_ptr = (unsigned char*)&handshake_ctx->rx_iv;
+            out_ptr = &handshake_ctx->rx_iv.buf;
         }
         prf_rc = hmac->prf(out_ptr,
-                           handshake_ctx->iv_length,
+                           aead->nonce_len,
                            handshake_ctx->hash_buffer,
                            hmac->outlen + client_handshake_context_iv_string_length,
                            &handshake_ctx->handshake_secret.buf,
@@ -128,7 +129,7 @@ derive_handshake_keys(struct xtt_handshake_context *handshake_ctx,
             out_ptr = (unsigned char*)&handshake_ctx->tx_key;
         }
         prf_rc = hmac->prf(out_ptr,
-                           handshake_ctx->key_length,
+                           aead->key_len,
                            handshake_ctx->hash_buffer,
                            hmac->outlen + server_handshake_context_string_length,
                            &handshake_ctx->handshake_secret.buf,
@@ -150,7 +151,7 @@ derive_handshake_keys(struct xtt_handshake_context *handshake_ctx,
             out_ptr = (unsigned char*)&handshake_ctx->tx_iv;
         }
         prf_rc = hmac->prf(out_ptr,
-                           handshake_ctx->iv_length,
+                           aead->nonce_len,
                            handshake_ctx->hash_buffer,
                            hmac->outlen + server_handshake_context_iv_string_length,
                            &handshake_ctx->handshake_secret.buf,

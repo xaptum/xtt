@@ -99,7 +99,7 @@ int encrypt_chacha(unsigned char* ciphertext,
                                          addl_data,
                                          addl_len,
                                          &nonce,
-                                         &self->tx_key.chacha);
+                                         (const xtt_chacha_key*)&self->tx_key.buf);
 
     xtt_crypto_secure_clear(nonce.data, sizeof(nonce));
 
@@ -131,7 +131,7 @@ int encrypt_aes256(unsigned char* ciphertext,
                                          addl_data,
                                          addl_len,
                                          &nonce,
-                                         &self->tx_key.aes256);
+                                         (const xtt_aes256_key*)&self->tx_key.buf);
 
     xtt_crypto_secure_clear(nonce.data, sizeof(nonce));
 
@@ -184,7 +184,7 @@ int decrypt_chacha(unsigned char* decrypted,
                                          addl_data,
                                          addl_len,
                                          &nonce,
-                                         &self->rx_key.chacha);
+                                         (const xtt_chacha_key*)&self->rx_key.buf);
 
     xtt_crypto_secure_clear(nonce.data, sizeof(nonce));
 
@@ -216,7 +216,7 @@ int decrypt_aes256(unsigned char* decrypted,
                                          addl_data,
                                          addl_len,
                                          &nonce,
-                                         &self->rx_key.aes256);
+                                         (const xtt_aes256_key*)&self->rx_key.buf);
 
     xtt_crypto_secure_clear(nonce.data, sizeof(nonce));
 
@@ -386,6 +386,22 @@ int copy_in_pseudonym_client_lrsw(struct xtt_client_handshake_context *self,
     return copy_pseudonym_lrsw(self->pseudonym.lrsw.data,
                                &out_length_ignore,
                                signature_in);
+}
+
+void prepare_aead_nonce(struct xtt_crypto_aead_nonce* nonce,
+                        xtt_sequence_number* seqnum,
+                        const struct xtt_crypto_aead_nonce* iv)
+{
+    assert(nonce->len > sizeof(*seqnum));
+    assert(sizeof(*seqnum) == sizeof(uint32_t));
+
+    uint32_t padlen = nonce->len - sizeof(*seqnum);
+    memset(nonce, 0U, padlen);
+
+    long_to_bigendian(*seqnum, &nonce->buf + padlen);
+    *seqnum += 1;
+
+    xor_equals(&nonce->buf, &iv->buf, nonce->len);
 }
 
 void prepare_nonce(unsigned char* nonce,

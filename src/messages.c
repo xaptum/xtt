@@ -21,6 +21,7 @@
 #include <xtt/messages.h>
 #include <xtt/return_codes.h>
 
+#include "internal/crypto_utils.h"
 #include "internal/message_utils.h"
 #include "internal/byte_utils.h"
 #include "internal/server_cookie.h"
@@ -31,6 +32,25 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <stdio.h>
+
+static
+xtt_return_code_type
+aead_encrypt(struct xtt_handshake_context *ctx,
+             unsigned char *cipher,
+             uint16_t *cipherlen,
+             const unsigned char *msg,
+             uint16_t msglen,
+             const unsigned char *ad,
+             uint16_t adlen);
+
+static
+xtt_return_code_type
+aead_decrypt(struct xtt_handshake_context *ctx,
+             unsigned char *msg,
+             const unsigned char *cipher,
+             uint16_t cipherlen,
+             const unsigned char *ad,
+             uint16_t adlen);
 
 uint16_t max_handshake_server_message_length(void)
 {
@@ -182,7 +202,9 @@ xtt_handshake_client_handle_io(uint16_t bytes_written,
                 ctx->base.out_end += bytes_written;
                 uint16_t bytes_io_performed_for_this_message = ctx->base.out_end - ctx->base.out_message_start;
 
-                uint16_t message_length = xtt_identityclientattest_total_length(ctx->base.version, ctx->base.suite_spec);
+                uint16_t message_length = xtt_identityclientattest_total_length(ctx->base.version,
+                                                                                ctx->base.suite_spec,
+                                                                                ctx->base.suite_ops);
 
                 if (bytes_io_performed_for_this_message == message_length) {
                     ctx->state = XTT_CLIENT_HANDSHAKE_STATE_READING_IDSERVERFINISHEDHEADER;
@@ -218,7 +240,9 @@ xtt_handshake_client_handle_io(uint16_t bytes_written,
                     if (XTT_RETURN_SUCCESS != rc) {
                         return rc;
                     }
-                    if (message_length != xtt_identityserverfinished_total_length(ctx->base.version, ctx->base.suite_spec)) {
+                    if (message_length != xtt_identityserverfinished_total_length(ctx->base.version,
+                                                                                  ctx->base.suite_spec,
+                                                                                  ctx->base.suite_ops)) {
                         return XTT_RETURN_INCORRECT_LENGTH;
                     }
 
@@ -243,7 +267,9 @@ xtt_handshake_client_handle_io(uint16_t bytes_written,
                 ctx->base.in_end += bytes_read;
                 uint16_t bytes_io_performed_for_this_message = ctx->base.in_end - ctx->base.in_message_start;
 
-                uint16_t message_length = xtt_identityserverfinished_total_length(ctx->base.version, ctx->base.suite_spec);
+                uint16_t message_length = xtt_identityserverfinished_total_length(ctx->base.version,
+                                                                                  ctx->base.suite_spec,
+                                                                                  ctx->base.suite_ops);
 
                 if (bytes_io_performed_for_this_message >= message_length) {
                     ctx->state = XTT_CLIENT_HANDSHAKE_STATE_PARSING_IDSERVERFINISHED;
@@ -407,7 +433,9 @@ xtt_handshake_server_handle_io(uint16_t bytes_written,
                     if (XTT_RETURN_SUCCESS != rc) {
                         return rc;
                     }
-                    if (message_length != xtt_identityclientattest_total_length(ctx->base.version, ctx->base.suite_spec)) {
+                    if (message_length != xtt_identityclientattest_total_length(ctx->base.version,
+                                                                                ctx->base.suite_spec,
+                                                                                ctx->base.suite_ops)) {
                         return XTT_RETURN_INCORRECT_LENGTH;
                     }
 
@@ -436,7 +464,9 @@ xtt_handshake_server_handle_io(uint16_t bytes_written,
                 ctx->base.in_end += bytes_read;
                 uint16_t bytes_io_performed_for_this_message = ctx->base.in_end - ctx->base.in_message_start;
 
-                uint16_t message_length = xtt_identityclientattest_total_length(ctx->base.version, ctx->base.suite_spec);
+                uint16_t message_length = xtt_identityclientattest_total_length(ctx->base.version,
+                                                                                ctx->base.suite_spec,
+                                                                                ctx->base.suite_ops);
 
                 if (bytes_io_performed_for_this_message >= message_length) {
                     ctx->state = XTT_SERVER_HANDSHAKE_STATE_PREPARSING_IDCLIENTATTEST;
@@ -457,7 +487,9 @@ xtt_handshake_server_handle_io(uint16_t bytes_written,
                 ctx->base.out_end += bytes_written;
                 uint16_t bytes_io_performed_for_this_message = ctx->base.out_end - ctx->base.out_message_start;
 
-                uint16_t message_length = xtt_identityserverfinished_total_length(ctx->base.version, ctx->base.suite_spec);
+                uint16_t message_length = xtt_identityserverfinished_total_length(ctx->base.version,
+                                                                                  ctx->base.suite_spec,
+                                                                                  ctx->base.suite_ops);
 
                 if (bytes_io_performed_for_this_message == message_length) {
                     ctx->state = XTT_SERVER_HANDSHAKE_STATE_FINISHED;
@@ -700,19 +732,19 @@ xtt_handshake_server_build_serverattest(uint16_t* io_bytes_requested,
         goto finish;
 
     // 11) AEAD encrypt the message
-    uint16_t encrypted_len;
-    rc = ctx->base.encrypt(ctx->base.out_message_start + xtt_serverinitandattest_unencrypted_part_length(ctx->base.version,
-                                                                                                         ctx->base.suite_spec,
-                                                                                                         ctx->base.suite_ops),
-                               &encrypted_len,
-                               ctx->base.buffer,
-                               xtt_serverinitandattest_encrypted_part_length(ctx->base.version,
-                                                                             ctx->base.suite_spec),
-                               ctx->base.out_message_start,
-                               xtt_serverinitandattest_unencrypted_part_length(ctx->base.version,
-                                                                               ctx->base.suite_spec,
-                                                                               ctx->base.suite_ops),
-                               &ctx->base);
+    uint16_t cipherlen = 0;
+    rc = aead_encrypt(&ctx->base,
+                      ctx->base.out_message_start + xtt_serverinitandattest_unencrypted_part_length(ctx->base.version,
+                                                                                                     ctx->base.suite_spec,
+                                                                                                     ctx->base.suite_ops),
+                      &cipherlen,
+                      ctx->base.buffer,
+                      xtt_serverinitandattest_encrypted_part_length(ctx->base.version,
+                                                                    ctx->base.suite_spec),
+                      ctx->base.out_message_start,
+                      xtt_serverinitandattest_unencrypted_part_length(ctx->base.version,
+                                                                      ctx->base.suite_spec,
+                                                                      ctx->base.suite_ops));
     if (XTT_RETURN_SUCCESS != rc)
         goto finish;
 
@@ -722,7 +754,7 @@ finish:
         *io_bytes_requested = xtt_serverinitandattest_unencrypted_part_length(ctx->base.version,
                                                                               ctx->base.suite_spec,
                                                                               ctx->base.suite_ops)
-                        + encrypted_len;
+            + cipherlen;
         assert(xtt_serverinitandattest_total_length(ctx->base.version,
                                                     ctx->base.suite_spec,
                                                     ctx->base.suite_ops) == *io_bytes_requested);
@@ -864,7 +896,9 @@ xtt_handshake_client_build_idclientattest(uint16_t *io_bytes_requested,
     *xtt_access_msg_type(handshake_ctx->base.out_message_start) = XTT_ID_CLIENTATTEST_MSG;
 
     // 3) Set length.
-    short_to_bigendian(xtt_identityclientattest_total_length(handshake_ctx->base.version, handshake_ctx->base.suite_spec),
+    short_to_bigendian(xtt_identityclientattest_total_length(handshake_ctx->base.version,
+                                                             handshake_ctx->base.suite_spec,
+                                                             handshake_ctx->base.suite_ops),
                        xtt_access_length(handshake_ctx->base.out_message_start));
 
     // 4) Set version.
@@ -951,15 +985,15 @@ xtt_handshake_client_build_idclientattest(uint16_t *io_bytes_requested,
                                                                                                handshake_ctx->base.suite_spec));
 
     // 12) AEAD encrypt the message
-    uint16_t encrypted_len;
-    rc = handshake_ctx->base.encrypt(handshake_ctx->base.out_message_start + xtt_identityclientattest_unencrypted_part_length(handshake_ctx->base.version),
-                                     &encrypted_len,
-                                     handshake_ctx->base.buffer,
-                                     xtt_identityclientattest_encrypted_part_length(handshake_ctx->base.version,
-                                                                                    handshake_ctx->base.suite_spec),
-                                     handshake_ctx->base.out_message_start,
-                                     xtt_identityclientattest_unencrypted_part_length(handshake_ctx->base.version),
-                                     &handshake_ctx->base);
+    uint16_t cipherlen = 0;
+    rc = aead_encrypt(&handshake_ctx->base,
+                      handshake_ctx->base.out_message_start + xtt_identityclientattest_unencrypted_part_length(handshake_ctx->base.version),
+                      &cipherlen,
+                      handshake_ctx->base.buffer,
+                      xtt_identityclientattest_encrypted_part_length(handshake_ctx->base.version,
+                                                                     handshake_ctx->base.suite_spec),
+                      handshake_ctx->base.out_message_start,
+                      xtt_identityclientattest_unencrypted_part_length(handshake_ctx->base.version));
     if (XTT_RETURN_SUCCESS != rc)
         goto finish;
 
@@ -967,8 +1001,10 @@ finish:
     if (XTT_RETURN_SUCCESS == rc) {
         // 13) Report Identity_CLientAttest message length.
         *io_bytes_requested = xtt_identityclientattest_unencrypted_part_length(handshake_ctx->base.version)
-                        + encrypted_len;
-        assert(xtt_identityclientattest_total_length(handshake_ctx->base.version, handshake_ctx->base.suite_spec) == *io_bytes_requested);
+            + cipherlen;
+        assert(xtt_identityclientattest_total_length(handshake_ctx->base.version,
+                                                     handshake_ctx->base.suite_spec,
+                                                     handshake_ctx->base.suite_ops) == *io_bytes_requested);
 
         // 13) Set io_ptr
         *io_ptr = handshake_ctx->base.out_message_start;
@@ -1002,7 +1038,9 @@ xtt_handshake_server_preparse_idclientattest(uint16_t *io_bytes_requested,
 
     // 0i) Ensure we've read enough
     uint16_t bytes_io_performed_for_this_message = handshake_ctx->base.in_end - handshake_ctx->base.in_message_start;
-    uint16_t message_length = xtt_identityclientattest_total_length(handshake_ctx->base.version, handshake_ctx->base.suite_spec);
+    uint16_t message_length = xtt_identityclientattest_total_length(handshake_ctx->base.version,
+                                                                    handshake_ctx->base.suite_spec,
+                                                                    handshake_ctx->base.suite_ops);
     if (XTT_RETURN_SUCCESS != parse_message_header(&message_length, &handshake_ctx->base)) {
         rc = XTT_RETURN_RECEIVED_ERROR_MSG;
         goto finish;
@@ -1043,11 +1081,18 @@ xtt_handshake_server_preparse_idclientattest(uint16_t *io_bytes_requested,
     xtt_version_raw claimed_version = *xtt_access_version(handshake_ctx->base.in_message_start);
     xtt_suite_spec claimed_suite_spec;
     xtt_suite_spec_raw claimed_suite_spec_raw;
+    const struct xtt_suite_ops* claimed_suite_ops;
     bigendian_to_short(xtt_identityclientattest_access_suite_spec(handshake_ctx->base.in_message_start,
                                                                   claimed_version),
                        &claimed_suite_spec_raw);
     claimed_suite_spec = claimed_suite_spec_raw;
-    if (clientattest_length != xtt_identityclientattest_total_length(claimed_version, claimed_suite_spec)) {
+    claimed_suite_ops = xtt_suite_ops_get(claimed_suite_spec);
+    if (NULL == claimed_suite_ops)
+        return XTT_RETURN_UNKNOWN_SUITE_SPEC;
+
+    if (clientattest_length != xtt_identityclientattest_total_length(claimed_version,
+                                                                     claimed_suite_spec,
+                                                                     claimed_suite_ops)) {
         rc = XTT_RETURN_INCORRECT_LENGTH;
         goto finish;
     }
@@ -1074,18 +1119,17 @@ xtt_handshake_server_preparse_idclientattest(uint16_t *io_bytes_requested,
     }
 
     // 5) AEAD decrypt the message
-    uint16_t decrypted_len;
     assert(sizeof(handshake_ctx->base.clientattest_buffer) >= xtt_identityclientattest_encrypted_part_length(handshake_ctx->base.version,
                                                                                                         handshake_ctx->base.suite_spec));
-    rc = handshake_ctx->base.decrypt(handshake_ctx->base.clientattest_buffer,
-                                     &decrypted_len,
-                                     handshake_ctx->base.in_message_start + xtt_identityclientattest_unencrypted_part_length(handshake_ctx->base.version),
-                                     xtt_identityclientattest_encrypted_part_length(handshake_ctx->base.version,
-                                                                                    handshake_ctx->base.suite_spec)
-                                           + handshake_ctx->base.mac_length,
-                                     handshake_ctx->base.in_message_start,
-                                     xtt_identityclientattest_unencrypted_part_length(handshake_ctx->base.version),
-                                     &handshake_ctx->base);
+    struct xtt_crypto_aead_ops* aead = handshake_ctx->base.suite_ops->aead;
+    rc = aead_decrypt(&handshake_ctx->base,
+                      handshake_ctx->base.clientattest_buffer,
+                      handshake_ctx->base.in_message_start + xtt_identityclientattest_unencrypted_part_length(handshake_ctx->base.version),
+                      xtt_identityclientattest_encrypted_part_length(handshake_ctx->base.version,
+                                                                     handshake_ctx->base.suite_spec)
+                      + aead->mac_len,
+                      handshake_ctx->base.in_message_start,
+                      xtt_identityclientattest_unencrypted_part_length(handshake_ctx->base.version));
     if (XTT_RETURN_SUCCESS != rc) {
         goto finish;
     }
@@ -1158,7 +1202,9 @@ xtt_handshake_server_verify_groupsignature(uint16_t *io_bytes_requested,
 
     // 0i) Ensure we've read enough
     uint16_t bytes_io_performed_for_this_message = handshake_ctx->base.in_end - handshake_ctx->base.in_message_start;
-    uint16_t message_length = xtt_identityclientattest_total_length(handshake_ctx->base.version, handshake_ctx->base.suite_spec);
+    uint16_t message_length = xtt_identityclientattest_total_length(handshake_ctx->base.version,
+                                                                    handshake_ctx->base.suite_spec,
+                                                                    handshake_ctx->base.suite_ops);
     if (bytes_io_performed_for_this_message < message_length) {
         *io_ptr = handshake_ctx->base.in_end;
         *io_bytes_requested = message_length - bytes_io_performed_for_this_message;
@@ -1212,7 +1258,9 @@ xtt_handshake_server_build_idserverfinished(uint16_t *io_bytes_requested,
 
     // 0i) Ensure we've read enough
     uint16_t bytes_io_performed_for_this_message = handshake_ctx->base.in_end - handshake_ctx->base.in_message_start;
-    uint16_t message_length = xtt_identityclientattest_total_length(handshake_ctx->base.version, handshake_ctx->base.suite_spec);
+    uint16_t message_length = xtt_identityclientattest_total_length(handshake_ctx->base.version,
+                                                                    handshake_ctx->base.suite_spec,
+                                                                    handshake_ctx->base.suite_ops);
     if (bytes_io_performed_for_this_message < message_length) {
         *io_ptr = handshake_ctx->base.in_end;
         *io_bytes_requested = message_length - bytes_io_performed_for_this_message;
@@ -1230,7 +1278,8 @@ xtt_handshake_server_build_idserverfinished(uint16_t *io_bytes_requested,
 
     // 2) Set length.
     short_to_bigendian(xtt_identityserverfinished_total_length(handshake_ctx->base.version,
-                                                               handshake_ctx->base.suite_spec),
+                                                               handshake_ctx->base.suite_spec,
+                                                               handshake_ctx->base.suite_ops),
                        xtt_access_length(handshake_ctx->base.out_message_start));
 
     // 3) Set version.
@@ -1258,15 +1307,18 @@ xtt_handshake_server_build_idserverfinished(uint16_t *io_bytes_requested,
            handshake_ctx->base.longterm_key_length);
 
     // 7) AEAD encrypt the message
-    uint16_t encrypted_len;
-    rc = handshake_ctx->base.encrypt(handshake_ctx->base.out_message_start + xtt_identityserverfinished_unencrypted_part_length(handshake_ctx->base.version),
-                                     &encrypted_len,
-                                     handshake_ctx->base.buffer,
-                                     xtt_identityserverfinished_encrypted_part_length(handshake_ctx->base.version,
-                                                                                      handshake_ctx->base.suite_spec),
-                                     handshake_ctx->base.out_message_start,
-                                     xtt_identityserverfinished_unencrypted_part_length(handshake_ctx->base.version),
-                                     &handshake_ctx->base);
+    struct xtt_crypto_aead_ops* aead = handshake_ctx->base.suite_ops->aead;
+    struct xtt_crypto_aead_nonce nonce;
+    xtt_crypto_aead_nonce_init(&nonce, aead);
+    prepare_aead_nonce(&nonce, &handshake_ctx->base.tx_sequence_num, &handshake_ctx->base.tx_iv);
+    rc = aead->encrypt(handshake_ctx->base.out_message_start + xtt_identityserverfinished_unencrypted_part_length(handshake_ctx->base.version),
+                       handshake_ctx->base.buffer,
+                       xtt_identityserverfinished_encrypted_part_length(handshake_ctx->base.version,
+                                                                        handshake_ctx->base.suite_spec),
+                       handshake_ctx->base.out_message_start,
+                       xtt_identityserverfinished_unencrypted_part_length(handshake_ctx->base.version),
+                       &nonce,
+                       &handshake_ctx->base.tx_key);
     if (XTT_RETURN_SUCCESS != rc)
         goto finish;
 
@@ -1274,8 +1326,12 @@ finish:
     if (XTT_RETURN_SUCCESS == rc) {
         // 8) Report ServerFinished message length.
         *io_bytes_requested = xtt_identityserverfinished_unencrypted_part_length(handshake_ctx->base.version)
-                        + encrypted_len;
-        assert(xtt_identityserverfinished_total_length(handshake_ctx->base.version, handshake_ctx->base.suite_spec) == *io_bytes_requested);
+            + xtt_identityserverfinished_encrypted_part_length(handshake_ctx->base.version,
+                                                               handshake_ctx->base.suite_spec)
+            + aead->mac_len;
+        assert(xtt_identityserverfinished_total_length(handshake_ctx->base.version,
+                                                       handshake_ctx->base.suite_spec,
+                                                       handshake_ctx->base.suite_ops) == *io_bytes_requested);
 
         // 9) Set io_ptr.
         *io_ptr = handshake_ctx->base.out_message_start;
@@ -1304,7 +1360,9 @@ xtt_handshake_client_parse_idserverfinished(uint16_t *io_bytes_requested,
 
     // 0i) Ensure we've read enough
     uint16_t bytes_io_performed_for_this_message = handshake_ctx->base.in_end - handshake_ctx->base.in_message_start;
-    uint16_t message_length = xtt_identityserverfinished_total_length(handshake_ctx->base.version, handshake_ctx->base.suite_spec);
+    uint16_t message_length = xtt_identityserverfinished_total_length(handshake_ctx->base.version,
+                                                                      handshake_ctx->base.suite_spec,
+                                                                      handshake_ctx->base.suite_ops);
     if (bytes_io_performed_for_this_message < message_length) {
         *io_ptr = handshake_ctx->base.in_end;
         *io_bytes_requested = message_length - bytes_io_performed_for_this_message;
@@ -1331,11 +1389,18 @@ xtt_handshake_client_parse_idserverfinished(uint16_t *io_bytes_requested,
     xtt_version_raw claimed_version = *xtt_access_version(handshake_ctx->base.in_message_start);
     xtt_suite_spec claimed_suite_spec;
     xtt_suite_spec_raw claimed_suite_spec_raw;
+    const struct xtt_suite_ops* claimed_suite_ops;
     bigendian_to_short(xtt_identityserverfinished_access_suite_spec(handshake_ctx->base.in_message_start,
                                                                     claimed_version),
                        &claimed_suite_spec_raw);
     claimed_suite_spec = claimed_suite_spec_raw;
-    if (serverfinished_length != xtt_identityserverfinished_total_length(claimed_version, claimed_suite_spec)) {
+    claimed_suite_ops = xtt_suite_ops_get(claimed_suite_spec);
+    if (NULL == claimed_suite_ops)
+        return XTT_RETURN_UNKNOWN_SUITE_SPEC;
+
+    if (serverfinished_length != xtt_identityserverfinished_total_length(claimed_version,
+                                                                         claimed_suite_spec,
+                                                                         claimed_suite_ops)) {
         rc = XTT_RETURN_INCORRECT_LENGTH;
         goto finish;
     }
@@ -1358,19 +1423,17 @@ xtt_handshake_client_parse_idserverfinished(uint16_t *io_bytes_requested,
     }
 
     // 4) AEAD decrypt the message
-    uint16_t decrypted_len;
     assert(sizeof(handshake_ctx->base.buffer) >= xtt_identityserverfinished_encrypted_part_length(handshake_ctx->base.version,
                                                                                              handshake_ctx->base.suite_spec));
-
-    rc = handshake_ctx->base.decrypt(handshake_ctx->base.buffer,
-                                     &decrypted_len,
-                                     handshake_ctx->base.in_message_start + xtt_identityserverfinished_unencrypted_part_length(handshake_ctx->base.version),
-                                     xtt_identityserverfinished_encrypted_part_length(handshake_ctx->base.version,
-                                                                                      handshake_ctx->base.suite_spec)
-                                           + handshake_ctx->base.mac_length,
-                                     handshake_ctx->base.in_message_start,
-                                     xtt_identityserverfinished_unencrypted_part_length(handshake_ctx->base.version),
-                                     &handshake_ctx->base);
+    struct xtt_crypto_aead_ops* aead = handshake_ctx->base.suite_ops->aead;
+    rc = aead_decrypt(&handshake_ctx->base,
+                      handshake_ctx->base.buffer,
+                      handshake_ctx->base.in_message_start + xtt_identityserverfinished_unencrypted_part_length(handshake_ctx->base.version),
+                      xtt_identityserverfinished_encrypted_part_length(handshake_ctx->base.version,
+                                                                       handshake_ctx->base.suite_spec)
+                      + aead->mac_len,
+                      handshake_ctx->base.in_message_start,
+                      xtt_identityserverfinished_unencrypted_part_length(handshake_ctx->base.version));
     if (XTT_RETURN_SUCCESS != rc)
         goto finish;
 
@@ -1547,22 +1610,21 @@ parse_server_initandattest(struct xtt_client_handshake_context *handshake_ctx,
         return rc;
 
     // 5) AEAD decrypt the message
-    uint16_t decrypted_len;
     assert(sizeof(handshake_ctx->base.server_initandattest_buffer) >= xtt_serverinitandattest_encrypted_part_length(handshake_ctx->base.version,
                                                                                                                handshake_ctx->base.suite_spec));
-    int decrypt_rc = handshake_ctx->base.decrypt(handshake_ctx->base.server_initandattest_buffer,
-                                                 &decrypted_len,
-                                                 server_init_and_attest + xtt_serverinitandattest_unencrypted_part_length(handshake_ctx->base.version,
-                                                                                                                          handshake_ctx->base.suite_spec,
-                                                                                                                          handshake_ctx->base.suite_ops),
-                                                 xtt_serverinitandattest_encrypted_part_length(handshake_ctx->base.version,
-                                                                                               handshake_ctx->base.suite_spec)
-                                                       + handshake_ctx->base.mac_length,
-                                                 server_init_and_attest,
-                                                 xtt_serverinitandattest_unencrypted_part_length(handshake_ctx->base.version,
-                                                                                                 handshake_ctx->base.suite_spec,
-                                                                                                 handshake_ctx->base.suite_ops),
-                                                 &handshake_ctx->base);
+    struct xtt_crypto_aead_ops* aead = handshake_ctx->base.suite_ops->aead;
+    int decrypt_rc = aead_decrypt(&handshake_ctx->base,
+                                  handshake_ctx->base.server_initandattest_buffer,
+                                  server_init_and_attest + xtt_serverinitandattest_unencrypted_part_length(handshake_ctx->base.version,
+                                                                                                           handshake_ctx->base.suite_spec,
+                                                                                                           handshake_ctx->base.suite_ops),
+                                  xtt_serverinitandattest_encrypted_part_length(handshake_ctx->base.version,
+                                                                                handshake_ctx->base.suite_spec)
+                                  + aead->mac_len,
+                                  server_init_and_attest,
+                                  xtt_serverinitandattest_unencrypted_part_length(handshake_ctx->base.version,
+                                                                                  handshake_ctx->base.suite_spec,
+                                                                                  handshake_ctx->base.suite_ops));
     if (0 != decrypt_rc)
         return XTT_RETURN_CRYPTO;
 
@@ -1607,4 +1669,36 @@ xtt_client_build_error_msg(uint16_t *io_bytes_requested,
     handshake_ctx->state = XTT_CLIENT_HANDSHAKE_STATE_ERROR;
 
     return XTT_RETURN_WANT_WRITE;
+}
+
+xtt_return_code_type
+aead_encrypt(struct xtt_handshake_context* ctx,
+             unsigned char* cipher,
+             uint16_t *cipherlen,
+             const unsigned char* msg,
+             uint16_t msglen,
+             const unsigned char* ad,
+             uint16_t adlen)
+{
+    struct xtt_crypto_aead_ops* aead = ctx->suite_ops->aead;
+    struct xtt_crypto_aead_nonce nonce;
+    xtt_crypto_aead_nonce_init(&nonce, aead);
+    prepare_aead_nonce(&nonce, &ctx->tx_sequence_num, &ctx->tx_iv);
+    *cipherlen = msglen + aead->mac_len;
+    return aead->encrypt(cipher, msg, msglen, ad, adlen, &nonce, &ctx->tx_key);
+}
+
+xtt_return_code_type
+aead_decrypt(struct xtt_handshake_context *ctx,
+             unsigned char *msg,
+             const unsigned char *cipher,
+             uint16_t cipherlen,
+             const unsigned char *ad,
+             uint16_t adlen)
+{
+    struct xtt_crypto_aead_ops* aead = ctx->suite_ops->aead;
+    struct xtt_crypto_aead_nonce nonce;
+    xtt_crypto_aead_nonce_init(&nonce, aead);
+    prepare_aead_nonce(&nonce, &ctx->rx_sequence_num, &ctx->rx_iv);
+    return aead->decrypt(msg, cipher, cipherlen, ad, adlen, &nonce, &ctx->rx_key);
 }

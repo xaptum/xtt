@@ -21,11 +21,16 @@
 #pragma once
 
 #include <xtt/crypto_types.h>
+#include <xtt/crypto.h>
 #include <xtt/context.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+void prepare_aead_nonce(struct xtt_crypto_aead_nonce* nonce,
+                        xtt_sequence_number* seqnum,
+                        const struct xtt_crypto_aead_nonce* iv);
 
 void copy_longterm_key_ecdsap256(unsigned char* out,
                                uint16_t* out_length,

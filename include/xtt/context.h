@@ -82,22 +82,6 @@ typedef enum {
 
 struct xtt_handshake_context {
 
-    int (*encrypt)(unsigned char* ciphertext,
-                   uint16_t* ciphertext_len,
-                   const unsigned char* message,
-                   uint16_t msg_len,
-                   const unsigned char* addl_data,
-                   uint16_t addl_len,
-                   struct xtt_handshake_context *self);
-
-    int (*decrypt)(unsigned char* decrypted,
-                   uint16_t* decrypted_len,
-                   const unsigned char* ciphertext,
-                   uint16_t ciphertext_len,
-                   const unsigned char* addl_data,
-                   uint16_t addl_len,
-                   struct xtt_handshake_context *self);
-
     xtt_suite_spec suite_spec;
     const struct xtt_suite_ops* suite_ops;
     xtt_version version;
@@ -111,9 +95,6 @@ struct xtt_handshake_context {
 
     uint16_t longterm_key_length;
     uint16_t longterm_key_signature_length;
-    uint16_t mac_length;
-    uint16_t key_length;
-    uint16_t iv_length;
 
     xtt_sequence_number tx_sequence_num;
     xtt_sequence_number rx_sequence_num;
@@ -122,22 +103,10 @@ struct xtt_handshake_context {
     struct xtt_crypto_kx_secret kx_seckey;
     struct xtt_crypto_kx_shared kx_shared;
 
-    union {
-        xtt_chacha_key chacha;
-        xtt_aes256_key aes256;
-    } rx_key;
-    union {
-        xtt_chacha_nonce chacha;
-        xtt_aes256_nonce aes256;
-    } rx_iv;
-    union {
-        xtt_chacha_key chacha;
-        xtt_aes256_key aes256;
-    } tx_key;
-    union {
-        xtt_chacha_nonce chacha;
-        xtt_aes256_nonce aes256;
-    } tx_iv;
+    struct xtt_crypto_aead_key rx_key;
+    struct xtt_crypto_aead_key tx_key;
+    struct xtt_crypto_aead_nonce rx_iv;
+    struct xtt_crypto_aead_nonce tx_iv;
 
     struct xtt_crypto_hmac hash_out;
     struct xtt_crypto_hmac inner_hash;

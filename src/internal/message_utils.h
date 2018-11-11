@@ -119,7 +119,8 @@ uint16_t xtt_identityclientattest_encrypted_part_length(xtt_version version,
 
 uint16_t
 xtt_identityclientattest_total_length(xtt_version version,
-                                      xtt_suite_spec suite_spec);
+                                      xtt_suite_spec suite_spec,
+                                      const struct xtt_suite_ops* suite_ops);
 
 uint16_t
 xtt_identityclientattest_uptofirstsignature_length(xtt_version version,
@@ -170,7 +171,8 @@ uint16_t xtt_identityserverfinished_encrypted_part_length(xtt_version version,
 
 uint16_t
 xtt_identityserverfinished_total_length(xtt_version version,
-                                        xtt_suite_spec suite_spec);
+                                        xtt_suite_spec suite_spec,
+                                        const struct xtt_suite_ops* suite_ops);
 
 unsigned char*
 xtt_identityserverfinished_access_suite_spec(const unsigned char *msg_start,

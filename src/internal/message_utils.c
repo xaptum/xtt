@@ -186,10 +186,9 @@ xtt_serverinitandattest_total_length(xtt_version version,
             switch (suite_spec) {
                 case XTT_X25519_LRSW_ECDSAP256_CHACHA20POLY1305_SHA512:
                 case XTT_X25519_LRSW_ECDSAP256_CHACHA20POLY1305_BLAKE2B:
-                    return body_length + sizeof(xtt_chacha_mac);
                 case XTT_X25519_LRSW_ECDSAP256_AES256GCM_SHA512:
                 case XTT_X25519_LRSW_ECDSAP256_AES256GCM_BLAKE2B:
-                    return body_length + sizeof(xtt_aes256_mac);
+                    return body_length + suite_ops->aead->mac_len;
             }
     }
 
@@ -395,7 +394,8 @@ uint16_t xtt_identityclientattest_encrypted_part_length(xtt_version version,
 
 uint16_t
 xtt_identityclientattest_total_length(xtt_version version,
-                                      xtt_suite_spec suite_spec)
+                                      xtt_suite_spec suite_spec,
+                                      const struct xtt_suite_ops* suite_ops)
 {
     uint16_t body_length = xtt_identityclientattest_unencrypted_part_length(version)
         + xtt_identityclientattest_encrypted_part_length(version, suite_spec);
@@ -405,10 +405,9 @@ xtt_identityclientattest_total_length(xtt_version version,
             switch (suite_spec) {
                 case XTT_X25519_LRSW_ECDSAP256_CHACHA20POLY1305_SHA512:
                 case XTT_X25519_LRSW_ECDSAP256_CHACHA20POLY1305_BLAKE2B:
-                    return body_length + sizeof(xtt_chacha_mac);
                 case XTT_X25519_LRSW_ECDSAP256_AES256GCM_SHA512:
                 case XTT_X25519_LRSW_ECDSAP256_AES256GCM_BLAKE2B:
-                    return body_length + sizeof(xtt_aes256_mac);
+                    return body_length + suite_ops->aead->mac_len;
             }
     }
 
@@ -634,7 +633,8 @@ uint16_t xtt_identityserverfinished_encrypted_part_length(xtt_version version,
 
 uint16_t
 xtt_identityserverfinished_total_length(xtt_version version,
-                                        xtt_suite_spec suite_spec)
+                                        xtt_suite_spec suite_spec,
+                                        const struct xtt_suite_ops* suite_ops)
 {
     uint16_t body_length = xtt_identityserverfinished_unencrypted_part_length(version)
         + xtt_identityserverfinished_encrypted_part_length(version, suite_spec);
@@ -644,10 +644,9 @@ xtt_identityserverfinished_total_length(xtt_version version,
             switch (suite_spec) {
                 case XTT_X25519_LRSW_ECDSAP256_CHACHA20POLY1305_SHA512:
                 case XTT_X25519_LRSW_ECDSAP256_CHACHA20POLY1305_BLAKE2B:
-                    return body_length + sizeof(xtt_chacha_mac);
                 case XTT_X25519_LRSW_ECDSAP256_AES256GCM_SHA512:
                 case XTT_X25519_LRSW_ECDSAP256_AES256GCM_BLAKE2B:
-                    return body_length + sizeof(xtt_aes256_mac);
+                    return body_length + suite_ops->aead->mac_len;
             }
     }
 
