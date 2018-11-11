@@ -86,70 +86,21 @@ xtt_setup_server_handshake_context(struct xtt_server_handshake_context* ctx_out,
     xtt_crypto_aead_nonce_init(&ctx_out->base.rx_iv, ctx_out->base.suite_ops->aead);
     xtt_crypto_aead_nonce_init(&ctx_out->base.tx_iv, ctx_out->base.suite_ops->aead);
 
+    ctx_out->base.longterm_key_length = sizeof(xtt_ecdsap256_pub_key);
+    ctx_out->base.longterm_key_signature_length = sizeof(xtt_ecdsap256_signature);
+
+    ctx_out->base.tx_sequence_num = 0;
+    ctx_out->base.rx_sequence_num = 0;
+
+    ctx_out->read_longterm_key = read_longterm_key_ecdsap256;
+    ctx_out->copy_in_clients_pseudonym = copy_in_pseudonym_server_lrsw;
+    ctx_out->verify_client_longterm_signature = verify_server_signature_ecdsap256;
+
     if (0 != ctx_out->base.suite_ops->kx->keypair(&ctx_out->base.kx_pubkey,
                                                   &ctx_out->base.kx_seckey))
         return XTT_RETURN_CRYPTO;
 
-    switch (suite_spec) {
-        case XTT_X25519_LRSW_ECDSAP256_CHACHA20POLY1305_SHA512:
-            ctx_out->base.longterm_key_length = sizeof(xtt_ecdsap256_pub_key);
-            ctx_out->base.longterm_key_signature_length = sizeof(xtt_ecdsap256_signature);
-
-            ctx_out->base.tx_sequence_num = 0;
-            ctx_out->base.rx_sequence_num = 0;
-
-            ctx_out->read_longterm_key = read_longterm_key_ecdsap256;
-
-            ctx_out->copy_in_clients_pseudonym = copy_in_pseudonym_server_lrsw;
-
-            ctx_out->verify_client_longterm_signature = verify_server_signature_ecdsap256;
-
-            return XTT_RETURN_SUCCESS;
-        case XTT_X25519_LRSW_ECDSAP256_CHACHA20POLY1305_BLAKE2B:
-            ctx_out->base.longterm_key_length = sizeof(xtt_ecdsap256_pub_key);
-            ctx_out->base.longterm_key_signature_length = sizeof(xtt_ecdsap256_signature);
-
-            ctx_out->base.tx_sequence_num = 0;
-            ctx_out->base.rx_sequence_num = 0;
-
-            ctx_out->read_longterm_key = read_longterm_key_ecdsap256;
-
-            ctx_out->copy_in_clients_pseudonym = copy_in_pseudonym_server_lrsw;
-
-            ctx_out->verify_client_longterm_signature = verify_server_signature_ecdsap256;
-
-            return XTT_RETURN_SUCCESS;
-        case XTT_X25519_LRSW_ECDSAP256_AES256GCM_SHA512:
-            ctx_out->base.longterm_key_length = sizeof(xtt_ecdsap256_pub_key);
-            ctx_out->base.longterm_key_signature_length = sizeof(xtt_ecdsap256_signature);
-
-            ctx_out->base.tx_sequence_num = 0;
-            ctx_out->base.rx_sequence_num = 0;
-
-            ctx_out->read_longterm_key = read_longterm_key_ecdsap256;
-
-            ctx_out->copy_in_clients_pseudonym = copy_in_pseudonym_server_lrsw;
-
-            ctx_out->verify_client_longterm_signature = verify_server_signature_ecdsap256;
-
-            return XTT_RETURN_SUCCESS;
-        case XTT_X25519_LRSW_ECDSAP256_AES256GCM_BLAKE2B:
-            ctx_out->base.longterm_key_length = sizeof(xtt_ecdsap256_pub_key);
-            ctx_out->base.longterm_key_signature_length = sizeof(xtt_ecdsap256_signature);
-
-            ctx_out->base.tx_sequence_num = 0;
-            ctx_out->base.rx_sequence_num = 0;
-
-            ctx_out->read_longterm_key = read_longterm_key_ecdsap256;
-
-            ctx_out->copy_in_clients_pseudonym = copy_in_pseudonym_server_lrsw;
-
-            ctx_out->verify_client_longterm_signature = verify_server_signature_ecdsap256;
-
-            return XTT_RETURN_SUCCESS;
-        default:
-            return XTT_RETURN_UNKNOWN_CRYPTO_SPEC;
-    }
+    return XTT_RETURN_SUCCESS;
 }
 
 xtt_return_code_type
@@ -195,98 +146,28 @@ xtt_initialize_client_handshake_context(struct xtt_client_handshake_context* ctx
     xtt_crypto_aead_nonce_init(&ctx_out->base.rx_iv, ctx_out->base.suite_ops->aead);
     xtt_crypto_aead_nonce_init(&ctx_out->base.tx_iv, ctx_out->base.suite_ops->aead);
 
+    ctx_out->base.longterm_key_length = sizeof(xtt_ecdsap256_pub_key);
+    ctx_out->base.longterm_key_signature_length = sizeof(xtt_ecdsap256_signature);
+
+    ctx_out->base.tx_sequence_num = 0;
+    ctx_out->base.rx_sequence_num = 0;
+
+    ctx_out->verify_server_signature = verify_server_signature_ecdsap256;
+
+    ctx_out->copy_longterm_key = copy_longterm_key_ecdsap256;
+
+    ctx_out->compare_longterm_keys = compare_longterm_keys_ecdsap256;
+    ctx_out->longterm_sign = longterm_sign_ecdsap256;
+    ctx_out->copy_in_my_pseudonym = copy_in_pseudonym_client_lrsw;
+
     if (0 != ctx_out->base.suite_ops->kx->keypair(&ctx_out->base.kx_pubkey,
                                                   &ctx_out->base.kx_seckey))
         return XTT_RETURN_CRYPTO;
 
-    switch (suite_spec) {
-        case XTT_X25519_LRSW_ECDSAP256_CHACHA20POLY1305_SHA512:
-            ctx_out->base.longterm_key_length = sizeof(xtt_ecdsap256_pub_key);
-            ctx_out->base.longterm_key_signature_length = sizeof(xtt_ecdsap256_signature);
+    if (0 != xtt_crypto_create_ecdsap256_key_pair(&ctx_out->longterm_key.ecdsap256, &ctx_out->longterm_private_key.ecdsap256))
+        return XTT_RETURN_CRYPTO;
 
-            ctx_out->base.tx_sequence_num = 0;
-            ctx_out->base.rx_sequence_num = 0;
-
-            ctx_out->verify_server_signature = verify_server_signature_ecdsap256;
-
-            ctx_out->copy_longterm_key = copy_longterm_key_ecdsap256;
-
-            ctx_out->compare_longterm_keys = compare_longterm_keys_ecdsap256;
-
-            ctx_out->longterm_sign = longterm_sign_ecdsap256;
-
-            ctx_out->copy_in_my_pseudonym = copy_in_pseudonym_client_lrsw;
-
-            if (0 != xtt_crypto_create_ecdsap256_key_pair(&ctx_out->longterm_key.ecdsap256, &ctx_out->longterm_private_key.ecdsap256))
-                return XTT_RETURN_CRYPTO;
-
-            return XTT_RETURN_SUCCESS;
-        case XTT_X25519_LRSW_ECDSAP256_CHACHA20POLY1305_BLAKE2B:
-            ctx_out->base.longterm_key_length = sizeof(xtt_ecdsap256_pub_key);
-            ctx_out->base.longterm_key_signature_length = sizeof(xtt_ecdsap256_signature);
-
-            ctx_out->base.tx_sequence_num = 0;
-            ctx_out->base.rx_sequence_num = 0;
-
-            ctx_out->verify_server_signature = verify_server_signature_ecdsap256;
-
-            ctx_out->copy_longterm_key = copy_longterm_key_ecdsap256;
-
-            ctx_out->compare_longterm_keys = compare_longterm_keys_ecdsap256;
-
-            ctx_out->longterm_sign = longterm_sign_ecdsap256;
-
-            ctx_out->copy_in_my_pseudonym = copy_in_pseudonym_client_lrsw;
-
-            if (0 != xtt_crypto_create_ecdsap256_key_pair(&ctx_out->longterm_key.ecdsap256, &ctx_out->longterm_private_key.ecdsap256))
-                return XTT_RETURN_CRYPTO;
-
-            return XTT_RETURN_SUCCESS;
-        case XTT_X25519_LRSW_ECDSAP256_AES256GCM_SHA512:
-            ctx_out->base.longterm_key_length = sizeof(xtt_ecdsap256_pub_key);
-            ctx_out->base.longterm_key_signature_length = sizeof(xtt_ecdsap256_signature);
-
-            ctx_out->base.tx_sequence_num = 0;
-            ctx_out->base.rx_sequence_num = 0;
-
-            ctx_out->verify_server_signature = verify_server_signature_ecdsap256;
-
-            ctx_out->copy_longterm_key = copy_longterm_key_ecdsap256;
-
-            ctx_out->compare_longterm_keys = compare_longterm_keys_ecdsap256;
-
-            ctx_out->longterm_sign = longterm_sign_ecdsap256;
-
-            ctx_out->copy_in_my_pseudonym = copy_in_pseudonym_client_lrsw;
-
-            if (0 != xtt_crypto_create_ecdsap256_key_pair(&ctx_out->longterm_key.ecdsap256, &ctx_out->longterm_private_key.ecdsap256))
-                return XTT_RETURN_CRYPTO;
-
-            return XTT_RETURN_SUCCESS;
-        case XTT_X25519_LRSW_ECDSAP256_AES256GCM_BLAKE2B:
-            ctx_out->base.longterm_key_length = sizeof(xtt_ecdsap256_pub_key);
-            ctx_out->base.longterm_key_signature_length = sizeof(xtt_ecdsap256_signature);
-
-            ctx_out->base.tx_sequence_num = 0;
-            ctx_out->base.rx_sequence_num = 0;
-
-            ctx_out->verify_server_signature = verify_server_signature_ecdsap256;
-
-            ctx_out->copy_longterm_key = copy_longterm_key_ecdsap256;
-
-            ctx_out->compare_longterm_keys = compare_longterm_keys_ecdsap256;
-
-            ctx_out->longterm_sign = longterm_sign_ecdsap256;
-
-            ctx_out->copy_in_my_pseudonym = copy_in_pseudonym_client_lrsw;
-
-            if (0 != xtt_crypto_create_ecdsap256_key_pair(&ctx_out->longterm_key.ecdsap256, &ctx_out->longterm_private_key.ecdsap256))
-                return XTT_RETURN_CRYPTO;
-
-            return XTT_RETURN_SUCCESS;
-        default:
-            return XTT_RETURN_UNKNOWN_CRYPTO_SPEC;
-    }
+    return XTT_RETURN_SUCCESS;
 }
 
 xtt_return_code_type
