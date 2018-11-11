@@ -109,13 +109,6 @@ typedef struct {unsigned char data[32];} xtt_aes256_key;
 typedef struct {unsigned char data[12];} xtt_aes256_nonce;
 typedef struct {unsigned char data[16];} xtt_aes256_mac;
 
-/* Hash/HMAC/KDF */
-typedef struct {unsigned char data[32];} xtt_sha256;
-
-typedef struct {unsigned char data[64];} xtt_sha512;
-
-typedef struct {unsigned char data[64];} xtt_blake2b;
-
 int
 xtt_identity_to_string(const xtt_identity_type *identity_in,
                        xtt_identity_string *string_out);
