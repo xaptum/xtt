@@ -25,7 +25,7 @@ extern "C" {
 #endif
 
 #include <xtt/crypto_types.h>
-#include <xtt/crypto/kx.h>
+#include <xtt/crypto.h>
 
 int xtt_crypto_initialize_crypto();
 
@@ -79,6 +79,38 @@ int xtt_crypto_verify_ecdsap256(const unsigned char* signature,
                               uint16_t msg_len,
                               const xtt_ecdsap256_pub_key* pub_key);
 
+int xtt_crypto_aead_chacha20poly1305_encrypt(unsigned char* cipher,
+                                             const unsigned char* msg,
+                                             uint16_t msglen,
+                                             const unsigned char* ad,
+                                             uint16_t adlen,
+                                             const struct xtt_crypto_aead_nonce* nonce,
+                                             const struct xtt_crypto_aead_key* key);
+
+int xtt_crypto_aead_chacha20poly1305_decrypt(unsigned char* msg,
+                                             const unsigned char* cipher,
+                                             uint16_t cipherlen,
+                                             const unsigned char* ad_data,
+                                             uint16_t adlen,
+                                             const struct xtt_crypto_aead_nonce* nonce,
+                                             const struct xtt_crypto_aead_key* key);
+
+int xtt_crypto_aead_aes256gcm_encrypt(unsigned char* cipher,
+                                      const unsigned char* msg,
+                                      uint16_t msglen,
+                                      const unsigned char* ad,
+                                      uint16_t adlen,
+                                      const struct xtt_crypto_aead_nonce* nonce,
+                                      const struct xtt_crypto_aead_key* key);
+
+int xtt_crypto_aead_aes256gcm_decrypt(unsigned char* msg,
+                                      const unsigned char* cipher,
+                                      uint16_t cipherlen,
+                                      const unsigned char* ad_data,
+                                      uint16_t adlen,
+                                      const struct xtt_crypto_aead_nonce* nonce,
+                                      const struct xtt_crypto_aead_key* key);
+
 int xtt_crypto_aead_chacha_encrypt(unsigned char* ciphertext,
                                    uint16_t* ciphertext_len,
                                    const unsigned char* message,
@@ -114,8 +146,6 @@ int xtt_crypto_aead_aes256_decrypt(unsigned char* decrypted,
                                    uint16_t addl_len,
                                    const xtt_aes256_nonce* nonce,
                                    const xtt_aes256_key* key);
-
-
 
 #ifdef __cplusplus
 }

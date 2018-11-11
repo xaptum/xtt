@@ -107,6 +107,68 @@ int xtt_crypto_kx_x25519_exchange(struct xtt_crypto_kx_shared* shared,
     return 0;
 }
 
+int xtt_crypto_aead_chacha20poly1305_encrypt(unsigned char* cipher,
+                                             const unsigned char* msg,
+                                             uint16_t msglen,
+                                             const unsigned char* ad,
+                                             uint16_t adlen,
+                                             const struct xtt_crypto_aead_nonce* nonce,
+                                             const struct xtt_crypto_aead_key* key)
+{
+    return crypto_aead_chacha20poly1305_ietf_encrypt(cipher, NULL,
+                                                     msg, msglen,
+                                                     ad, adlen,
+                                                     NULL, &nonce->buf,
+                                                     &key->buf);
+}
+
+int xtt_crypto_aead_chacha20poly1305_decrypt(unsigned char* msg,
+                                             const unsigned char* cipher,
+                                             uint16_t cipherlen,
+                                             const unsigned char* ad,
+                                             uint16_t adlen,
+                                             const struct xtt_crypto_aead_nonce* nonce,
+                                             const struct xtt_crypto_aead_key* key)
+{
+    return crypto_aead_chacha20poly1305_ietf_decrypt(msg, NULL,
+                                                     NULL,
+                                                     cipher, cipherlen,
+                                                     ad, adlen,
+                                                     &nonce->buf,
+                                                     &key->buf);
+}
+
+int xtt_crypto_aead_aes256gcm_encrypt(unsigned char* cipher,
+                                      const unsigned char* msg,
+                                      uint16_t msglen,
+                                      const unsigned char* ad,
+                                      uint16_t adlen,
+                                      const struct xtt_crypto_aead_nonce* nonce,
+                                      const struct xtt_crypto_aead_key* key)
+{
+    return crypto_aead_aes256gcm_encrypt(cipher, NULL,
+                                         msg, msglen,
+                                         ad, adlen,
+                                         NULL, &nonce->buf,
+                                         &key->buf);
+}
+
+int xtt_crypto_aead_aes256gcm_decrypt(unsigned char* msg,
+                                      const unsigned char* cipher,
+                                      uint16_t cipherlen,
+                                      const unsigned char* ad,
+                                      uint16_t adlen,
+                                      const struct xtt_crypto_aead_nonce* nonce,
+                                      const struct xtt_crypto_aead_key* key)
+{
+    return crypto_aead_aes256gcm_decrypt(msg, NULL,
+                                         NULL,
+                                         cipher, cipherlen,
+                                         ad, adlen,
+                                         &nonce->buf,
+                                         &key->buf);
+}
+
 int xtt_crypto_hash_sha512(unsigned char* out,
                            uint16_t outlen,
                            const unsigned char* in,

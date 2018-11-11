@@ -22,6 +22,7 @@
 #define XTT_CRYPTO_H
 
 #include "crypto_types.h"
+#include "crypto/aead.h"
 #include "crypto/hmac.h"
 #include "crypto/kx.h"
 
@@ -40,6 +41,7 @@ extern "C" {
  */
 struct xtt_suite_ops {
     struct xtt_crypto_kx_ops   *kx;
+    struct xtt_crypto_aead_ops *aead;
     struct xtt_crypto_hmac_ops *hmac;
 };
 

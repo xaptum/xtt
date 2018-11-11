@@ -28,6 +28,25 @@ static struct xtt_crypto_kx_ops x25519_ops =
      .exchange = xtt_crypto_kx_x25519_exchange
     };
 
+/** AEAD  Ops **/
+static struct xtt_crypto_aead_ops aes256gcm_ops =
+    {
+     .nonce_len = sizeof(xtt_crypto_aes256gcm_nonce),
+     .mac_len = sizeof(xtt_crypto_aes256gcm_mac),
+     .key_len = sizeof(xtt_crypto_aes256gcm_key),
+     .encrypt = xtt_crypto_aead_aes256gcm_encrypt,
+     .decrypt = xtt_crypto_aead_aes256gcm_decrypt
+    };
+
+static struct xtt_crypto_aead_ops chacha20poly1305_ops =
+    {
+     .nonce_len = sizeof(xtt_crypto_chacha20poly1305_nonce),
+     .mac_len = sizeof(xtt_crypto_chacha20poly1305_mac),
+     .key_len = sizeof(xtt_crypto_chacha20poly1305_key),
+     .encrypt = xtt_crypto_aead_chacha20poly1305_encrypt,
+     .decrypt = xtt_crypto_aead_chacha20poly1305_decrypt
+    };
+
 /** HMAC Ops **/
 static struct xtt_crypto_hmac_ops sha512_ops =
     {
@@ -55,18 +74,22 @@ struct xtt_suite_ops xtt_suite_ops[] =
      },
      { // XTT_X25519_LRSW_ECDSAP256_CHACHA20POLY1305_SHA512
       .kx   = &x25519_ops,
+      .aead = &chacha20poly1305_ops,
       .hmac = &sha512_ops
      },
      { // XTT_X25519_LRSW_ECDSAP256_CHACHA20POLY1305_BLAKE2B
       .kx   = &x25519_ops,
+      .aead = &chacha20poly1305_ops,
       .hmac = &blake2b_ops
      },
      { // XTT_X25519_LRSW_ECDSAP256_AES256GCM_SHA512
       .kx   = &x25519_ops,
+      .aead = &aes256gcm_ops,
       .hmac = &sha512_ops
      },
      { // XTT_X25519_LRSW_ECDSAP256_AES256GCM_BLAKE2B
       .kx   = &x25519_ops,
+      .aead = &aes256gcm_ops,
       .hmac = &blake2b_ops
      }
     };
