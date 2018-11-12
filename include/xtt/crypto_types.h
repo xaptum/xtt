@@ -78,7 +78,7 @@ typedef struct {unsigned char data[32];} xtt_group_id;
 typedef struct {unsigned char data[260];} xtt_daa_credential_lrsw;
 typedef struct {unsigned char data[32];} xtt_daa_priv_key_lrsw;
 typedef struct {unsigned char data[258];} xtt_daa_group_pub_key_lrsw;
-typedef struct {unsigned char data[389];} xtt_daa_signature_lrsw;
+typedef struct {unsigned char data[421];} xtt_daa_signature_lrsw;
 typedef struct {unsigned char data[65];} xtt_daa_pseudonym_lrsw;
 
 /* Diffie-Hellman */
