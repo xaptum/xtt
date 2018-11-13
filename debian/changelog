@@ -1,3 +1,65 @@
+xtt (0.10.0-1) unstable; urgency=medium
+
+  [ David R. Bild ]
+  * examples: free addrinfo in example client
+
+  [ Kathryn Fejer ]
+  * Update URL of libsodium tar.gz
+
+  [ Zane Beckwith ]
+  * Remove old commented-out printf logging lines.
+
+  [ Unknown ]
+  * Add a basic XTT tool-key and certificate gen.
+
+  [ Zane Beckwith ]
+  * Remove extra return statements in internal/message_utils.c
+
+  [ Kathryn Fejer ]
+  * Put common name in IPv6 formatting
+
+  [ Unknown ]
+  * Standardize usage string
+  * Add tool capability to parse certificates
+
+  [ Kathryn ]
+  * Add check for a file that is too long
+
+  [ Unknown ]
+  * print errors with stderror
+  * Add tool capabilities to run handshake
+
+  [ Kathryn Fejer ]
+  * adding gid.bin created with example data
+
+  [ Zane Beckwith ]
+  * tool: Don't hardcode basename length in client.c
+
+  [ Kathryn Fejer ]
+  * Add tpm handles to xtt library
+  * Update xtt_client and the tool to use tpm handles from lib
+  * tool: ifdef out all tpm specific code
+
+  [ David R. Bild ]
+  * add editorconfig
+  * simplify the TPM ifdef macros
+  * convert templatized headers to plain headers
+  * pc: add USE_TPM define to cflags, if enabled
+  * travis: pin ecdaa to a specific version
+  * travis: specify version of amcl in top-level file
+  * travis: pin xaptum-tpm to a specific version
+  * travis: specify version of libsodium in top-level file
+  * travis: extract common jobs into build matrix
+
+  [ Zane Beckwith ]
+  * cmake: Use ecdaa v0.10.0
+  * daa: Use new, longer, DAA signature length.
+  * README: Bump required version of ecdaa
+  * Bump minor version.
+  * cmake: Don't attempt to install templatized headers.
+
+ -- Zane Beckwith <zane.beckwith@xaptum.com>  Tue, 13 Nov 2018 16:02:59 +0000
+
 xtt (0.9.3-1) unstable; urgency=medium
 
   [ Zane Beckwith ]
