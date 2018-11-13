@@ -71,6 +71,9 @@ unsigned char*
 xtt_server_certificate_access_rootsignature(const struct xtt_server_certificate_raw_type *certificate,
                                             xtt_suite_spec suite_spec);
 
+int
+xtt_check_expiry(const xtt_certificate_expiry *expiry);
+
 #ifdef __cplusplus
 }
 #endif

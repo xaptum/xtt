@@ -19,7 +19,7 @@
 #include <xtt.h>
 #include <assert.h>
 #include "test-utils.h"
-#include "../src/internal/asn1.h"
+#include "../src/util/internal/asn1.h"
 
 #ifdef __cplusplus
 extern "C" {

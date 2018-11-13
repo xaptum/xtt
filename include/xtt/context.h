@@ -20,10 +20,6 @@
 #define XTT_CONTEXT_H
 #pragma once
 
-#ifndef USE_TPM
-@USE_TPM_DEFINE@
-#endif
-
 #include <xtt/crypto_types.h>
 #include <xtt/return_codes.h>
 #include <xtt/certificates.h>

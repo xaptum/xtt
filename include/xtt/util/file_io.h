@@ -15,26 +15,37 @@
  *    limitations under the License
  *
  *****************************************************************************/
+ #ifndef XTT_UTIL_FILE_IO_H
+ #define XTT_UTIL_FILE_IO_H
+ #pragma once
 
-#ifndef XTT_H
-#define XTT_H
-#pragma once
+ #ifdef __cplusplus
+ extern "C" {
+ #endif
 
-#include <xtt/certificates.h>
-#include <xtt/context.h>
-#include <xtt/crypto_wrapper.h>
-#include <xtt/crypto_types.h>
-#include <xtt/daa_wrapper.h>
-#include <xtt/return_codes.h>
-#include <xtt/messages.h>
-#include <xtt/util/asn1.h>
-#include <xtt/util/generate_ecdsap256_keys.h>
-#include <xtt/util/generate_x509_certificate.h>
-#include <xtt/util/wrap_keys_asn1.h>
-#include <xtt/util/root.h>
-#include <xtt/util/generate_server_certificate.h>
-#include <xtt/util/file_io.h>
-#include <xtt/util/util_errors.h>
-#include <xtt/tpm/handles.h>
+#include <stdio.h>
+/*
+ * Writes given byte-string to the given file.
+ *
+ * Returns:
+ * 'bytes_to_write' on success
+ * SAVE_TO_FILE_ERROR on failure
+*/
+int xtt_save_to_file(unsigned char *buffer, size_t bytes_to_write, const char *filename);
+
+/*
+ * Read at-most `bytes_to_read` bytes from the given file.
+ *
+ * Reads until `bytes_to_read` bytes have been read, or until `EOF`, whichever comes first.
+ *
+ * Returns:
+ * Number of bytes read into `buffer` on success
+ * READ_FROM_FILE_ERROR on failure
+*/
+int xtt_read_from_file(const char *filename, unsigned char *buffer, size_t bytes_to_read);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

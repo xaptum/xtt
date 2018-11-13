@@ -16,25 +16,31 @@
  *
  *****************************************************************************/
 
-#ifndef XTT_H
-#define XTT_H
+#ifndef XTT_UTIL_INFO_CERT_H
+#define XTT_UTIL_INFO_CERT_H
 #pragma once
 
-#include <xtt/certificates.h>
-#include <xtt/context.h>
-#include <xtt/crypto_wrapper.h>
-#include <xtt/crypto_types.h>
-#include <xtt/daa_wrapper.h>
-#include <xtt/return_codes.h>
-#include <xtt/messages.h>
-#include <xtt/util/asn1.h>
-#include <xtt/util/generate_ecdsap256_keys.h>
-#include <xtt/util/generate_x509_certificate.h>
-#include <xtt/util/wrap_keys_asn1.h>
-#include <xtt/util/root.h>
-#include <xtt/util/generate_server_certificate.h>
-#include <xtt/util/file_io.h>
-#include <xtt/util/util_errors.h>
-#include <xtt/tpm/handles.h>
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+enum infocert_type {
+    infocert_type_server,
+    infocert_type_root
+};
+
+/*
+ * Parses certificate and prints important info to screen
+ *
+ * Returns:
+ * 0                        on success
+ * PARSE_CERT_ERROR         if infocert_type is not set
+ * READ_FROM_FILE_ERROR     error while reading in file
+*/
+int info_cert(const char* filename, enum infocert_type type);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

@@ -21,7 +21,7 @@
 #include "byte_utils.h"
 
 #include <xtt/crypto_wrapper.h>
-
+#include <xtt/certificates.h>
 #include <assert.h>
 #include <string.h>
 #include <time.h>
@@ -46,9 +46,6 @@ generate_client_sig_hash(unsigned char *hash_out,
                          int is_daa,
                          struct xtt_handshake_context *handshake_ctx);
 
-static
-xtt_return_code_type
-is_expiry_passed(const xtt_certificate_expiry *expiry);
 
 xtt_return_code_type
 generate_server_signature(unsigned char* signature_out,
@@ -229,10 +226,10 @@ verify_server_signature(const unsigned char *signature,
         return XTT_RETURN_BAD_CERTIFICATE;
 
     // 2) Check that cert isn't expired.
-    rc = is_expiry_passed((xtt_certificate_expiry*)xtt_server_certificate_access_expiry(xtt_encrypted_serverinitandattest_access_certificate(server_initandattest_encryptedpart_uptosignature,
+    int ret = xtt_check_expiry((xtt_certificate_expiry*)xtt_server_certificate_access_expiry(xtt_encrypted_serverinitandattest_access_certificate(server_initandattest_encryptedpart_uptosignature,
                                                                                                                                              handshake_ctx->base.version)));
-    if (XTT_RETURN_SUCCESS != rc)
-        return rc;
+    if (0 != ret)
+        return XTT_RETURN_BAD_EXPIRY;
 
     // 3) Check that our root cert does in fact have the id claimed by the server cert.
     xtt_certificate_root_id *claimed_root
@@ -318,32 +315,6 @@ generate_server_sig_hash(unsigned char *hash_out,
                                             inner_hash_input_length + sizeof(inner_hash_input_length));
     if (0 != hash_ret)
         return XTT_RETURN_CRYPTO;
-
-    return XTT_RETURN_SUCCESS;
-}
-
-xtt_return_code_type
-is_expiry_passed(const xtt_certificate_expiry *expiry)
-{
-    time_t now_timet = time(NULL);
-    struct tm *now = gmtime(&now_timet);
-
-    int year, month, day;
-
-    if (3 != sscanf(expiry->data, "%4d%2d%2d", &year, &month, &day))
-        return XTT_RETURN_BAD_EXPIRY;
-
-    if ((year-1900) < now->tm_year) {
-        return XTT_RETURN_BAD_EXPIRY;
-    } else if ((year-1900) == now->tm_year) {
-        if ((month-1) < now->tm_mon) {
-            return XTT_RETURN_BAD_EXPIRY;
-        } else if ((month-1) == now->tm_mon) {
-            if (day <= now->tm_mday) {
-                return XTT_RETURN_BAD_EXPIRY;
-            }
-        }
-    }
 
     return XTT_RETURN_SUCCESS;
 }

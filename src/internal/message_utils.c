@@ -185,7 +185,6 @@ xtt_serverinitandattest_total_length(xtt_version version,
                 case XTT_X25519_LRSW_ECDSAP256_AES256GCM_SHA512:
                 case XTT_X25519_LRSW_ECDSAP256_AES256GCM_BLAKE2B:
                     return body_length + sizeof(xtt_aes256_mac);
-                    return body_length;
             }
     }
 
@@ -401,7 +400,6 @@ xtt_identityclientattest_total_length(xtt_version version,
                 case XTT_X25519_LRSW_ECDSAP256_AES256GCM_SHA512:
                 case XTT_X25519_LRSW_ECDSAP256_AES256GCM_BLAKE2B:
                     return body_length + sizeof(xtt_aes256_mac);
-                    return body_length;
             }
     }
 
@@ -641,7 +639,6 @@ xtt_identityserverfinished_total_length(xtt_version version,
                 case XTT_X25519_LRSW_ECDSAP256_AES256GCM_SHA512:
                 case XTT_X25519_LRSW_ECDSAP256_AES256GCM_BLAKE2B:
                     return body_length + sizeof(xtt_aes256_mac);
-                    return body_length;
             }
     }
 

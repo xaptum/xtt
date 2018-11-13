@@ -31,7 +31,7 @@ extern "C" {
 #define MAX_HANDSHAKE_SERVER_MESSAGE_LENGTH 417 // ServerInitAndAttest
 uint16_t max_handshake_server_message_length(void);
 
-#define MAX_HANDSHAKE_CLIENT_MESSAGE_LENGTH 718 // Identity_ClientAttest
+#define MAX_HANDSHAKE_CLIENT_MESSAGE_LENGTH 750 // Identity_ClientAttest
 uint16_t max_handshake_client_message_length(void);
 
 /*
