@@ -67,7 +67,9 @@ static int initialize_server_id(xtt_identity_type *intended_server_id,
                          TSS2_TCTI_CONTEXT *tcti_context, const char* server_id_file);
 
 static int initialize_certs(int use_tpm,
-                     TSS2_TCTI_CONTEXT *tcti_context, xtt_root_certificate* root_certificate);
+                     TSS2_TCTI_CONTEXT *tcti_context,
+                     xtt_root_certificate* root_certificate,
+                     const char* root_cert_file);
 
 static int initialize_daa(struct xtt_client_group_context *group_ctx,
                    int use_tpm,
@@ -121,13 +123,6 @@ int run_client(struct cli_params* params)
 
     int ret = 0;
     int read_ret = 0;
-
-    //Read in root certificate from file
-    xtt_root_certificate root_certificate;
-    read_ret = xtt_read_from_file(root_cert_file, root_certificate.data, sizeof(xtt_root_certificate));
-    if (read_ret < 0) {
-        return READ_FROM_FILE_ERROR;
-    }
 
     ret = xtt_crypto_initialize_crypto();
     if (0 != ret) {
@@ -208,7 +203,8 @@ int run_client(struct cli_params* params)
         goto finish;
     }
     // 1iii) Initialize Certificates
-    ret = initialize_certs(use_tpm, tcti_context, &root_certificate);
+    xtt_root_certificate root_certificate;
+    ret = initialize_certs(use_tpm, tcti_context, &root_certificate, root_cert_file);
     if (0 != ret) {
         fprintf(stderr, "Error initializing server/root certificate contexts\n");
         goto finish;
@@ -503,7 +499,9 @@ int initialize_daa(struct xtt_client_group_context *group_ctx, int use_tpm, TSS2
 
 static
 int initialize_certs(int use_tpm,
-                     TSS2_TCTI_CONTEXT *tcti_context, xtt_root_certificate* root_certificate)
+                     TSS2_TCTI_CONTEXT *tcti_context,
+                     xtt_root_certificate* root_certificate,
+                     const char* root_cert_file)
 {
     xtt_return_code_type rc = 0;
     // 1) Read root id ang pubkey in from buffer
@@ -513,21 +511,12 @@ int initialize_certs(int use_tpm,
     if (use_tpm && tcti_context) {
 #ifdef USE_TPM
         int nvram_ret;
-        nvram_ret = read_nvram(root_id.data,
-                               sizeof(xtt_certificate_root_id),
-                               XTT_ROOT_ID_HANDLE,
+        nvram_ret = read_nvram(root_certificate->data,
+                               sizeof(xtt_root_certificate),
+                               XTT_ROOT_CERT_HANDLE,
                                tcti_context);
         if (0 != nvram_ret) {
-            fprintf(stderr, "Error reading root ID from TPM NVRAM");
-            return TPM_ERROR;
-        }
-
-        nvram_ret = read_nvram(root_public_key.data,
-                               sizeof(xtt_ecdsap256_pub_key),
-                               XTT_ROOT_PUBKEY_HANDLE,
-                               tcti_context);
-        if (0 != nvram_ret) {
-            fprintf(stderr, "Error reading root's public key from TPM NVRAM");
+            fprintf(stderr, "Error reading root's certificate from TPM NVRAM");
             return TPM_ERROR;
         }
 #else
@@ -535,9 +524,13 @@ int initialize_certs(int use_tpm,
         return TPM_ERROR;
 #endif
     } else {
-        memcpy(root_public_key.data, &root_certificate->data[sizeof(xtt_identity_type)], sizeof(xtt_ecdsap256_pub_key));
-        memcpy(root_id.data, &root_certificate->data[0], sizeof(xtt_certificate_root_id));
+        int read_ret = xtt_read_from_file(root_cert_file, root_certificate->data, sizeof(xtt_root_certificate));
+        if (read_ret < 0) {
+            return READ_FROM_FILE_ERROR;
+        }
     }
+
+    xtt_deserialize_root_certificate(&root_public_key, &root_id, root_certificate);
 
     // 2) Initialize stored data
     memcpy(stored_root_id, root_id.data, sizeof(xtt_certificate_root_id));

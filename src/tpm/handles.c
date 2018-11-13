@@ -33,16 +33,6 @@ uint32_t xtt_cred_handle(void)
     return XTT_CRED_HANDLE;
 }
 
-uint32_t xtt_root_id_handle(void)
-{
-    return XTT_ROOT_ID_HANDLE;
-}
-
-uint32_t xtt_root_pubkey_handle(void)
-{
-    return XTT_ROOT_PUBKEY_HANDLE;
-}
-
 uint32_t xtt_basename_size_handle(void)
 {
     return XTT_BASENAME_SIZE_HANDLE;
@@ -56,4 +46,9 @@ uint32_t xtt_basename_handle(void)
 uint32_t xtt_server_id_handle(void)
 {
     return XTT_SERVER_ID_HANDLE;
+}
+
+uint32_t xtt_root_cert_handle(void)
+{
+    return XTT_ROOT_CERT_HANDLE;
 }
