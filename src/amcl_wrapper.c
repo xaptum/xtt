@@ -17,9 +17,7 @@
  *****************************************************************************/
 
 #include <amcl/ecdh_NIST256.h>
-// #include <amcl/x509.h>
 #include <sodium.h>
-#include <xtt.h>
 #include <xtt/crypto_wrapper.h>
 #include <assert.h>
 

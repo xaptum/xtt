@@ -15,26 +15,31 @@
  *    limitations under the License
  *
  *****************************************************************************/
-
-#ifndef XTT_H
-#define XTT_H
-#pragma once
-
-#include <xtt/certificates.h>
-#include <xtt/context.h>
 #include <xtt/crypto_wrapper.h>
 #include <xtt/crypto_types.h>
-#include <xtt/daa_wrapper.h>
-#include <xtt/return_codes.h>
-#include <xtt/messages.h>
-#include <xtt/util/asn1.h>
-#include <xtt/util/generate_ecdsap256_keys.h>
-#include <xtt/util/generate_x509_certificate.h>
-#include <xtt/util/wrap_keys_asn1.h>
-#include <xtt/util/root.h>
-#include <xtt/util/generate_server_certificate.h>
 #include <xtt/util/file_io.h>
 #include <xtt/util/util_errors.h>
-#include <xtt/tpm/handles.h>
 
-#endif
+int xtt_generate_ecdsap256_keys(const char *private_key_file, const char *public_key_file)
+{
+    xtt_ecdsap256_pub_key pub = {.data = {0}};
+    xtt_ecdsap256_priv_key priv  = {.data = {0}};
+    int save_ret = 0;
+
+    int ret = xtt_crypto_create_ecdsap256_key_pair(&pub, &priv);
+    if (0 != ret) {
+        return KEY_CREATION_ERROR;
+    }
+
+    save_ret = xtt_save_to_file(pub.data, sizeof(xtt_ecdsap256_pub_key), public_key_file);
+    if (save_ret < 0) {
+        return save_ret;
+    }
+
+    save_ret = xtt_save_to_file(priv.data, sizeof(xtt_ecdsap256_priv_key), private_key_file);
+    if (save_ret < 0) {
+        return save_ret;
+    }
+
+    return 0;
+}

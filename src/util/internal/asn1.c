@@ -166,7 +166,7 @@ build_tbs_certificate(unsigned char **current_loc,
                       const char *common_name)
 {
     set_as_sequence(current_loc);
-    set_length(current_loc, tbs_certificate_length - 1 - 2);
+    set_length(current_loc, tbs_certificate_length - 1 - 3);
 
     build_serial_number(current_loc);
 

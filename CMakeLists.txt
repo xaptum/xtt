@@ -4,7 +4,7 @@ list(APPEND CMAKE_MODULE_PATH CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/cmake)
 
 project(xtt
         LANGUAGES C
-        VERSION "0.9.1"
+        VERSION "0.10.0"
         )
 
 set(XTT_VERSION ${PROJECT_VERSION})
@@ -18,20 +18,16 @@ option(USE_TPM "use a TPM" ON)
 
 option(BUILD_SHARED_LIBS "Build as a shared library" ON)
 option(BUILD_STATIC_LIBS "Build as a static library" OFF)
-option(BUILD_UTILS "build utility programs" ON)
+option(BUILD_TOOL "Build XTT tool" ON)
 
-find_package(ecdaa 0.9.0 REQUIRED QUIET)
+find_package(ecdaa 0.10.0 REQUIRED QUIET)
 find_package(sodium 1.0.11 REQUIRED QUIET)
 
 if(USE_TPM)
         add_definitions(-DUSE_TPM)
-        set(USE_TPM_DEFINE "#define USE_TPM")
         find_package(xaptum-tpm 0.5.0 REQUIRED QUIET)
-        find_package(ecdaa 0.9.0 COMPONENTS tpm REQUIRED QUIET)
+        find_package(ecdaa 0.10.0 COMPONENTS tpm REQUIRED QUIET)
 endif()
-
-configure_file(${PROJECT_SOURCE_DIR}/include/xtt/context.h.in ${CMAKE_BINARY_DIR}/include/xtt/context.h)
-configure_file(${PROJECT_SOURCE_DIR}/include/xtt/daa_wrapper.h.in ${CMAKE_BINARY_DIR}/include/xtt/daa_wrapper.h)
 
 # If not building as a shared library, force build as a static.  This
 # is to match the CMake default semantics of using
@@ -45,21 +41,28 @@ set(CMAKE_C_FLAGS_RELWITHSANITIZE "${CMAKE_C_FLAGS_RELWITHSANITIZE} -O2 -g -fsan
 
 set(XTT_SRCS
         src/libsodium_wrapper.c
-	src/amcl_wrapper.c
+        src/amcl_wrapper.c
         src/ecdaa_wrapper.c
         src/certificates.c
         src/context.c
         src/crypto_types.c
         src/messages.c
         src/return_codes.c
-        src/asn1_utilities.c
+        src/util/asn1.c
+        src/util/file_io.c
+        src/util/generate_ecdsap256_keys.c
+        src/util/root.c
+        src/util/generate_server_certificate.c
+        src/util/generate_x509_certificate.c
+        src/util/wrap_keys_asn1.c
+        src/util/internal/asn1.c
         src/internal/byte_utils.c
         src/internal/key_derivation.c
         src/internal/crypto_utils.c
         src/internal/message_utils.c
         src/internal/server_cookie.c
         src/internal/signatures.c
-        src/internal/asn1.c
+        src/tpm/handles.c
         )
 
 ################################################################################
@@ -140,11 +143,13 @@ endif()
 ################################################################################
 install(FILES include/xtt.h DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
 install(DIRECTORY include/xtt DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}" FILES_MATCHING PATTERN "*.h")
-install(DIRECTORY ${CMAKE_BINARY_DIR}/include/xtt DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
 
 ################################################################################
 # pkgconfig
 ################################################################################
+if(USE_TPM)
+  set(PC_COMPILE_DEFINITIONS "-DUSE_TPM")
+endif()
 configure_file(xtt.pc.in xtt.pc @ONLY)
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/xtt.pc
         DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig
@@ -180,24 +185,23 @@ install(FILES
   DESTINATION ${INSTALL_CONFIGDIR}
 )
 
-
 ################################################################################
 # Examples
 ################################################################################
 if(BUILD_EXAMPLES)
-        add_subdirectory(examples)
+    add_subdirectory(examples)
 endif()
 
 ################################################################################
 # Tests
 ################################################################################
 if(BUILD_TESTING)
- add_subdirectory(test)
+    add_subdirectory(test)
 endif()
 
 ################################################################################
-# Util
+# Tool
 ################################################################################
-if(BUILD_UTILS)
-  add_subdirectory(util)
+if(BUILD_TOOL)
+    add_subdirectory(tool)
 endif()
