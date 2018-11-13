@@ -143,7 +143,6 @@ endif()
 ################################################################################
 install(FILES include/xtt.h DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
 install(DIRECTORY include/xtt DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}" FILES_MATCHING PATTERN "*.h")
-install(DIRECTORY ${CMAKE_BINARY_DIR}/include/xtt DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
 
 ################################################################################
 # pkgconfig
