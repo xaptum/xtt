@@ -164,10 +164,10 @@ void parse_genroot_cli(int argc, char **argv, struct cli_params *params)
         "Usage: %s %s [-h] [-v <file>] [-b <file>] [-d <file>] [-c <file>]\n"
         "\tOptions:\n"
         "\t\t-h --help                      Display this message.\n"
-        "\t\t-v --rpriv                     Root's private key output location [default = root_priv.bin]\n"
-        "\t\t-b --rpub                      Root's public key output location [default = root_pub.bin]\n"
+        "\t\t-v --rpriv                     Root's private key input location [default = root_priv.bin]\n"
+        "\t\t-b --rpub                      Root's public key input location [default = root_pub.bin]\n"
         "\t\t-d --rid                       Root's ID input location [default generates a random ID]\n"
-        "\t\t-c --rcert                     Root's public key output location [default = root_cert.bin]\n"
+        "\t\t-c --rcert                     Root's certificate key output location [default = root_cert.bin]\n"
         ;
 
     static struct option cli_options[] =
@@ -220,7 +220,7 @@ void parse_genservercert_cli(int argc, char **argv, struct cli_params *params)
         "\t\t-r --rcert                   Root certificate input location [default = root_cert.bin]\n"
         "\t\t-p --rpriv                   Root private key input location [default = root_priv.bin]\n"
         "\t\t-v --serverpriv              Server private key input location [default = server_priv.bin]\n"
-        "\t\t-b --serverpub               Server private key output location [default = server_pub.bin]\n"
+        "\t\t-b --serverpub               Server public key input location [default = server_pub.bin]\n"
         "\t\t-s --sid                     Server ID input location [default = server_id.bin]\n"
         "\t\t-e --expiry                  Year, month and day when certificate will expire in format YYYYMMDD [default 1 year]\n"
         "\t\t-c --out-servercert          Server certificate output location [default = server_cert.bin]\n"        ;
@@ -364,7 +364,7 @@ void parse_runclient_cli(int argc, char** argv, struct cli_params *params){
     params->serverhost = "127.0.0.1";
     params->longtermcert = "longterm_cert.bin";
     params->longtermpriv = "longterm_priv.bin";
-    params->assignedid = "client_id.bin";
+    params->assignedid = "client_id.txt";
     params->server_id = "server_id.bin";
     params->basename = "basename.bin";
     params->rootcert = "root_cert.bin";
@@ -381,12 +381,12 @@ void parse_runclient_cli(int argc, char** argv, struct cli_params *params){
         "\t\t-h --help                    Display this message.\n"
         "\t\t-p --port                    Port to connect to [default port: 4444]\n"
         "\t\t-s --suitespec               Suite Spec:\n"
-        "\t\t\tX25519_LRSW_ECDSAP256_CHACHA20POLY1305_SHA512 (default)\n"
+        "\t\t\tX25519_LRSW_ECDSAP256_CHACHA20POLY1305_SHA512 [default]\n"
         "\t\t\tX25519_LRSW_ECDSAP256_CHACHA20POLY1305_BLAKE2B\n"
         "\t\t\tX25519_LRSW_ECDSAP256_AES256GCM_SHA512\n"
         "\t\t\tX25519_LRSW_ECDSAP256_AES256GCM_BLAKE2B\n"
-        "\t\t-a --serverhost              Specifies what host server to connect to\n"
-        "\t\t-q --requestid               Requested client ID [default = server_id.bin]\n"
+        "\t\t-a --serverhost              Specifies what host server to connect to [default = 127.0.0.1]\n"
+        "\t\t-q --requestid               Requested client ID [default = NULL identity type]\n"
         "\t\t-r --serverid                Server ID input location [default = server_id.bin]\n"
         "\t\t-d --daagpk                  DAA GPK input location [default = daa_gpk.bin]\n"
         "\t\t-c --daacred                 DAA Credential input location [default = daa_cred.bin]\n"
@@ -396,7 +396,7 @@ void parse_runclient_cli(int argc, char** argv, struct cli_params *params){
         "\t\t-m --tpmuse                  Indicates to use TPM\n"
         "\t\t-t --tctitype                Which TCTI socket is used ('device' or 'socket') [default = device]\n"
         "\t\t-f --devfile                 Device file input location if tcti == device\n"
-        "\t\t-i --assignedid              Assigned ID output location [default = client_id.bin]\n"
+        "\t\t-i --assignedid              Assigned ID output location [default = client_id.txt]\n"
         "\t\t-b --longtermpub             Longterm Public Key output location [default = longterm_cert.bin]\n"
         "\t\t-v --longtermpriv            Longterm Private Key output location [default = longterm_priv.bin]\n"
         ;
