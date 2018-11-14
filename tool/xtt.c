@@ -51,7 +51,7 @@ int main(int argc, char **argv)
             out = xtt_wrap_keys_asn1(params.privkey, params.pubkey, params.asn1);
             break;
         case action_genrootcert:
-            out = xtt_generate_root(params.privkey, params.pubkey, params.id, params.rootcert);
+            out = xtt_generate_root(params.pubkey, params.id, params.rootcert);
             break;
         case action_genservercert:
             out = xtt_generate_server_certificate(params.rootcert, params.rootpriv, params.serverpriv, params.serverpub, params.server_id, params.time, params.servercert);

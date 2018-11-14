@@ -156,15 +156,13 @@ void parse_wrapkeys_cli(int argc, char **argv, struct cli_params *params)
 static
 void parse_genroot_cli(int argc, char **argv, struct cli_params *params)
 {
-    params->privkey = "root_priv.bin";
     params->pubkey = "root_pub.bin";
     params->id = NULL;
     params->rootcert = "root_cert.bin";
     const char *usage_str = "Generate a root certificate.\n\n"
-        "Usage: %s %s [-h] [-v <file>] [-b <file>] [-d <file>] [-c <file>]\n"
+        "Usage: %s %s [-h] [-b <file>] [-d <file>] [-c <file>]\n"
         "\tOptions:\n"
         "\t\t-h --help                      Display this message.\n"
-        "\t\t-v --rpriv                     Root's private key input location [default = root_priv.bin]\n"
         "\t\t-b --rpub                      Root's public key input location [default = root_pub.bin]\n"
         "\t\t-d --rid                       Root's ID input location [default generates a random ID]\n"
         "\t\t-c --rcert                     Root's certificate key output location [default = root_cert.bin]\n"
@@ -172,7 +170,6 @@ void parse_genroot_cli(int argc, char **argv, struct cli_params *params)
 
     static struct option cli_options[] =
     {
-        {"rpriv", required_argument, NULL, 'v'},
         {"rpub", required_argument, NULL, 'b'},
         {"rid", required_argument, NULL, 'd'},
         {"rcert", required_argument, NULL, 'c'},
@@ -181,11 +178,8 @@ void parse_genroot_cli(int argc, char **argv, struct cli_params *params)
     };
 
     int c;
-    while ((c = getopt_long(argc, argv, "v:b:d:c:h", cli_options, NULL)) != -1) {
+    while ((c = getopt_long(argc, argv, "b:d:c:h", cli_options, NULL)) != -1) {
         switch (c) {
-            case 'v':
-                params->privkey = optarg;
-                break;
             case 'b':
                 params->pubkey = optarg;
                 break;
