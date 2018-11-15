@@ -47,7 +47,7 @@ void xtt_deserialize_root_certificate(xtt_ecdsap256_pub_key *pub_key, xtt_certif
  *      READ_FROM_FILE_ERROR    an error occurred reading from a file
  *      KEY_CREATION_ERROR      an error occurred creating a keypair
 */
-int xtt_generate_root(const char *privkey_filename, const char *pubkey_filename, const char *id_filename, const char *cert_filename);
+int xtt_generate_root(const char *pubkey_filename, const char *id_filename, const char *cert_filename);
 
 #ifdef __cplusplus
 }
