@@ -40,12 +40,11 @@ struct xtt_crypto_hmac_ops {
      * Computes the hash of the provided message.
      *
      * @out the destination buffer for the computed hash
-     * @outlen the destination integer for the output size in bytes
      * @msg the source buffer to hash
      * @msglen the size in bytes of the source buffer
      */
     int (*hash)(unsigned char* out,
-                uint16_t* outlen,
+                uint16_t outlen,
                 const unsigned char* msg,
                 uint16_t msglen);
 

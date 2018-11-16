@@ -196,16 +196,15 @@ generate_handshake_key_hash(unsigned char *hash_out,
 
     // 1iv) Hash the hash input buffer to get the inner hash.
     //      (and save that inner hash to our handshake_ctx, for later use).
-    uint16_t inner_hash_length;
     int hash_rc = hmac->hash(&handshake_ctx->inner_hash.buf,
-                             &inner_hash_length,
+                             handshake_ctx->inner_hash.len,
                              handshake_ctx->hash_buffer,
                              inner_hash_input_length + sizeof(inner_hash_input_length));
     if (0 != hash_rc)
         return XTT_RETURN_CRYPTO;
 
     // 2) Create HandshakeKeyHash: hash_ext(inner-hash || server_cookie)
-    uint16_t outer_hash_input_length = inner_hash_length + sizeof(xtt_server_cookie);
+    uint16_t outer_hash_input_length = hmac->outlen + sizeof(xtt_server_cookie);
     assert(sizeof(handshake_ctx->hash_buffer) >= sizeof(outer_hash_input_length) + outer_hash_input_length);
 
     hash_input = handshake_ctx->hash_buffer;
@@ -223,9 +222,8 @@ generate_handshake_key_hash(unsigned char *hash_out,
     hash_input += sizeof(xtt_server_cookie);
 
     // 2iv) Hash the hash input buffer to get the HandshakeKeyHash.
-    uint16_t outer_hash_length;
     hash_rc = hmac->hash(hash_out,
-                         &outer_hash_length,
+                         hmac->outlen,
                          handshake_ctx->hash_buffer,
                          outer_hash_input_length + sizeof(outer_hash_input_length));
     if (0 != hash_rc)

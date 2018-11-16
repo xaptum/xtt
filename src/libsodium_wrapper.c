@@ -102,17 +102,18 @@ int xtt_crypto_do_x25519_diffie_hellman(unsigned char* shared_secret,
 }
 
 int xtt_crypto_hash_sha512(unsigned char* out,
-                           uint16_t* out_length,
+                           uint16_t outlen,
                            const unsigned char* in,
-                           uint16_t in_len)
+                           uint16_t inlen)
 {
     crypto_hash_sha512_state h;
 
-    *out_length = sizeof(xtt_crypto_sha512);
+    if (outlen != crypto_hash_sha512_BYTES)
+        return -1;
 
     if (0 != crypto_hash_sha512_init(&h))
         return -1;
-    if (0 != crypto_hash_sha512_update(&h, in, in_len))
+    if (0 != crypto_hash_sha512_update(&h, in, inlen))
         return -1;
     if (0 != crypto_hash_sha512_final(&h, out))
         return -1;
@@ -121,24 +122,26 @@ int xtt_crypto_hash_sha512(unsigned char* out,
 }
 
 int xtt_crypto_hash_blake2b(unsigned char* out,
-                            uint16_t* out_length,
+                            uint16_t outlen,
                             const unsigned char* in,
-                            uint16_t in_len)
+                            uint16_t inlen)
 {
     crypto_generichash_blake2b_state h;
 
-    *out_length = sizeof(xtt_crypto_blake2b);
+    if ((outlen < crypto_generichash_blake2b_BYTES_MIN) ||
+        (outlen > crypto_generichash_blake2b_BYTES_MAX))
+        return -1;
 
     if (0 != crypto_generichash_blake2b_init(&h,
                                              NULL,
                                              0,
-                                             sizeof(xtt_crypto_blake2b)))
+                                             outlen))
         return -1;
-    if (0 != crypto_generichash_blake2b_update(&h, in, in_len))
+    if (0 != crypto_generichash_blake2b_update(&h, in, inlen))
         return -1;
     if (0 != crypto_generichash_blake2b_final(&h,
                                               out,
-                                              sizeof(xtt_crypto_blake2b)))
+                                              outlen))
         return -1;
 
     return 0;

@@ -296,9 +296,8 @@ generate_server_sig_hash(unsigned char *hash_out,
                                                                              handshake_ctx->suite_spec);
 
     // 1v) Hash the hash input buffer to get the inner hash.
-    uint16_t inner_hash_length;
     int hash_ret = hmac->hash(hash_out,
-                              &inner_hash_length,
+                              hmac->outlen,
                               handshake_ctx->hash_buffer,
                               inner_hash_input_length + sizeof(inner_hash_input_length));
     if (0 != hash_ret)
@@ -373,9 +372,8 @@ generate_client_sig_hash(unsigned char *hash_out,
     hash_input += encrypted_part_to_signature_length;
 
     // 7) Hash the hash input buffer to get the ClientSigHash.
-    uint16_t outer_hash_length;
     int hash_rc = hmac->hash(hash_out,
-                             &outer_hash_length,
+                             hmac->outlen,
                              handshake_ctx->hash_buffer,
                              outer_hash_input_length + sizeof(outer_hash_input_length));
     if (0 != hash_rc)
