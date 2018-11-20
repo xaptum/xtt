@@ -37,5 +37,6 @@
 #include <xtt/util/file_io.h>
 #include <xtt/util/util_errors.h>
 #include <xtt/tpm/handles.h>
+#include <xtt/tpm/nvram.h>
 
 #endif

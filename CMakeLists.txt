@@ -64,6 +64,7 @@ set(XTT_SRCS
         src/internal/server_cookie.c
         src/internal/signatures.c
         src/tpm/handles.c
+        src/tpm/nvram.c
         )
 
 ################################################################################

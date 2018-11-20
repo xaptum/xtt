@@ -467,7 +467,7 @@ int initialize_certs(int use_tpm,
         int nvram_ret;
         nvram_ret = read_nvram(root_certificate->data,
                                sizeof(xtt_root_certificate),
-                               XTT_ROOT_CERT_HANDLE,
+                               XTT_ROOT_XTTCERT_HANDLE,
                                tcti_context);
         if (0 != nvram_ret) {
             fprintf(stderr, "Error reading root's certificate from TPM NVRAM");
