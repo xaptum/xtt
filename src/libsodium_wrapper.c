@@ -169,47 +169,42 @@ int xtt_crypto_aead_aes256gcm_decrypt(unsigned char* msg,
                                          &key->buf);
 }
 
-int xtt_crypto_hash_sha512(unsigned char* out,
-                           uint16_t outlen,
+int xtt_crypto_hash_sha512(struct xtt_crypto_hmac* out,
                            const unsigned char* in,
                            uint16_t inlen)
 {
-    crypto_hash_sha512_state h;
+    out->len = sizeof(xtt_crypto_sha512);
 
-    if (outlen != crypto_hash_sha512_BYTES)
-        return -1;
+    crypto_hash_sha512_state h;
 
     if (0 != crypto_hash_sha512_init(&h))
         return -1;
     if (0 != crypto_hash_sha512_update(&h, in, inlen))
         return -1;
-    if (0 != crypto_hash_sha512_final(&h, out))
+    if (0 != crypto_hash_sha512_final(&h, &out->buf))
         return -1;
 
     return 0;
 }
 
-int xtt_crypto_hash_blake2b(unsigned char* out,
-                            uint16_t outlen,
+int xtt_crypto_hash_blake2b(struct xtt_crypto_hmac* out,
                             const unsigned char* in,
                             uint16_t inlen)
 {
-    crypto_generichash_blake2b_state h;
+    out->len = sizeof(xtt_crypto_blake2b);
 
-    if ((outlen < crypto_generichash_blake2b_BYTES_MIN) ||
-        (outlen > crypto_generichash_blake2b_BYTES_MAX))
-        return -1;
+    crypto_generichash_blake2b_state h;
 
     if (0 != crypto_generichash_blake2b_init(&h,
                                              NULL,
                                              0,
-                                             outlen))
+                                             out->len))
         return -1;
     if (0 != crypto_generichash_blake2b_update(&h, in, inlen))
         return -1;
     if (0 != crypto_generichash_blake2b_final(&h,
-                                              out,
-                                              outlen))
+                                              &out->buf,
+                                              out->len))
         return -1;
 
     return 0;

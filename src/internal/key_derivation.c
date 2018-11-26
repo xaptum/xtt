@@ -25,7 +25,7 @@
 
 static
 xtt_return_code_type
-generate_handshake_key_hash(unsigned char *hash_out,
+generate_handshake_key_hash(struct xtt_crypto_hmac *hash_out,
                             struct xtt_handshake_context *handshake_ctx,
                             const unsigned char *client_init,
                             const unsigned char *server_initandattest_uptocookie,
@@ -45,7 +45,7 @@ derive_handshake_keys(struct xtt_handshake_context *handshake_ctx,
     xtt_return_code_type rc;
 
     // 1) Create HandshakeKeyHash.
-    rc = generate_handshake_key_hash(&handshake_ctx->hash_out.buf,
+    rc = generate_handshake_key_hash(&handshake_ctx->hash_out,
                                      handshake_ctx,
                                      client_init,
                                      server_initandattest_uptocookie,
@@ -164,7 +164,7 @@ derive_handshake_keys(struct xtt_handshake_context *handshake_ctx,
 }
 
 xtt_return_code_type
-generate_handshake_key_hash(unsigned char *hash_out,
+generate_handshake_key_hash(struct xtt_crypto_hmac *hash_out,
                             struct xtt_handshake_context *handshake_ctx,
                             const unsigned char *client_init,
                             const unsigned char *server_initandattest_uptocookie,
@@ -201,8 +201,7 @@ generate_handshake_key_hash(unsigned char *hash_out,
 
     // 1iv) Hash the hash input buffer to get the inner hash.
     //      (and save that inner hash to our handshake_ctx, for later use).
-    int hash_rc = hmac->hash(&handshake_ctx->inner_hash.buf,
-                             handshake_ctx->inner_hash.len,
+    int hash_rc = hmac->hash(&handshake_ctx->inner_hash,
                              handshake_ctx->hash_buffer,
                              inner_hash_input_length + sizeof(inner_hash_input_length));
     if (0 != hash_rc)
@@ -228,7 +227,6 @@ generate_handshake_key_hash(unsigned char *hash_out,
 
     // 2iv) Hash the hash input buffer to get the HandshakeKeyHash.
     hash_rc = hmac->hash(hash_out,
-                         hmac->outlen,
                          handshake_ctx->hash_buffer,
                          outer_hash_input_length + sizeof(outer_hash_input_length));
     if (0 != hash_rc)

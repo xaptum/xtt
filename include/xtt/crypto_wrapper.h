@@ -42,13 +42,11 @@ int xtt_crypto_kx_x25519_exchange(struct xtt_crypto_kx_shared* shared,
                                   const struct xtt_crypto_kx_public* other_public,
                                   const struct xtt_crypto_kx_secret* my_secret);
 
-int xtt_crypto_hash_sha512(unsigned char* out,
-                           uint16_t outlen,
+int xtt_crypto_hash_sha512(struct xtt_crypto_hmac* out,
                            const unsigned char* in,
                            uint16_t inlen);
 
-int xtt_crypto_hash_blake2b(unsigned char* out,
-                            uint16_t outlen,
+int xtt_crypto_hash_blake2b(struct xtt_crypto_hmac* out,
                             const unsigned char* in,
                             uint16_t inlen);
 

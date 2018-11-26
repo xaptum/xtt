@@ -28,46 +28,6 @@ extern "C" {
 #include <string.h>
 
 /**
- * A generic interface for an HMAC algorithm.
- */
-struct xtt_crypto_hmac_ops {
-    /**
-     * The size in bytes of the HMAC output.
-     */
-    const uint16_t outlen;
-
-    /**
-     * Computes the hash of the provided message.
-     *
-     * @out the destination buffer for the computed hash
-     * @msg the source buffer to hash
-     * @msglen the size in bytes of the source buffer
-     */
-    int (*hash)(unsigned char* out,
-                uint16_t outlen,
-                const unsigned char* msg,
-                uint16_t msglen);
-
-    /**
-     * Evaluates a pseudorandom function on the provided input to
-     * generate an output of the requested length.
-     *
-     * @out the destination buffer for the function output
-     * @outlen the size in bytes of the output buffer
-     * @in the source buffer on which to evaluation the function
-     * @inlen the size in bytes of the source buffer
-     * @key the key for the pseudorandom function
-     * @keylen the size in bytes of the key
-     */
-    int (*prf)(unsigned char* out,
-               uint16_t outlen,
-               const unsigned char* in,
-               uint16_t inlen,
-               const unsigned char* key,
-               uint16_t keylen);
-};
-
-/**
  * Fixed sized buffers for specific HMAC algorithms.
  *
  * They are used to ensure that the :xtt_crypto_hmac: generic buffer
@@ -94,6 +54,45 @@ struct xtt_crypto_hmac {
         xtt_crypto_blake2b blake2b;
     };
     uint16_t len;
+};
+
+/**
+ * A generic interface for an HMAC algorithm.
+ */
+struct xtt_crypto_hmac_ops {
+    /**
+     * The size in bytes of the HMAC output.
+     */
+    const uint16_t outlen;
+
+    /**
+     * Computes the hash of the provided message.
+     *
+     * @out the destination for the computed hash
+     * @msg the source buffer to hash
+     * @msglen the size in bytes of the source buffer
+     */
+    int (*hash)(struct xtt_crypto_hmac* out,
+                const unsigned char* msg,
+                uint16_t msglen);
+
+    /**
+     * Evaluates a pseudorandom function on the provided input to
+     * generate an output of the requested length.
+     *
+     * @out the destination buffer for the function output
+     * @outlen the size in bytes of the output buffer
+     * @in the source buffer on which to evaluation the function
+     * @inlen the size in bytes of the source buffer
+     * @key the key for the pseudorandom function
+     * @keylen the size in bytes of the key
+     */
+    int (*prf)(unsigned char* out,
+               uint16_t outlen,
+               const unsigned char* in,
+               uint16_t inlen,
+               const unsigned char* key,
+               uint16_t keylen);
 };
 
 /**
