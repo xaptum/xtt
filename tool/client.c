@@ -38,6 +38,7 @@
 #include <xtt/util/asn1.h>
 #include <xtt/util/root.h>
 #include <xtt/tpm/handles.h>
+#include <xtt/tpm/nvram.h>
 
 #ifdef USE_TPM
 #include <tss2/tss2_sys.h>
@@ -75,10 +76,9 @@ static int initialize_daa(struct xtt_client_group_context *group_ctx,
 
 #ifdef USE_TPM
 static int
-read_nvram(unsigned char *out,
-           uint16_t length,
-           TPM_HANDLE index,
-           TSS2_TCTI_CONTEXT *tcti_context);
+init_sapi(TSS2_SYS_CONTEXT *sapi_context,
+          size_t sapi_ctx_size,
+          TSS2_TCTI_CONTEXT *tcti_context);
 #endif
 
 static int do_handshake_client(int socket,
@@ -337,43 +337,48 @@ int initialize_daa(struct xtt_client_group_context *group_ctx, int use_tpm, TSS2
     uint16_t basename_len = 0;
     if (use_tpm && tcti_context) {
 #ifdef USE_TPM
+        size_t sapi_ctx_size = Tss2_Sys_GetContextSize(0);
+        TSS2_SYS_CONTEXT *sapi_context = malloc(sapi_ctx_size);
+        uint16_t length_read = 0;
         int nvram_ret = 0;
-        uint8_t basename_len_from_tpm = 0;
-        nvram_ret = read_nvram((unsigned char*)&basename_len_from_tpm,
-                               1,
-                               XTT_BASENAME_SIZE_HANDLE,
-                               tcti_context);
+        nvram_ret = init_sapi(sapi_context, sapi_ctx_size, tcti_context);
         if (0 != nvram_ret) {
-            fprintf(stderr, "Error reading basename size from TPM NVRAM\n");
-            return TPM_ERROR;
+            fprintf(stderr, "Error creating SAPI context");
+            return nvram_ret;
         }
-        basename_len = basename_len_from_tpm;
-        nvram_ret = read_nvram(basename,
-                               basename_len,
-                               XTT_BASENAME_HANDLE,
-                               tcti_context);
+        nvram_ret = xtt_read_object(basename,
+                                   sizeof(basename),
+                                   &length_read,
+                                   XTT_BASENAME,
+                                   sapi_context);
         if (0 != nvram_ret) {
             fprintf(stderr, "Error reading basename from TPM NVRAM\n");
-            return TPM_ERROR;
+            return nvram_ret;
         }
+        basename_len = length_read;
 
-        nvram_ret = read_nvram(gpk.data,
-                               sizeof(xtt_daa_group_pub_key_lrsw),
-                               XTT_GPK_HANDLE,
-                               tcti_context);
+        length_read = 0;
+        nvram_ret = xtt_read_object(gpk.data,
+                                    sizeof(xtt_daa_group_pub_key_lrsw),
+                                    &length_read,
+                                    XTT_GROUP_PUBLIC_KEY,
+                                    sapi_context);
         if (0 != nvram_ret) {
             fprintf(stderr, "Error reading GPK from TPM NVRAM");
             return TPM_ERROR;
         }
 
-        nvram_ret = read_nvram(cred.data,
-                               sizeof(xtt_daa_credential_lrsw),
-                               XTT_CRED_HANDLE,
-                               tcti_context);
+        length_read = 0;
+        nvram_ret = xtt_read_object(cred.data,
+                                    sizeof(xtt_daa_credential_lrsw),
+                                    &length_read,
+                                    XTT_CREDENTIAL,
+                                    sapi_context);
         if (0 != nvram_ret) {
             fprintf(stderr, "Error reading credential from TPM NVRAM");
             return TPM_ERROR;
         }
+        free(sapi_context);
 #else
         fprintf(stderr, "Attempted to use a TPM, but not built with TPM enabled!\n");
         return TPM_ERROR;
@@ -464,11 +469,21 @@ int initialize_certs(int use_tpm,
 
     if (use_tpm && tcti_context) {
 #ifdef USE_TPM
-        int nvram_ret;
-        nvram_ret = read_nvram(root_certificate->data,
-                               sizeof(xtt_root_certificate),
-                               XTT_ROOT_XTTCERT_HANDLE,
-                               tcti_context);
+        size_t sapi_ctx_size = Tss2_Sys_GetContextSize(0);
+        TSS2_SYS_CONTEXT *sapi_context = malloc(sapi_ctx_size);
+        uint16_t length_read = 0;
+        int nvram_ret = 0;
+        nvram_ret = init_sapi(sapi_context, sapi_ctx_size, tcti_context);
+        if (0 != nvram_ret) {
+            fprintf(stderr, "Error creating SAPI context");
+            return nvram_ret;
+        }
+        nvram_ret = xtt_read_object(root_certificate->data,
+                                    sizeof(xtt_root_certificate),
+                                    &length_read,
+                                    XTT_ROOT_XTT_CERTIFICATE,
+                                    sapi_context);
+        free(sapi_context);
         if (0 != nvram_ret) {
             fprintf(stderr, "Error reading root's certificate from TPM NVRAM");
             return TPM_ERROR;
@@ -481,6 +496,15 @@ int initialize_certs(int use_tpm,
         int read_ret = xtt_read_from_file(root_cert_file, root_certificate->data, sizeof(xtt_root_certificate));
         if (read_ret < 0) {
             return READ_FROM_FILE_ERROR;
+        }
+    }
+
+    for (size_t i=0; i < sizeof(xtt_root_certificate); ++i) {
+        printf("%#02X", root_certificate->data[i]);
+        if (i < (sizeof(xtt_root_certificate)-1)) {
+            printf(", ");
+        } else {
+            printf("}\n");
         }
     }
 
@@ -750,15 +774,12 @@ int report_results_client(xtt_identity_type *requested_client_id,
 
 #ifdef USE_TPM
 static int
-read_nvram(unsigned char *out,
-           uint16_t size,
-           TPM_HANDLE index,
-           TSS2_TCTI_CONTEXT *tcti_context)
+init_sapi(TSS2_SYS_CONTEXT *sapi_context,
+          size_t sapi_ctx_size,
+          TSS2_TCTI_CONTEXT *tcti_context)
 {
     TSS2_RC ret = TSS2_RC_SUCCESS;
 
-    size_t sapi_ctx_size = Tss2_Sys_GetContextSize(0);
-    TSS2_SYS_CONTEXT *sapi_context = malloc(sapi_ctx_size);
     if (NULL == sapi_context) {
         fprintf(stderr, "Error allocating memory for TPM SAPI context\n");
         return TPM_ERROR;
@@ -774,54 +795,8 @@ read_nvram(unsigned char *out,
         goto finish;
     }
 
-    TPMS_AUTH_COMMAND session_data = {
-        .sessionHandle = TPM_RS_PW,
-        .sessionAttributes = {0},
-    };
-    TPMS_AUTH_RESPONSE sessionDataOut = {{0}, {0}, {0}};
-    (void)sessionDataOut;
-    TSS2_SYS_CMD_AUTHS sessionsData;
-    TSS2_SYS_RSP_AUTHS sessionsDataOut;
-    TPMS_AUTH_COMMAND *sessionDataArray[1];
-    sessionDataArray[0] = &session_data;
-    TPMS_AUTH_RESPONSE *sessionDataOutArray[1];
-    sessionDataOutArray[0] = &sessionDataOut;
-    sessionsDataOut.rspAuths = &sessionDataOutArray[0];
-    sessionsData.cmdAuths = &sessionDataArray[0];
-    sessionsDataOut.rspAuthsCount = 1;
-    sessionsData.cmdAuthsCount = 1;
-    sessionsData.cmdAuths[0] = &session_data;
-
-    uint16_t data_offset = 0;
-
-    while (size > 0) {
-        uint16_t bytes_to_read = size;
-
-        TPM2B_MAX_NV_BUFFER nv_data = {.size=0};
-
-        ret = Tss2_Sys_NV_Read(sapi_context,
-                               index,
-                               index,
-                               &sessionsData,
-                               bytes_to_read,
-                               data_offset,
-                               &nv_data,
-                               &sessionsDataOut);
-
-        if (ret != TSS2_RC_SUCCESS) {
-            fprintf(stderr, "Error reading from NVRAM\n");
-            goto finish;
-        }
-
-        size -= nv_data.size;
-
-        memcpy(out + data_offset, nv_data.buffer, nv_data.size);
-        data_offset += nv_data.size;
-    }
-
 finish:
     Tss2_Sys_Finalize(sapi_context);
-    free(sapi_context);
 
     if (ret == TSS2_RC_SUCCESS) {
         return 0;
