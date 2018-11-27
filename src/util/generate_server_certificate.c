@@ -17,6 +17,7 @@
  *****************************************************************************/
 #define _POSIX_C_SOURCE 200809L
 
+#include <xtt/util/generate_server_certificate.h>
 #include <xtt/certificates.h>
 #include <xtt/crypto_types.h>
 #include <xtt/util/root.h>
