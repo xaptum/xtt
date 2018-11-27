@@ -30,7 +30,7 @@ extern const unsigned char SEQUENCE_TAG;
 extern const unsigned char SET_TAG;
 extern const unsigned char INTEGER_TAG;
 extern const unsigned char OBJECTIDENTIFIER_TAG;
-extern const unsigned char UTCTIME_TAG;
+extern const unsigned char GENERALIZEDTIME_TAG;
 extern const unsigned char BITSTRING_TAG;
 extern const unsigned char OCTETSTRING_TAG;
 extern const unsigned char CONSTRUCTED_TAG0;
@@ -48,7 +48,7 @@ extern const unsigned char UTF8STRING_ATTRTYPE;
 
 extern const int VALIDITY_YEARS;
 
-enum { UTC_LENGTH = 13 };                                                               // YYMMDDhhssmm'Z'
+enum { GENERALIZEDTIME_LENGTH = 15 };                                                               // YYYYMMDDhhmmss'Z'
 enum { NAME_LENGTH = 39 };
 enum { RAW_PRIVATE_KEY_LENGTH = 32 };
 enum { PUBLIC_KEY_LENGTH = 65 };
@@ -69,8 +69,8 @@ enum { name_attr_tandv_length = 1 + 1 + name_oid_length + name_string_length }; 
 enum { rdn_length = 1 + 1 + name_attr_tandv_length };                                   // tag(1) + length(1) + name_attr_tandv_length
 enum { name_length = 1 + 1 + rdn_length };                                              // tag(1) + length(1) + rdn_length
 
-enum { utctime_length = 1 + 1 + UTC_LENGTH };                                           // tag(1) + length(1) + content(13) 'YYMMDDhhssmmZ'
-enum { validity_length = 1 + 1 + 2*utctime_length };                                    // tag(1) + length(1) + 2*utctime_length (one for notBefore, other for notAfter)
+enum { generalizedtime_length = 1 + 1 + GENERALIZEDTIME_LENGTH };                                           // tag(1) + length(1) + content(15) 'YYYYMMDDhhmmssZ'
+enum { validity_length = 1 + 1 + 2*generalizedtime_length };                                    // tag(1) + length(1) + 2*generalizedtime_length (one for notBefore, other for notAfter)
 
 enum { curve_def_length = 1 + 1 + prime256v1_oid_length + ecpublickey_oid_length };
 

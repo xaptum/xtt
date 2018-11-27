@@ -28,7 +28,7 @@
 extern "C" {
 #endif
 
-#define XTT_X509_CERTIFICATE_LENGTH 348
+#define XTT_X509_CERTIFICATE_LENGTH 352
 size_t xtt_x509_certificate_length(void);
 
 #define XTT_ASN1_PRIVATE_KEY_LENGTH 121

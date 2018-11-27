@@ -24,14 +24,13 @@
 #include <stdint.h>
 #include <assert.h>
 #include <string.h>
-#include <time.h>
 #include <stdio.h>
 
 const unsigned char SEQUENCE_TAG = 0x30;
 const unsigned char SET_TAG = 0x31;
 const unsigned char INTEGER_TAG = 0x02;
 const unsigned char OBJECTIDENTIFIER_TAG = 0x06;
-const unsigned char UTCTIME_TAG = 0x17;
+const unsigned char GENERALIZEDTIME_TAG = 0x18;
 const unsigned char BITSTRING_TAG = 0x03;
 const unsigned char OCTETSTRING_TAG = 0x04;
 const unsigned char CONSTRUCTED_TAG0 = 0xA0;
@@ -303,23 +302,22 @@ build_validity(unsigned char **current_loc)
     set_as_sequence(current_loc);
     set_length(current_loc, validity_length - 1 - 1);
 
-    char not_before_time[14];
-    assert(sizeof(not_before_time) == UTC_LENGTH + 1);      // for the null-terminator
-    char not_after_time[14];
-    assert(sizeof(not_after_time) == UTC_LENGTH + 1);      // for the null-terminator
-    get_validity_times(not_before_time, not_after_time);
+    char not_before_time[16] = "00000101000000Z";
+    assert(sizeof(not_before_time) == GENERALIZEDTIME_LENGTH + 1);      // for the null-terminator
+    char not_after_time[16] = "99991231235959Z";
+    assert(sizeof(not_after_time) == GENERALIZEDTIME_LENGTH + 1);      // for the null-terminator
 
-    **current_loc = UTCTIME_TAG;
+    **current_loc = GENERALIZEDTIME_TAG;
     *current_loc += 1;
-    set_length(current_loc, utctime_length - 1 - 1);
-    memcpy(*current_loc, not_before_time, UTC_LENGTH);
-    *current_loc += UTC_LENGTH;
+    set_length(current_loc, generalizedtime_length - 1 - 1);
+    memcpy(*current_loc, not_before_time, GENERALIZEDTIME_LENGTH);
+    *current_loc += GENERALIZEDTIME_LENGTH;
 
-    **current_loc = UTCTIME_TAG;
+    **current_loc = GENERALIZEDTIME_TAG;
     *current_loc += 1;
-    set_length(current_loc, utctime_length - 1 - 1);
-    memcpy(*current_loc, not_after_time, UTC_LENGTH);
-    *current_loc += UTC_LENGTH;
+    set_length(current_loc, generalizedtime_length - 1 - 1);
+    memcpy(*current_loc, not_after_time, GENERALIZEDTIME_LENGTH);
+    *current_loc += GENERALIZEDTIME_LENGTH;
 }
 
 void
@@ -348,25 +346,4 @@ build_subjectpublickeyinfo(unsigned char **current_loc, unsigned char **pubkey_l
     build_curve(current_loc);
 
     build_publickey(current_loc, pubkey_location);
-}
-
-void
-get_validity_times(char *not_before_time, char *not_after_time)
-{
-    time_t now_timet = time(NULL);
-    struct tm *now = gmtime(&now_timet);
-
-    snprintf(not_before_time,
-             UTC_LENGTH + 1,
-             "%02d%02d%02d000000Z",
-             now->tm_year - 100,
-             now->tm_mon + 1,
-             now->tm_mday);
-
-    snprintf(not_after_time,
-             UTC_LENGTH + 1,
-             "%02d%02d%02d000000Z",
-             now->tm_year - 100 + VALIDITY_YEARS,
-             now->tm_mon + 1,
-             now->tm_mday);
 }
