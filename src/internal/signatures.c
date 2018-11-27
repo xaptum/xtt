@@ -209,7 +209,6 @@ verify_client_longterm_signature(unsigned char *signature,
 
 xtt_return_code_type
 verify_server_signature(const unsigned char *signature,
-                        const xtt_identity_type* intended_server_identity,
                         const struct xtt_server_root_certificate_context* root_server_certificate,
                         const unsigned char *client_init,
                         const unsigned char *server_initandattest_unencrypted_part,
@@ -218,20 +217,7 @@ verify_server_signature(const unsigned char *signature,
 {
     xtt_return_code_type rc;
 
-    // 1) Check that the certificate is for the correct server ClientID.
-    if (0 != xtt_crypto_memcmp(xtt_server_certificate_access_id(xtt_encrypted_serverinitandattest_access_certificate(server_initandattest_encryptedpart_uptosignature,
-                                                                                                                     handshake_ctx->base.version)),
-                               intended_server_identity->data,
-                               sizeof(xtt_identity_type)))
-        return XTT_RETURN_BAD_CERTIFICATE;
-
-    // 2) Check that cert isn't expired.
-    int ret = xtt_check_expiry((xtt_certificate_expiry*)xtt_server_certificate_access_expiry(xtt_encrypted_serverinitandattest_access_certificate(server_initandattest_encryptedpart_uptosignature,
-                                                                                                                                             handshake_ctx->base.version)));
-    if (0 != ret)
-        return XTT_RETURN_BAD_EXPIRY;
-
-    // 3) Check that our root cert does in fact have the id claimed by the server cert.
+    // 1) Check that our root cert does in fact have the id claimed by the server cert.
     xtt_certificate_root_id *claimed_root
         = (xtt_certificate_root_id*)xtt_server_certificate_access_rootid(xtt_encrypted_serverinitandattest_access_certificate(server_initandattest_encryptedpart_uptosignature,
                                                                                                   handshake_ctx->base.version));
@@ -239,7 +225,7 @@ verify_server_signature(const unsigned char *signature,
     if (0 != xtt_crypto_memcmp(root_server_certificate->id.data, claimed_root->data, sizeof(xtt_certificate_root_id)))
         return XTT_RETURN_BAD_CERTIFICATE;
 
-    // 4) Check that the root signature in the server cert verifies using that root cert.
+    // 2) Check that the root signature in the server cert verifies using that root cert.
     struct xtt_server_certificate_raw_type *certificate = xtt_encrypted_serverinitandattest_access_certificate(server_initandattest_encryptedpart_uptosignature,
                                                                                                            handshake_ctx->base.version);
     rc = root_server_certificate->verify_signature(xtt_server_certificate_access_rootsignature(certificate, handshake_ctx->base.suite_spec),
@@ -247,7 +233,7 @@ verify_server_signature(const unsigned char *signature,
                                                                                                root_server_certificate);
     if (XTT_RETURN_SUCCESS != rc)
         return rc;
-    // 5) Check that the server signature verifies using the server cert.
+    // 3) Check that the server signature verifies using the server cert.
     rc = generate_server_sig_hash(handshake_ctx->base.hash_out_buffer,
                                   client_init,
                                   server_initandattest_unencrypted_part,

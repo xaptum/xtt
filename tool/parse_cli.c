@@ -202,21 +202,19 @@ void parse_genservercert_cli(int argc, char **argv, struct cli_params *params)
 {
     params->rootcert = "root_cert.bin";
     params->rootpriv = "root_priv.bin";
-    params->server_id = "server_id.bin";
     params->servercert = "server_cert.bin";
     params->serverpriv = "server_priv.bin";
     params->serverpub = "server_pub.bin";
-    params->time = NULL;
+    params->certreserved = NULL;
     const char *usage_str = "Generate server's certificate.\n\n"
-        "Usage: %s %s [-h] [-r <file>] [-p <file>] [-v <file>] [-b <file>] [-s <file>] [-e 'YYYYMMDD'][-c <file>]\n"
+        "Usage: %s %s [-h] [-r <file>] [-p <file>] [-v <file>] [-b <file>] [-x <file>] [-c <file>]\n"
         "\tOptions:\n"
         "\t\t-h --help                    Display this message.\n"
         "\t\t-r --rcert                   Root certificate input location [default = root_cert.bin]\n"
         "\t\t-p --rpriv                   Root private key input location [default = root_priv.bin]\n"
         "\t\t-v --serverpriv              Server private key input location [default = server_priv.bin]\n"
         "\t\t-b --serverpub               Server public key input location [default = server_pub.bin]\n"
-        "\t\t-s --sid                     Server ID input location [default = server_id.bin]\n"
-        "\t\t-e --expiry                  Year, month and day when certificate will expire in format YYYYMMDD [default 1 year]\n"
+        "\t\t-x --reserved                Certificate reserved field input location [default = use \"58415054554d534552564552303030313939393931323331\" for reserved field]\n"
         "\t\t-c --out-servercert          Server certificate output location [default = server_cert.bin]\n"        ;
 
     static struct option cli_options[] =
@@ -225,14 +223,13 @@ void parse_genservercert_cli(int argc, char **argv, struct cli_params *params)
         {"rpriv", required_argument, NULL, 'p'},
         {"serverpriv", required_argument, NULL, 'v'},
         {"serverpub", required_argument, NULL, 'b'},
-        {"sid", required_argument, NULL, 's'},
-        {"expiry", required_argument, NULL, 'e'},
+        {"reserved", required_argument, NULL, 'x'},
         {"out-servercert", required_argument, NULL, 'c'},
         {"help", no_argument, NULL, 'h'},
         {NULL, 0, NULL, 0}
     };
     int c;
-    while ((c = getopt_long(argc, argv, "r:p:v:b:s:e:c:h", cli_options, NULL)) != -1) {
+    while ((c = getopt_long(argc, argv, "r:p:v:b:x:c:h", cli_options, NULL)) != -1) {
         switch (c) {
             case 'r':
                 params->rootcert = optarg;
@@ -246,14 +243,11 @@ void parse_genservercert_cli(int argc, char **argv, struct cli_params *params)
             case 'b':
                 params->serverpub = optarg;
                 break;
-            case 's':
-                params->server_id = optarg;
-                break;
-            case 'e':
-                params->time = optarg;
-                break;
             case 'c':
                 params->servercert = optarg;
+                break;
+            case 'x':
+                params->certreserved = optarg;
                 break;
             case 'h':
                 printf(usage_str, argv[0], argv[1]);
@@ -359,7 +353,6 @@ void parse_runclient_cli(int argc, char** argv, struct cli_params *params){
     params->longtermcert = "longterm_cert.bin";
     params->longtermpriv = "longterm_priv.bin";
     params->assignedid = "client_id.txt";
-    params->server_id = "server_id.bin";
     params->basename = "basename.bin";
     params->rootcert = "root_cert.bin";
     params->daagpk = "daa_gpk.bin";
@@ -381,7 +374,6 @@ void parse_runclient_cli(int argc, char** argv, struct cli_params *params){
         "\t\t\tX25519_LRSW_ECDSAP256_AES256GCM_BLAKE2B\n"
         "\t\t-a --serverhost              Specifies what host server to connect to [default = 127.0.0.1]\n"
         "\t\t-q --requestid               Requested client ID [default = NULL identity type]\n"
-        "\t\t-r --serverid                Server ID input location [default = server_id.bin]\n"
         "\t\t-d --daagpk                  DAA GPK input location [default = daa_gpk.bin]\n"
         "\t\t-c --daacred                 DAA Credential input location [default = daa_cred.bin]\n"
         "\t\t-k --daasecret               DAA Secret Key input location [default = daa_secretkey.bin]\n"
@@ -401,7 +393,6 @@ void parse_runclient_cli(int argc, char** argv, struct cli_params *params){
         {"suitespec", required_argument, NULL, 's'},
         {"serverhost", required_argument, NULL, 'a'},
         {"requestid", required_argument, NULL, 'q'},
-        {"serverid", required_argument, NULL, 'r'},
         {"daagpk", required_argument, NULL, 'd'},
         {"daacred", required_argument, NULL, 'c'},
         {"daasecret", required_argument, NULL, 'k'},
@@ -418,7 +409,7 @@ void parse_runclient_cli(int argc, char** argv, struct cli_params *params){
         {NULL, 0, NULL, 0}
     };
     int c;
-    while ((c = getopt_long(argc, argv, "p:s:a:q:r:d:c:k:e:n:mt:f:i:b:v:h", cli_options, NULL)) != -1) {
+    while ((c = getopt_long(argc, argv, "p:s:a:q:d:c:k:e:n:mt:f:i:b:v:h", cli_options, NULL)) != -1) {
         switch (c) {
             case 'p':
                 params->portstr = optarg;
@@ -434,11 +425,6 @@ void parse_runclient_cli(int argc, char** argv, struct cli_params *params){
             case 'q':
             {
                 params->requestid = optarg;
-                break;
-            }
-            case 'r':
-            {
-                params->server_id = optarg;
                 break;
             }
             case 'd':

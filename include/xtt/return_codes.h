@@ -1,13 +1,13 @@
 /******************************************************************************
  *
  * Copyright 2018 Xaptum, Inc.
- * 
+ *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
  *    You may obtain a copy of the License at
- * 
+ *
  *        http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  *    Unless required by applicable law or agreed to in writing, software
  *    distributed under the License is distributed on an "AS IS" BASIS,
  *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -66,7 +66,7 @@ typedef enum xtt_return_code_type {
     XTT_RETURN_UNKNOWN_GID,
     XTT_RETURN_BAD_GPK,
     XTT_RETURN_BAD_ID,
-    XTT_RETURN_BAD_EXPIRY,
+    XTT_RETURN_UNUSED_1,
     XTT_RETURN_CRYPTO,
     XTT_RETURN_DAA,
     XTT_RETURN_BAD_COOKIE,

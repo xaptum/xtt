@@ -37,9 +37,6 @@ uint32_t xtt_basename_size_handle(void);
 #define XTT_BASENAME_HANDLE 0x1410007
 uint32_t xtt_basename_handle(void);
 
-#define XTT_SERVER_ID_HANDLE 0x1410008
-uint32_t xtt_server_id_handle(void);
-
 #define XTT_ROOT_CERT_HANDLE 0x1410009
 uint32_t xtt_root_cert_handle(void);
 

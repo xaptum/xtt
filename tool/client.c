@@ -62,10 +62,6 @@ static int initialize_tcti(TSS2_TCTI_CONTEXT **tcti_context, xtt_tcti_type tcti_
 
 static int connect_to_server(const char *ip, char *port);
 
-static int initialize_server_id(xtt_identity_type *intended_server_id,
-                         int use_tpm,
-                         TSS2_TCTI_CONTEXT *tcti_context, const char* server_id_file);
-
 static int initialize_certs(int use_tpm,
                      TSS2_TCTI_CONTEXT *tcti_context,
                      xtt_root_certificate* root_certificate,
@@ -87,7 +83,6 @@ read_nvram(unsigned char *out,
 
 static int do_handshake_client(int socket,
                  xtt_identity_type *requested_client_id,
-                 xtt_identity_type *intended_server_id,
                  struct xtt_client_group_context *group_ctx,
                  struct xtt_client_handshake_context *ctx);
 
@@ -103,7 +98,6 @@ static int report_results_client(xtt_identity_type *requested_client_id,
 int run_client(struct cli_params* params)
 {
     const char *requested_client_id_file = params->requestid;
-    const char *server_id_file = params->server_id;
     const char *daa_gpk_file = params->daagpk;
     const char *daa_cred_file = params->daacred;
     const char *daa_secretkey_file = params->daasecretkey;
@@ -210,15 +204,7 @@ int run_client(struct cli_params* params)
         goto finish;
     }
 
-    // 2) Set the intended server id.
-    xtt_identity_type intended_server_id = {.data = {0}};
-    ret = initialize_server_id(&intended_server_id, use_tpm, tcti_context, server_id_file);
-    if(0 != ret) {
-        fprintf(stderr, "Error setting XTT server ID!\n");
-        goto finish;
-    }
-
-    // 3) Make TCP connection to server.
+    // 2) Make TCP connection to server.
     printf("Connecting to server at %s:%s ...\t", server_ip, server_port);
     socket = connect_to_server(server_ip, (char*)server_port);
     if (socket < 0) {
@@ -227,7 +213,7 @@ int run_client(struct cli_params* params)
     }
     printf("ok\n");
 
-    // 4) Initialize XTT handshake context
+    // 3) Initialize XTT handshake context
     // (will be populated with useful information after a successful handshake).
     printf("Using suite_spec = %d\n", suite_spec);
     unsigned char in_buffer[MAX_HANDSHAKE_SERVER_MESSAGE_LENGTH] = {0};
@@ -240,14 +226,13 @@ int run_client(struct cli_params* params)
         goto finish;
     }
 
-    // 5) Run the identity-provisioning handshake with the server.
+    // 4) Run the identity-provisioning handshake with the server.
     ret = do_handshake_client(socket,
                        &requested_client_id,
-                       &intended_server_id,
                        &group_ctx,
                        &ctx);
     if (0 == ret) {
-    // 6) Print the results (what we and the server now agree on post-handshake)
+    // 5) Print the results (what we and the server now agree on post-handshake)
         ret = report_results_client(&requested_client_id,
                              &ctx, assigned_client_id_out_file, longterm_public_key_out_file, longterm_private_key_out_file);
         if (0 != ret)
@@ -337,37 +322,6 @@ int initialize_tcti(TSS2_TCTI_CONTEXT **tcti_context, xtt_tcti_type tcti_type, c
     return 0;
 }
 #endif
-
-static
-int initialize_server_id(xtt_identity_type *intended_server_id,
-                         int use_tpm,
-                         TSS2_TCTI_CONTEXT *tcti_context, const char* server_id_file)
-{
-    // Set server's id from file/NVRAM
-    int read_ret = 0;
-    if (use_tpm && tcti_context) {
-#ifdef USE_TPM
-        int nvram_ret = 0;
-        nvram_ret = read_nvram(intended_server_id->data,
-                               sizeof(xtt_identity_type),
-                               XTT_SERVER_ID_HANDLE,
-                               tcti_context);
-        if (0 != nvram_ret) {
-            fprintf(stderr, "Error reading server id from TPM NVRAM");
-            return TPM_ERROR;
-        }
-#else
-        fprintf(stderr, "Attempted to use a TPM, but not built with TPM enabled!\n");
-        return TPM_ERROR;
-#endif
-    } else {
-        read_ret = xtt_read_from_file(server_id_file, intended_server_id->data, sizeof(xtt_identity_type));
-        if(read_ret < 0){
-            return READ_FROM_FILE_ERROR;
-        }
-    }
-    return 0;
-}
 
 static
 int initialize_daa(struct xtt_client_group_context *group_ctx, int use_tpm, TSS2_TCTI_CONTEXT *tcti_context,
@@ -547,7 +501,6 @@ int initialize_certs(int use_tpm,
 static
 int do_handshake_client(int socket,
                  xtt_identity_type *requested_client_id,
-                 xtt_identity_type *intended_server_id,
                  struct xtt_client_group_context *group_ctx,
                  struct xtt_client_handshake_context *ctx)
 {
@@ -628,7 +581,6 @@ int do_handshake_client(int socket,
                                                                    &io_ptr,
                                                                    server_cert,
                                                                    requested_client_id,
-                                                                   intended_server_id,
                                                                    group_ctx,
                                                                    ctx);
 
