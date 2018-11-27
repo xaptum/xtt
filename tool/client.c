@@ -59,27 +59,41 @@ struct xtt_server_root_certificate_context stored_cert;
 
 #ifdef USE_TPM
 static int initialize_tcti(TSS2_TCTI_CONTEXT **tcti_context, xtt_tcti_type tcti_type, const char *dev_file);
+
+static int initialize_sapi(TSS2_SYS_CONTEXT *sapi_context, size_t sapi_ctx_size, TSS2_TCTI_CONTEXT *tcti_context);
 #endif
 
 static int connect_to_server(const char *ip, char *port);
 
-static int initialize_certs(int use_tpm,
-                     TSS2_TCTI_CONTEXT *tcti_context,
-                     xtt_root_certificate* root_certificate,
-                     const char* root_cert_file);
+static int initialize_certs(xtt_root_certificate* root_certificate);
 
 static int initialize_daa(struct xtt_client_group_context *group_ctx,
-                   int use_tpm,
-                   TSS2_TCTI_CONTEXT *tcti_context,
-               const char* basename_file, const char* daa_gpk_file,
-               const char* daa_cred_file, const char* daa_secretkey_file);
+                unsigned char* basename,
+                uint16_t basename_len,
+                xtt_daa_group_pub_key_lrsw* gpk,
+                xtt_daa_credential_lrsw* cred,
+                xtt_daa_priv_key_lrsw* daa_priv_key,
+                int use_tpm,
+                TSS2_TCTI_CONTEXT* tcti_context);
 
-#ifdef USE_TPM
-static int
-init_sapi(TSS2_SYS_CONTEXT *sapi_context,
-          size_t sapi_ctx_size,
-          TSS2_TCTI_CONTEXT *tcti_context);
-#endif
+static int read_in_from_TPM(TSS2_TCTI_CONTEXT* tcti_context,
+                  unsigned char* basename,
+                  uint16_t* basename_len,
+                  xtt_daa_group_pub_key_lrsw* gpk,
+                  xtt_daa_credential_lrsw* cred,
+                  xtt_root_certificate* root_certificate);
+
+static int read_in_from_files(unsigned char* basename,
+                       uint16_t* basename_len,
+                       const char* basename_file,
+                       xtt_daa_group_pub_key_lrsw* gpk,
+                       const char* daa_gpk_file,
+                       xtt_daa_credential_lrsw* cred,
+                       const char* daa_cred_file,
+                       xtt_daa_priv_key_lrsw* daa_priv_key,
+                       const char* daa_secretkey_file,
+                       xtt_root_certificate* root_certificate,
+                       const char* root_cert_file);
 
 static int do_handshake_client(int socket,
                  xtt_identity_type *requested_client_id,
@@ -111,7 +125,6 @@ int run_client(struct cli_params* params)
     int use_tpm = params->usetpm;
     const char *tcti_dev_file = params->devfile;
 
-    // 0) Read in data from files
     int init_daa_ret = -1;
     int socket = -1;
 
@@ -125,7 +138,7 @@ int run_client(struct cli_params* params)
     }
     setbuf(stdout, NULL);
 
-    //Read in requested client id, setting it to xtt_null_identity is not provided
+    //Read in requested client id, setting it to xtt_null_identity if no client ID is provided
     xtt_identity_type requested_client_id = {.data = {0}};
     if(NULL == params->requestid){
         requested_client_id = xtt_null_identity;
@@ -174,7 +187,7 @@ int run_client(struct cli_params* params)
         }
     }
 
-    // 1) Setup the needed XTT contexts (from files).
+    // 1) Setup the needed XTT contexts (from files/TPM).
     // 1i) Setup TPM TCTI, if using TPM
     TSS2_TCTI_CONTEXT *tcti_context = NULL;
 #ifdef USE_TPM
@@ -188,17 +201,38 @@ int run_client(struct cli_params* params)
     }
 #endif
 
+    xtt_daa_group_pub_key_lrsw gpk = {.data = {0}};
+    xtt_daa_credential_lrsw cred = {.data = {0}};
+    xtt_daa_priv_key_lrsw daa_priv_key = {.data = {0}};
+    xtt_root_certificate root_certificate = {.data = {0}};
+    unsigned char basename[1024] = {0};
+    uint16_t basename_len = sizeof(basename);
+
+    //Read in DAA data from the TPM or from files
+    if (use_tpm) {
+        read_ret = read_in_from_TPM(tcti_context, basename, &basename_len, &gpk, &cred, &root_certificate);
+    } else {
+        read_ret = read_in_from_files(basename, &basename_len, basename_file,
+                                      &gpk, daa_gpk_file,
+                                      &cred, daa_cred_file,
+                                      &daa_priv_key, daa_secretkey_file,
+                                      &root_certificate, root_cert_file);
+    }
+    if (read_ret != 0) {
+        return READ_FROM_FILE_ERROR;
+    }
+
+
     // 1ii) Initialize DAA
     struct xtt_client_group_context group_ctx;
-    init_daa_ret = initialize_daa(&group_ctx, use_tpm, tcti_context, basename_file, daa_gpk_file, daa_cred_file, daa_secretkey_file);
+    init_daa_ret = initialize_daa(&group_ctx, basename, basename_len, &gpk, &cred, &daa_priv_key, use_tpm, tcti_context);
     ret = init_daa_ret;
     if (0 != init_daa_ret) {
         fprintf(stderr, "Error initializing DAA context\n");
         goto finish;
     }
     // 1iii) Initialize Certificates
-    xtt_root_certificate root_certificate;
-    ret = initialize_certs(use_tpm, tcti_context, &root_certificate, root_cert_file);
+    ret = initialize_certs(&root_certificate);
     if (0 != ret) {
         fprintf(stderr, "Error initializing server/root certificate contexts\n");
         goto finish;
@@ -297,6 +331,124 @@ int connect_to_server(const char *server_host, char *port)
     return sock_ret;
 }
 
+static
+int read_in_from_TPM(TSS2_TCTI_CONTEXT* tcti_context,
+                  unsigned char* basename,
+                  uint16_t* basename_len,
+                  xtt_daa_group_pub_key_lrsw* gpk,
+                  xtt_daa_credential_lrsw* cred,
+                  xtt_root_certificate* root_certificate
+                  )
+{
+#ifdef USE_TPM
+    size_t sapi_ctx_size = Tss2_Sys_GetContextSize(0);
+    TSS2_SYS_CONTEXT *sapi_context = malloc(sapi_ctx_size);
+    uint16_t length_read = 0;
+    int nvram_ret = 0;
+    nvram_ret = initialize_sapi(sapi_context, sapi_ctx_size, tcti_context);
+    if (0 != nvram_ret) {
+        fprintf(stderr, "Error creating SAPI context\n");
+        goto finish;
+    }
+
+    nvram_ret = xtt_read_object(basename,
+                               *basename_len,
+                               &length_read,
+                               XTT_BASENAME,
+                               sapi_context);
+    if (0 != nvram_ret) {
+        fprintf(stderr, "Error reading basename from TPM NVRAM\n");
+        goto finish;
+    }
+    *basename_len = length_read;
+
+    length_read = 0;
+    nvram_ret = xtt_read_object(gpk->data,
+                                sizeof(xtt_daa_group_pub_key_lrsw),
+                                &length_read,
+                                XTT_GROUP_PUBLIC_KEY,
+                                sapi_context);
+    if (0 != nvram_ret) {
+        fprintf(stderr, "Error reading GPK from TPM NVRAM");
+        nvram_ret = TPM_ERROR;
+        goto finish;
+    }
+
+    length_read = 0;
+    nvram_ret = xtt_read_object(cred->data,
+                                sizeof(xtt_daa_credential_lrsw),
+                                &length_read,
+                                XTT_CREDENTIAL,
+                                sapi_context);
+    if (0 != nvram_ret) {
+        fprintf(stderr, "Error reading credential from TPM NVRAM");
+        nvram_ret = TPM_ERROR;
+        goto finish;
+    }
+
+    length_read = 0;
+    nvram_ret = xtt_read_object(root_certificate->data,
+                                sizeof(xtt_root_certificate),
+                                &length_read,
+                                XTT_ROOT_XTT_CERTIFICATE,
+                                sapi_context);
+    if (0 != nvram_ret) {
+        fprintf(stderr, "Error reading root's certificate from TPM NVRAM");
+        nvram_ret = TPM_ERROR;
+        goto finish;
+    }
+
+finish:
+    free(sapi_context);
+    return nvram_ret;
+#else
+    fprintf(stderr, "Attempted to use a TPM, but not built with TPM enabled!\n");
+    return TPM_ERROR;
+#endif
+}
+
+static
+int read_in_from_files(unsigned char* basename,
+                       uint16_t* basename_len,
+                       const char* basename_file,
+                       xtt_daa_group_pub_key_lrsw* gpk,
+                       const char* daa_gpk_file,
+                       xtt_daa_credential_lrsw* cred,
+                       const char* daa_cred_file,
+                       xtt_daa_priv_key_lrsw* daa_priv_key,
+                       const char* daa_secretkey_file,
+                       xtt_root_certificate* root_certificate,
+                       const char* root_cert_file)
+{
+    int read_ret = xtt_read_from_file(basename_file, basename, sizeof(basename));
+    if (read_ret < 0) {
+        return READ_FROM_FILE_ERROR;
+    }
+    *basename_len = (uint16_t)read_ret;
+
+    read_ret = xtt_read_from_file(daa_gpk_file, gpk->data, sizeof(xtt_daa_group_pub_key_lrsw));
+    if (read_ret < 0) {
+        return READ_FROM_FILE_ERROR;
+    }
+
+    read_ret = xtt_read_from_file(daa_cred_file, cred->data, sizeof(xtt_daa_credential_lrsw));
+    if (read_ret < 0) {
+        return READ_FROM_FILE_ERROR;
+    }
+
+    read_ret = xtt_read_from_file(daa_secretkey_file, daa_priv_key->data, sizeof(xtt_daa_priv_key_lrsw));
+    if (read_ret < 0) {
+        return READ_FROM_FILE_ERROR;
+    }
+
+    read_ret = xtt_read_from_file(root_cert_file, root_certificate->data, sizeof(xtt_root_certificate));
+    if (read_ret < 0) {
+        return READ_FROM_FILE_ERROR;
+    }
+
+    return 0;
+}
+
 #ifdef USE_TPM
 int initialize_tcti(TSS2_TCTI_CONTEXT **tcti_context, xtt_tcti_type tcti_type, const char *dev_file)
 {
@@ -321,99 +473,59 @@ int initialize_tcti(TSS2_TCTI_CONTEXT **tcti_context, xtt_tcti_type tcti_type, c
 
     return 0;
 }
+
+static int initialize_sapi(TSS2_SYS_CONTEXT *sapi_context,
+                     size_t sapi_ctx_size,
+                     TSS2_TCTI_CONTEXT *tcti_context)
+{
+    TSS2_RC ret = TSS2_RC_SUCCESS;
+
+    if (NULL == sapi_context) {
+        fprintf(stderr, "Error allocating memory for TPM SAPI context\n");
+        return TPM_ERROR;
+    }
+
+    TSS2_ABI_VERSION abi_version = TSS2_ABI_CURRENT_VERSION;
+    ret = Tss2_Sys_Initialize(sapi_context,
+                              sapi_ctx_size,
+                              tcti_context,
+                              &abi_version);
+    if (TSS2_RC_SUCCESS != ret) {
+        fprintf(stderr, "Error initializing TPM SAPI context\n");
+        goto finish;
+    }
+
+finish:
+    Tss2_Sys_Finalize(sapi_context);
+
+    if (ret == TSS2_RC_SUCCESS) {
+        return 0;
+    } else {
+        return TPM_ERROR;
+    }
+}
 #endif
 
 static
-int initialize_daa(struct xtt_client_group_context *group_ctx, int use_tpm, TSS2_TCTI_CONTEXT *tcti_context,
-                    const char* basename_file, const char* daa_gpk_file, const char* daa_cred_file, const char* daa_secretkey_file)
+int initialize_daa(struct xtt_client_group_context *group_ctx,
+                   unsigned char* basename,
+                   uint16_t basename_len,
+                   xtt_daa_group_pub_key_lrsw* gpk,
+                   xtt_daa_credential_lrsw* cred,
+                   xtt_daa_priv_key_lrsw* daa_priv_key,
+                   int use_tpm,
+                   TSS2_TCTI_CONTEXT* tcti_context)
 {
     xtt_return_code_type rc = 0;
 
-    // 1) Read DAA-related things in from file/TPM-NVRAM
-    xtt_daa_group_pub_key_lrsw gpk = {.data = {0}};
-    xtt_daa_credential_lrsw cred = {.data = {0}};
-    xtt_daa_priv_key_lrsw daa_priv_key = {.data = {0}};
-    unsigned char basename[1024] = {0};
-    uint16_t basename_len = 0;
-    if (use_tpm && tcti_context) {
-#ifdef USE_TPM
-        size_t sapi_ctx_size = Tss2_Sys_GetContextSize(0);
-        TSS2_SYS_CONTEXT *sapi_context = malloc(sapi_ctx_size);
-        uint16_t length_read = 0;
-        int nvram_ret = 0;
-        nvram_ret = init_sapi(sapi_context, sapi_ctx_size, tcti_context);
-        if (0 != nvram_ret) {
-            fprintf(stderr, "Error creating SAPI context");
-            return nvram_ret;
-        }
-        nvram_ret = xtt_read_object(basename,
-                                   sizeof(basename),
-                                   &length_read,
-                                   XTT_BASENAME,
-                                   sapi_context);
-        if (0 != nvram_ret) {
-            fprintf(stderr, "Error reading basename from TPM NVRAM\n");
-            return nvram_ret;
-        }
-        basename_len = length_read;
-
-        length_read = 0;
-        nvram_ret = xtt_read_object(gpk.data,
-                                    sizeof(xtt_daa_group_pub_key_lrsw),
-                                    &length_read,
-                                    XTT_GROUP_PUBLIC_KEY,
-                                    sapi_context);
-        if (0 != nvram_ret) {
-            fprintf(stderr, "Error reading GPK from TPM NVRAM");
-            return TPM_ERROR;
-        }
-
-        length_read = 0;
-        nvram_ret = xtt_read_object(cred.data,
-                                    sizeof(xtt_daa_credential_lrsw),
-                                    &length_read,
-                                    XTT_CREDENTIAL,
-                                    sapi_context);
-        if (0 != nvram_ret) {
-            fprintf(stderr, "Error reading credential from TPM NVRAM");
-            return TPM_ERROR;
-        }
-        free(sapi_context);
-#else
-        fprintf(stderr, "Attempted to use a TPM, but not built with TPM enabled!\n");
-        return TPM_ERROR;
-#endif
-    } else {
-        int read_ret = xtt_read_from_file(basename_file, basename, sizeof(basename));
-        if (read_ret < 0) {
-            return READ_FROM_FILE_ERROR;
-        }
-        basename_len = (uint16_t)read_ret;
-
-        read_ret = xtt_read_from_file(daa_gpk_file, gpk.data, sizeof(xtt_daa_group_pub_key_lrsw));
-        if (read_ret < 0) {
-            return READ_FROM_FILE_ERROR;
-        }
-
-        read_ret = xtt_read_from_file(daa_cred_file, cred.data, sizeof(xtt_daa_credential_lrsw));
-        if (read_ret < 0) {
-            return READ_FROM_FILE_ERROR;
-        }
-
-        read_ret = xtt_read_from_file(daa_secretkey_file, daa_priv_key.data, sizeof(xtt_daa_priv_key_lrsw));
-        if (read_ret < 0) {
-            return READ_FROM_FILE_ERROR;
-        }
-    }
-
-    // 2) Generate gid from gpk (gid = SHA-256(gpk | basename))
+    // 1) Generate gid from gpk (gid = SHA-256(gpk | basename))
     xtt_group_id gid = {.data = {0}};
 
     crypto_hash_sha256_state hash_state;
     int hash_ret = crypto_hash_sha256_init(&hash_state);
     if (0 != hash_ret)
         return CRYPTO_HASH_ERROR;
-    hash_ret = crypto_hash_sha256_update(&hash_state, gpk.data, sizeof(gpk));
+    hash_ret = crypto_hash_sha256_update(&hash_state, gpk->data, sizeof(*gpk));
     if (0 != hash_ret)
         return CRYPTO_HASH_ERROR;
     hash_ret = crypto_hash_sha256_update(&hash_state, basename, basename_len);
@@ -423,13 +535,13 @@ int initialize_daa(struct xtt_client_group_context *group_ctx, int use_tpm, TSS2
     if (0 != hash_ret)
         return CRYPTO_HASH_ERROR;
 
-    // 3) Initialize DAA context using the above information
+    // 2) Initialize DAA context using the above information
     if (use_tpm) {
 #ifdef USE_TPM
         rc = xtt_initialize_client_group_context_lrswTPM(group_ctx,
                                                          &gid,
-                                                         &cred,
-                                                         (unsigned char*)basename,
+                                                         cred,
+                                                         basename,
                                                          basename_len,
                                                          XTT_KEY_HANDLE,
                                                          tpm_password,
@@ -442,9 +554,9 @@ int initialize_daa(struct xtt_client_group_context *group_ctx, int use_tpm, TSS2
     } else {
         rc = xtt_initialize_client_group_context_lrsw(group_ctx,
                                              &gid,
-                                             &daa_priv_key,
-                                             &cred,
-                                             (unsigned char*)basename,
+                                             daa_priv_key,
+                                             cred,
+                                             basename,
                                              basename_len);
     }
 
@@ -457,60 +569,15 @@ int initialize_daa(struct xtt_client_group_context *group_ctx, int use_tpm, TSS2
 }
 
 static
-int initialize_certs(int use_tpm,
-                     TSS2_TCTI_CONTEXT *tcti_context,
-                     xtt_root_certificate* root_certificate,
-                     const char* root_cert_file)
+int initialize_certs(xtt_root_certificate* root_certificate)
 {
     xtt_return_code_type rc = 0;
-    // 1) Read root id ang pubkey in from buffer
     xtt_certificate_root_id root_id = {.data = {0}};
     xtt_ecdsap256_pub_key root_public_key = {.data = {0}};
 
-    if (use_tpm && tcti_context) {
-#ifdef USE_TPM
-        size_t sapi_ctx_size = Tss2_Sys_GetContextSize(0);
-        TSS2_SYS_CONTEXT *sapi_context = malloc(sapi_ctx_size);
-        uint16_t length_read = 0;
-        int nvram_ret = 0;
-        nvram_ret = init_sapi(sapi_context, sapi_ctx_size, tcti_context);
-        if (0 != nvram_ret) {
-            fprintf(stderr, "Error creating SAPI context");
-            return nvram_ret;
-        }
-        nvram_ret = xtt_read_object(root_certificate->data,
-                                    sizeof(xtt_root_certificate),
-                                    &length_read,
-                                    XTT_ROOT_XTT_CERTIFICATE,
-                                    sapi_context);
-        free(sapi_context);
-        if (0 != nvram_ret) {
-            fprintf(stderr, "Error reading root's certificate from TPM NVRAM");
-            return TPM_ERROR;
-        }
-#else
-        fprintf(stderr, "Attempted to use a TPM, but not built with TPM enabled!\n");
-        return TPM_ERROR;
-#endif
-    } else {
-        int read_ret = xtt_read_from_file(root_cert_file, root_certificate->data, sizeof(xtt_root_certificate));
-        if (read_ret < 0) {
-            return READ_FROM_FILE_ERROR;
-        }
-    }
-
-    for (size_t i=0; i < sizeof(xtt_root_certificate); ++i) {
-        printf("%#02X", root_certificate->data[i]);
-        if (i < (sizeof(xtt_root_certificate)-1)) {
-            printf(", ");
-        } else {
-            printf("}\n");
-        }
-    }
-
     xtt_deserialize_root_certificate(&root_public_key, &root_id, root_certificate);
 
-    // 2) Initialize stored data
+    // Initialize stored data
     memcpy(stored_root_id, root_id.data, sizeof(xtt_certificate_root_id));
 
     rc = xtt_initialize_server_root_certificate_context_ecdsap256(&stored_cert,
@@ -771,37 +838,3 @@ int report_results_client(xtt_identity_type *requested_client_id,
 
     return 0;
 }
-
-#ifdef USE_TPM
-static int
-init_sapi(TSS2_SYS_CONTEXT *sapi_context,
-          size_t sapi_ctx_size,
-          TSS2_TCTI_CONTEXT *tcti_context)
-{
-    TSS2_RC ret = TSS2_RC_SUCCESS;
-
-    if (NULL == sapi_context) {
-        fprintf(stderr, "Error allocating memory for TPM SAPI context\n");
-        return TPM_ERROR;
-    }
-
-    TSS2_ABI_VERSION abi_version = TSS2_ABI_CURRENT_VERSION;
-    ret = Tss2_Sys_Initialize(sapi_context,
-                              sapi_ctx_size,
-                              tcti_context,
-                              &abi_version);
-    if (TSS2_RC_SUCCESS != ret) {
-        fprintf(stderr, "Error initializing TPM SAPI context\n");
-        goto finish;
-    }
-
-finish:
-    Tss2_Sys_Finalize(sapi_context);
-
-    if (ret == TSS2_RC_SUCCESS) {
-        return 0;
-    } else {
-        return TPM_ERROR;
-    }
-}
-#endif

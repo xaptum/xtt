@@ -24,7 +24,7 @@ env:
     - LIBSODIUM_DIR=${TRAVIS_BUILD_DIR}/libsodium
     - AMCL_TAG=4.7.0
     - AMCL_DIR=${TRAVIS_BUILD_DIR}/milagro-crypto-c/install
-    - XAPTUM_TPM_TAG=v0.5.6
+    - XAPTUM_TPM_TAG=v0.5.7
     - XAPTUM_TPM_DIR=${TRAVIS_BUILD_DIR}/xaptum-tpm/
     - AMCL_CURVES=FP256BN,NIST256
     - ECDAA_TAG=v0.10.0
