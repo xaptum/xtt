@@ -24,6 +24,10 @@ SET(TOOL_SRCS
         server.c
         client.c)
 
+if(USE_TPM)
+    list(APPEND TOOL_SRCS read_nvram.c)
+endif()
+
 add_executable(xtt-tool ${TOOL_SRCS})
 set_target_properties(xtt-tool PROPERTIES OUTPUT_NAME xtt)
 

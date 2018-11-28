@@ -485,6 +485,100 @@ void parse_runclient_cli(int argc, char** argv, struct cli_params *params){
     }
 }
 
+static
+void parse_nvram_cli(int argc, char** argv, struct cli_params *params)
+{
+    params->tcti = "device";
+    params->devfile = "/dev/tpm0";
+    params->tpmhostname = "localhost";
+    params->tpmport = "2321";
+    params->outfile = NULL;
+    const char *usage_str = "Dump to file an NVRAM object provisioned on a Xaptum TPM.\n\n"
+        "Usage: %s [-h] [-t device|socket] [-d <path>] [-a <ip>] [-p <port>] [-o <file>] <object-name>\n"
+        "\tOptions:\n"
+        "\t\t-h --help              Display this message.\n"
+        "\t\t-t --tcti              TPM TCTI type (device|socket) [default = device].\n"
+        "\t\t-d --tpm-device-file   TCTI device file, if tcti==device [default = '/dev/tpm0'].\n"
+        "\t\t-a --tpm-ip-address    IP hostname of TPM TCP server, if tcti==socket [default = 'localhost'].\n"
+        "\t\t-p --tpm-port          TCP port of TPM TCP server, if tcti==socket [default = 2321].\n"
+        "\t\t-o --output-file       Output file. [default: '<object-name>.bin' or 'root.cert.asn1.bin']\n"
+        "\tArguments:\n"
+        "\t\tobject-name\tOne of gpk, cred, cred_sig, root_asn1_cert, root_xtt_cert, basename, or server_id\n"
+        ;
+
+    static struct option cli_options[] =
+    {
+        {"tcti", required_argument, NULL, 't'},
+        {"tpm-device-file", required_argument, NULL, 'd'},
+        {"tpm-ip-address", required_argument, NULL, 'a'},
+        {"tpm-port", required_argument, NULL, 'p'},
+        {"output-file", required_argument, NULL, 'o'},
+        {"help", no_argument, NULL, 'h'},
+        {NULL, 0, NULL, 0}
+    };
+
+    int c;
+    while ((c = getopt_long(argc, argv, "t:d:a:p:o:h", cli_options, NULL)) != -1) {
+        switch (c) {
+            case 't':
+                params->tcti = optarg;
+                break;
+            case 'd':
+                params->devfile = optarg;
+                break;
+            case 'a':
+                params->tpmhostname = optarg;
+                break;
+            case 'p':
+                params->tpmport = optarg;
+                break;
+            case 'o':
+                params->outfile = optarg;
+                break;
+            case 'h':
+                fprintf(stderr, usage_str, argv[0]);
+                exit(1);
+        }
+    }
+    if (argv[optind] != NULL) {
+        if (0 == strcmp(argv[optind], "gpk")) {
+            params->obj_name = XTT_GROUP_PUBLIC_KEY;
+            if (params->outfile == NULL)
+                params->outfile = "daa_gpk.bin";
+        } else if (0 == strcmp(argv[optind], "cred")) {
+            params->obj_name = XTT_CREDENTIAL;
+            if (params->outfile == NULL)
+                params->outfile = "daa_cred.bin";
+        } else if (0 == strcmp(argv[optind], "cred_sig")) {
+            params->obj_name = XTT_CREDENTIAL_SIGNATURE;
+            if (params->outfile == NULL)
+                params->outfile = "cred_sig.bin";
+        } else if (0 == strcmp(argv[optind], "root_asn1_cert")) {
+            params->obj_name = XTT_ROOT_ASN1_CERTIFICATE;
+            if (params->outfile == NULL)
+                params->outfile = "root.cert.asn1.pem";
+        } else if (0 == strcmp(argv[optind], "root_xtt_cert")) {
+            params->obj_name = XTT_ROOT_XTT_CERTIFICATE;
+            if (params->outfile == NULL)
+                params->outfile = "root_xtt_cert.bin";
+        } else if (0 == strcmp(argv[optind], "basename")) {
+            params->obj_name = XTT_BASENAME;
+            if (params->outfile == NULL)
+                params->outfile = "basename.bin";
+        } else if (0 == strcmp(argv[optind], "server_id")) {
+            params->obj_name = XTT_SERVER_ID;
+            if (params->outfile == NULL)
+                params->outfile = "server_id.bin";
+        } else {
+            fprintf(stderr, "Unrecognized object name '%s'\n", argv[optind]);
+            exit(1);
+        }
+    } else {
+        fprintf(stderr, "Must specify object name\n");
+        exit(1);
+    }
+}
+
 void parse_cli(int argc, char** argv, struct cli_params *params)
 {
     const char *usage_str =
@@ -498,6 +592,7 @@ void parse_cli(int argc, char** argv, struct cli_params *params)
         "\trunserver                Run a XTT server.\n"
         "\trunclient                Run a XTT client.\n"
         "\tinfocert                 Get information about a certificate.\n"
+        "\treadnvram                Read info from the TPM's NVRAM.\n"
         ;
 
     if(argc <=1 || strcmp(argv[1], "-h")==0 || strcmp(argv[1], "--help")==0) {
@@ -537,6 +632,10 @@ void parse_cli(int argc, char** argv, struct cli_params *params)
     {
         params->command=action_infocert;
         parse_infocert_cli(argc, argv, params);
+    } else if (strcmp(argv[1], "readnvram")==0)
+    {
+        params->command=action_readnvram;
+        parse_nvram_cli(argc-1, &argv[1], params);
     } else
     {
         fprintf(stderr, "'%s' is not an option for the XTT tool.\n", argv[1]);

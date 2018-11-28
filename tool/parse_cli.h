@@ -25,6 +25,7 @@ extern "C" {
 #endif
 
 #include <stdbool.h>
+#include <xtt/tpm/nvram.h>
 
 typedef enum {
     action_genkey,
@@ -35,6 +36,7 @@ typedef enum {
     action_runserver,
     action_runclient,
     action_infocert,
+    action_readnvram,
     action_help
 } action;
 
@@ -66,6 +68,10 @@ struct cli_params {
     const char* longtermcert;
     const char* longtermpriv;
     const char* assignedid;
+    const char* tpmhostname;
+    const char* tpmport;
+    const char* outfile;
+    enum xtt_object_name obj_name;
 
 };
 
