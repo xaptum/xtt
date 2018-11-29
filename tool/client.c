@@ -18,11 +18,11 @@
 
 #define _POSIX_C_SOURCE 200112L
 #include "client.h"
+
 #include <sodium.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <assert.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netdb.h>
@@ -37,6 +37,7 @@
 #include <xtt/util/file_io.h>
 #include <xtt/util/asn1.h>
 #include <xtt/util/root.h>
+#include <xtt/util/tpm_context.h>
 #include <xtt/tpm/handles.h>
 #include <xtt/tpm/nvram.h>
 
@@ -46,8 +47,6 @@
 #include <tss2/tss2_tcti_device.h>
 #endif
 
-const char *tpm_hostname_g = "localhost";
-const char *tpm_port_g = "2321";
 const size_t tpm_devfile_length_g = 9;
 const char *tpm_password = NULL;
 uint16_t tpm_password_len = 0;
@@ -56,12 +55,6 @@ xtt_version version_g_client = XTT_VERSION_ONE;
 
 char* stored_root_id[sizeof(xtt_certificate_root_id)];
 struct xtt_server_root_certificate_context stored_cert;
-
-#ifdef USE_TPM
-static int initialize_tcti(TSS2_TCTI_CONTEXT **tcti_context, xtt_tcti_type tcti_type, const char *dev_file);
-
-static int initialize_sapi(TSS2_SYS_CONTEXT *sapi_context, size_t sapi_ctx_size, TSS2_TCTI_CONTEXT *tcti_context);
-#endif
 
 static int connect_to_server(const char *ip, char *port);
 
@@ -448,63 +441,6 @@ int read_in_from_files(unsigned char* basename,
 
     return 0;
 }
-
-#ifdef USE_TPM
-int initialize_tcti(TSS2_TCTI_CONTEXT **tcti_context, xtt_tcti_type tcti_type, const char *dev_file)
-{
-    static unsigned char tcti_context_buffer_s[256];
-    *tcti_context = (TSS2_TCTI_CONTEXT*)tcti_context_buffer_s;
-    switch (tcti_type) {
-        case XTT_TCTI_SOCKET:
-            assert(tss2_tcti_getsize_socket() < sizeof(tcti_context_buffer_s));
-            if (TSS2_RC_SUCCESS != tss2_tcti_init_socket(tpm_hostname_g, tpm_port_g, *tcti_context)) {
-                fprintf(stderr, "Error: Unable to initialize socket TCTI context\n");
-                return TPM_ERROR;
-            }
-            break;
-        case XTT_TCTI_DEVICE:
-            assert(tss2_tcti_getsize_device() < sizeof(tcti_context_buffer_s));
-            if (TSS2_RC_SUCCESS != tss2_tcti_init_device(dev_file, strlen(dev_file), *tcti_context)) {
-                fprintf(stderr, "Error: Unable to initialize device TCTI context\n");
-                return TPM_ERROR;
-            }
-            break;
-    }
-
-    return 0;
-}
-
-static int initialize_sapi(TSS2_SYS_CONTEXT *sapi_context,
-                     size_t sapi_ctx_size,
-                     TSS2_TCTI_CONTEXT *tcti_context)
-{
-    TSS2_RC ret = TSS2_RC_SUCCESS;
-
-    if (NULL == sapi_context) {
-        fprintf(stderr, "Error allocating memory for TPM SAPI context\n");
-        return TPM_ERROR;
-    }
-
-    TSS2_ABI_VERSION abi_version = TSS2_ABI_CURRENT_VERSION;
-    ret = Tss2_Sys_Initialize(sapi_context,
-                              sapi_ctx_size,
-                              tcti_context,
-                              &abi_version);
-    if (TSS2_RC_SUCCESS != ret) {
-        fprintf(stderr, "Error initializing TPM SAPI context\n");
-        goto finish;
-    }
-
-finish:
-    Tss2_Sys_Finalize(sapi_context);
-
-    if (ret == TSS2_RC_SUCCESS) {
-        return 0;
-    } else {
-        return TPM_ERROR;
-    }
-}
-#endif
 
 static
 int initialize_daa(struct xtt_client_group_context *group_ctx,

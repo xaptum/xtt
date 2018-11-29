@@ -16,42 +16,27 @@
  *
  *****************************************************************************/
 
-#ifndef XTT_TPM_NVRAM_H
-#define XTT_TPM_NVRAM_H
+#ifndef XTT_UTIL_TPM_CONTEXT_H
+#define XTT_UTIL_TPM_CONTEXT_H
 #pragma once
-
-#include <tss2/tss2_sys.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-enum xtt_object_name {
-    XTT_GROUP_PUBLIC_KEY,
-    XTT_CREDENTIAL,
-    XTT_CREDENTIAL_SIGNATURE,
-    XTT_ROOT_ASN1_CERTIFICATE,
-    XTT_BASENAME,
-    XTT_ROOT_XTT_CERTIFICATE,
-};
+#include <tss2/tss2_sys.h>
+#include <tss2/tss2_tcti_socket.h>
+#include <tss2/tss2_tcti_device.h>
 
-TSS2_RC
-xtt_read_object(unsigned char* out_buffer,
-                 uint16_t out_buffer_size,
-                 uint16_t *out_length,
-                 enum xtt_object_name object_name,
-                 TSS2_SYS_CONTEXT *sapi_context);
+typedef enum {
+    XTT_TCTI_SOCKET,
+    XTT_TCTI_DEVICE,
+} xtt_tcti_type;
 
-TSS2_RC
-xtt_read_nvram(unsigned char *out,
-                uint16_t size,
-                TPM_HANDLE index,
-                TSS2_SYS_CONTEXT *sapi_context);
+int initialize_tcti(TSS2_TCTI_CONTEXT **tcti_context, xtt_tcti_type tcti_type, const char *dev_file);
 
-TSS2_RC
-xtt_get_nvram_size(uint16_t *size_out,
-                    TPM_HANDLE index,
-                    TSS2_SYS_CONTEXT *sapi_context);
+int initialize_sapi(TSS2_SYS_CONTEXT *sapi_context, size_t sapi_ctx_size, TSS2_TCTI_CONTEXT *tcti_context);
+
 
 #ifdef __cplusplus
 }

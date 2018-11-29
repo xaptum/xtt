@@ -501,9 +501,9 @@ void parse_nvram_cli(int argc, char** argv, struct cli_params *params)
         "\t\t-d --tpm-device-file   TCTI device file, if tcti==device [default = '/dev/tpm0'].\n"
         "\t\t-a --tpm-ip-address    IP hostname of TPM TCP server, if tcti==socket [default = 'localhost'].\n"
         "\t\t-p --tpm-port          TCP port of TPM TCP server, if tcti==socket [default = 2321].\n"
-        "\t\t-o --output-file       Output file. [default: '<object-name>.bin' or 'root.cert.asn1.bin']\n"
+        "\t\t-o --output-file       Output file. [default: '<object-name>.[bin,pem]']\n"
         "\tArguments:\n"
-        "\t\tobject-name\tOne of gpk, cred, cred_sig, root_asn1_cert, root_xtt_cert, basename, or server_id\n"
+        "\t\tobject-name\tOne of daa_gpk, daa_cred, daa_cred_sig, root_asn1_cert, root_xtt_cert, or basename\n"
         ;
 
     static struct option cli_options[] =
@@ -541,22 +541,22 @@ void parse_nvram_cli(int argc, char** argv, struct cli_params *params)
         }
     }
     if (argv[optind] != NULL) {
-        if (0 == strcmp(argv[optind], "gpk")) {
+        if (0 == strcmp(argv[optind], "daa_gpk")) {
             params->obj_name = XTT_GROUP_PUBLIC_KEY;
             if (params->outfile == NULL)
                 params->outfile = "daa_gpk.bin";
-        } else if (0 == strcmp(argv[optind], "cred")) {
+        } else if (0 == strcmp(argv[optind], "daa_cred")) {
             params->obj_name = XTT_CREDENTIAL;
             if (params->outfile == NULL)
                 params->outfile = "daa_cred.bin";
-        } else if (0 == strcmp(argv[optind], "cred_sig")) {
+        } else if (0 == strcmp(argv[optind], "daa_cred_sig")) {
             params->obj_name = XTT_CREDENTIAL_SIGNATURE;
             if (params->outfile == NULL)
-                params->outfile = "cred_sig.bin";
+                params->outfile = "daa_cred_sig.bin";
         } else if (0 == strcmp(argv[optind], "root_asn1_cert")) {
             params->obj_name = XTT_ROOT_ASN1_CERTIFICATE;
             if (params->outfile == NULL)
-                params->outfile = "root.cert.asn1.pem";
+                params->outfile = "root_asn1_cert.pem";
         } else if (0 == strcmp(argv[optind], "root_xtt_cert")) {
             params->obj_name = XTT_ROOT_XTT_CERTIFICATE;
             if (params->outfile == NULL)
@@ -565,10 +565,6 @@ void parse_nvram_cli(int argc, char** argv, struct cli_params *params)
             params->obj_name = XTT_BASENAME;
             if (params->outfile == NULL)
                 params->outfile = "basename.bin";
-        } else if (0 == strcmp(argv[optind], "server_id")) {
-            params->obj_name = XTT_SERVER_ID;
-            if (params->outfile == NULL)
-                params->outfile = "server_id.bin";
         } else {
             fprintf(stderr, "Unrecognized object name '%s'\n", argv[optind]);
             exit(1);

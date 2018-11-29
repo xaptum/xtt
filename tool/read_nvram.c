@@ -20,6 +20,8 @@
 #include <tss2/tss2_tcti_socket.h>
 #include <xtt/tpm/nvram.h>
 #include <xtt/util/util_errors.h>
+#include <xtt/util/file_io.h>
+#include <xtt/util/tpm_context.h>
 
 #include <getopt.h>
 
@@ -30,11 +32,6 @@
 #include "read_nvram.h"
 
 #define MAX_NVRAM_SIZE 768
-
-typedef enum {
-    XTT_TCTI_SOCKET,
-    XTT_TCTI_DEVICE,
-} xtt_tcti_type;
 
 struct nvram_context {
     xtt_tcti_type tcti;
@@ -56,16 +53,6 @@ init_device_tcti(struct nvram_context *ctx);
 static
 void
 init_socket_tcti(struct nvram_context *ctx);
-
-static
-void
-init_sapi(struct nvram_context *ctx);
-
-static
-void
-dump_binary_to_file(const char *output_file,
-                    unsigned char *binary,
-                    size_t size);
 
 int read_nvram(const char* tcti_str, const char* devfile, const char* tpmhostname,
                const char* tpmport, const char* outfile, enum xtt_object_name obj_name)
@@ -95,8 +82,10 @@ int read_nvram(const char* tcti_str, const char* devfile, const char* tpmhostnam
             init_socket_tcti(&ctx);
     }
 
-    init_sapi(&ctx);
+    size_t sapi_ctx_size = Tss2_Sys_GetContextSize(0);
+    ctx.sapi_context = malloc(sapi_ctx_size);
 
+    initialize_sapi(ctx.sapi_context, sapi_ctx_size, ctx.tcti_context);
     unsigned char output_data[MAX_NVRAM_SIZE];
     uint16_t output_length;
     printf("Reading object from NVRAM...");
@@ -105,8 +94,9 @@ int read_nvram(const char* tcti_str, const char* devfile, const char* tpmhostnam
         fprintf(stderr, "Bad read_ret: %#X\n", read_ret);
         return TPM_ERROR;
     }
+    free(ctx.sapi_context);
 
-    dump_binary_to_file(ctx.out_filename, output_data, output_length);
+    xtt_save_to_file(output_data, (size_t)output_length, ctx.out_filename);
 
     Tss2_Sys_Finalize(ctx.sapi_context);
     tss2_tcti_finalize(ctx.tcti_context);
@@ -149,46 +139,4 @@ init_socket_tcti(struct nvram_context *ctx)
         fprintf(stderr, "Error initializing TCTI socket\n");
         exit(1);
     }
-}
-
-void
-init_sapi(struct nvram_context *ctx)
-{
-    TSS2_RC ret = TSS2_RC_SUCCESS;
-
-    if (Tss2_Sys_GetContextSize(0) > sizeof(ctx->sapi_context_buffer)) {
-        fprintf(stderr, "SAPI context larger than allocated buffer\n");
-        exit(1);
-    }
-    ctx->sapi_context = (TSS2_SYS_CONTEXT*)ctx->sapi_context_buffer;
-
-    TSS2_ABI_VERSION abi_version = TSS2_ABI_CURRENT_VERSION;
-    ret = Tss2_Sys_Initialize(ctx->sapi_context,
-                              Tss2_Sys_GetContextSize(0),
-                              ctx->tcti_context,
-                              &abi_version);
-    if (TSS2_RC_SUCCESS != ret) {
-        fprintf(stderr, "Error initializing SAPI context\n");
-        exit(1);
-    }
-}
-
-void
-dump_binary_to_file(const char *output_file,
-                    unsigned char *binary,
-                    size_t size)
-{
-    FILE *file_ptr = fopen(output_file, "wb");
-    if (NULL == file_ptr) {
-        fprintf(stderr, "Error opening output file '%s'\n", output_file);
-        exit(1);
-    }
-
-    size_t write_ret = fwrite(binary, 1, size, file_ptr);
-    if (size != write_ret) {
-        fprintf(stderr, "Error writing to file\n");
-        exit(1);
-    }
-
-    fclose(file_ptr);
 }
