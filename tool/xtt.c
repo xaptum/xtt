@@ -25,6 +25,7 @@
 #include "client.h"
 #include "parse_cli.h"
 #include "infocert.h"
+#include "read_nvram.h"
 #include <getopt.h>
 #include <stdio.h>
 #include <string.h>
@@ -75,6 +76,9 @@ int main(int argc, char **argv)
             }
             break;
         }
+        case action_readnvram:
+            out = read_nvram(params.tcti, params.devfile, params.tpmhostname, params.tpmport, params.outfile, params.obj_name);
+            break;
         case action_help:
             break;
     }

@@ -16,27 +16,30 @@
  *
  *****************************************************************************/
 
-#ifndef XTT_H
-#define XTT_H
+#ifndef XTT_UTIL_TPM_CONTEXT_H
+#define XTT_UTIL_TPM_CONTEXT_H
 #pragma once
 
-#include <xtt/certificates.h>
-#include <xtt/context.h>
-#include <xtt/crypto.h>
-#include <xtt/crypto_wrapper.h>
-#include <xtt/crypto_types.h>
-#include <xtt/daa_wrapper.h>
-#include <xtt/return_codes.h>
-#include <xtt/messages.h>
-#include <xtt/util/asn1.h>
-#include <xtt/util/generate_ecdsap256_keys.h>
-#include <xtt/util/generate_x509_certificate.h>
-#include <xtt/util/wrap_keys_asn1.h>
-#include <xtt/util/root.h>
-#include <xtt/util/generate_server_certificate.h>
-#include <xtt/util/file_io.h>
-#include <xtt/util/util_errors.h>
-#include <xtt/tpm/handles.h>
-#include <xtt/tpm/nvram.h>
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#include <tss2/tss2_sys.h>
+#include <tss2/tss2_tcti_socket.h>
+#include <tss2/tss2_tcti_device.h>
+
+typedef enum {
+    XTT_TCTI_SOCKET,
+    XTT_TCTI_DEVICE,
+} xtt_tcti_type;
+
+int initialize_tcti(TSS2_TCTI_CONTEXT **tcti_context, xtt_tcti_type tcti_type, const char *dev_file);
+
+int initialize_sapi(TSS2_SYS_CONTEXT *sapi_context, size_t sapi_ctx_size, TSS2_TCTI_CONTEXT *tcti_context);
+
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

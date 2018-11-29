@@ -31,14 +31,16 @@ uint32_t xtt_gpk_handle(void);
 #define XTT_CRED_HANDLE 0x1410001
 uint32_t xtt_cred_handle(void);
 
-#define XTT_BASENAME_SIZE_HANDLE 0x1410006
-uint32_t xtt_basename_size_handle(void);
+#define XTT_CRED_SIG_HANDLE 0x1410002
+uint32_t xtt_cred_sig_handle(void);
+
+#define XTT_ROOT_ASN1CERT_HANDLE 0x1410005
+uint32_t xtt_root_asn1cert_handle(void);
 
 #define XTT_BASENAME_HANDLE 0x1410007
 uint32_t xtt_basename_handle(void);
 
-#define XTT_ROOT_CERT_HANDLE 0x1410009
-uint32_t xtt_root_cert_handle(void);
-
+#define XTT_ROOT_XTTCERT_HANDLE 0x1410009
+uint32_t xtt_root_xttcert_handle(void);
 
 #endif

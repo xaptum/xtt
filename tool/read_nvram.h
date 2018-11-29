@@ -16,27 +16,24 @@
  *
  *****************************************************************************/
 
-#ifndef XTT_H
-#define XTT_H
+#ifndef XTT_TOOL_READ_NVRAM_H
+#define XTT_TOOL_READ_NVRAM_H
 #pragma once
 
-#include <xtt/certificates.h>
-#include <xtt/context.h>
-#include <xtt/crypto.h>
-#include <xtt/crypto_wrapper.h>
-#include <xtt/crypto_types.h>
-#include <xtt/daa_wrapper.h>
-#include <xtt/return_codes.h>
-#include <xtt/messages.h>
-#include <xtt/util/asn1.h>
-#include <xtt/util/generate_ecdsap256_keys.h>
-#include <xtt/util/generate_x509_certificate.h>
-#include <xtt/util/wrap_keys_asn1.h>
-#include <xtt/util/root.h>
-#include <xtt/util/generate_server_certificate.h>
-#include <xtt/util/file_io.h>
-#include <xtt/util/util_errors.h>
-#include <xtt/tpm/handles.h>
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <xtt/tpm/nvram.h>
+
+
+int read_nvram(const char* tcti_str, const char* devfile, const char* tpmhostname,
+               const char* tpmport, const char* outfile, enum xtt_object_name obj_name);
+
+
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
