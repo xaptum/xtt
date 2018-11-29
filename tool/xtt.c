@@ -34,7 +34,7 @@
 
 int main(int argc, char **argv)
 {
-    struct cli_params params = {.privkey = NULL, .pubkey = NULL, .id = NULL, .cert = NULL, .asn1 = NULL, .server_id = NULL, .time=NULL,
+    struct cli_params params = {.privkey = NULL, .pubkey = NULL, .id = NULL, .cert = NULL, .asn1 = NULL,
                                 .rootcert = NULL, .servercert = NULL, .basename = NULL, .daagpk = NULL, .port = 0, .usetpm = 0, .tcti = NULL,
                                 .suitespec = NULL, .serverhost = NULL, .devfile = NULL, .daacred = NULL, .daasecretkey = NULL, .requestid = NULL,
                                 .longtermcert = NULL, .longtermpriv = NULL, .serverpriv = NULL, .serverpub = NULL};
@@ -54,7 +54,7 @@ int main(int argc, char **argv)
             out = xtt_generate_root(params.pubkey, params.id, params.rootcert);
             break;
         case action_genservercert:
-            out = xtt_generate_server_certificate(params.rootcert, params.rootpriv, params.serverpriv, params.serverpub, params.server_id, params.time, params.servercert);
+            out = xtt_generate_server_certificate(params.rootcert, params.rootpriv, params.certreserved, params.serverpriv, params.serverpub, params.servercert);
             break;
         case action_runserver:
             out = run_server(&params);
@@ -94,9 +94,6 @@ int main(int argc, char **argv)
             break;
         case ASN1_CREATION_ERROR:
             fprintf(stderr, "Error creating ASN.1 wrapped keys\n");
-            break;
-        case EXPIRY_PASSED:
-            fprintf(stderr, "Expiry has already passed\n");
             break;
         case SERVER_ERROR:
             fprintf(stderr, "Error while server is running xtt\n");

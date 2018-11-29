@@ -45,8 +45,7 @@ struct cli_params {
     const char* id;
     const char* cert;
     const char* asn1;
-    const char* server_id;
-    const char* time;
+    const char* certreserved;
     const char* rootcert;
     const char* rootpriv;
     const char* serverpriv;

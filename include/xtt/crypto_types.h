@@ -95,7 +95,7 @@ typedef struct {unsigned char data[65];} xtt_ecdsap256_pub_key;
 typedef struct {unsigned char data[32];} xtt_ecdsap256_priv_key;
 typedef struct {unsigned char data[64];} xtt_ecdsap256_signature;
 
-typedef struct {char data[8];} xtt_certificate_expiry;
+typedef struct {unsigned char data[24];} xtt_certificate_reserved;
 
 typedef struct {unsigned char data[16];} xtt_certificate_root_id;
 extern const xtt_certificate_root_id xtt_null_server_root_id;
