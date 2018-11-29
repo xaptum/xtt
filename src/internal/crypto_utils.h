@@ -21,19 +21,16 @@
 #pragma once
 
 #include <xtt/crypto_types.h>
+#include <xtt/crypto.h>
 #include <xtt/context.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-void copy_dh_pubkey_x25519(unsigned char* out,
-                           uint16_t* out_length,
-                           const struct xtt_handshake_context* self);
-
-int do_diffie_hellman_x25519(unsigned char* shared_secret,
-                             const unsigned char* other_pk,
-                             const struct xtt_handshake_context* self);
+void prepare_aead_nonce(struct xtt_crypto_aead_nonce* nonce,
+                        xtt_sequence_number* seqnum,
+                        const struct xtt_crypto_aead_nonce* iv);
 
 void copy_longterm_key_ecdsap256(unsigned char* out,
                                uint16_t* out_length,
@@ -42,54 +39,6 @@ void copy_longterm_key_ecdsap256(unsigned char* out,
 
 int compare_longterm_keys_ecdsap256(unsigned char *other_key,
                                   const struct xtt_client_handshake_context *self);
-
-int encrypt_null(unsigned char* ciphertext,
-                 uint16_t* ciphertext_len,
-                 const unsigned char* message,
-                 uint16_t msg_len,
-                 const unsigned char* addl_data,
-                 uint16_t addl_len,
-                 struct xtt_handshake_context *self);
-
-int encrypt_chacha(unsigned char* ciphertext,
-                   uint16_t* ciphertext_len,
-                   const unsigned char* message,
-                   uint16_t msg_len,
-                   const unsigned char* addl_data,
-                   uint16_t addl_len,
-                   struct xtt_handshake_context *self);
-
-int encrypt_aes256(unsigned char* ciphertext,
-                   uint16_t* ciphertext_len,
-                   const unsigned char* message,
-                   uint16_t msg_len,
-                   const unsigned char* addl_data,
-                   uint16_t addl_len,
-                   struct xtt_handshake_context *self);
-
-int decrypt_null(unsigned char* decrypted,
-                 uint16_t* decrypted_len,
-                 const unsigned char* ciphertext,
-                 uint16_t ciphertext_len,
-                 const unsigned char* addl_data,
-                 uint16_t addl_len,
-                 struct xtt_handshake_context *self);
-
-int decrypt_chacha(unsigned char* decrypted,
-                   uint16_t* decrypted_len,
-                   const unsigned char* ciphertext,
-                   uint16_t ciphertext_len,
-                   const unsigned char* addl_data,
-                   uint16_t addl_len,
-                   struct xtt_handshake_context *self);
-
-int decrypt_aes256(unsigned char* decrypted,
-                   uint16_t* decrypted_len,
-                   const unsigned char* ciphertext,
-                   uint16_t ciphertext_len,
-                   const unsigned char* addl_data,
-                   uint16_t addl_len,
-                   struct xtt_handshake_context *self);
 
 void read_longterm_key_ecdsap256(struct xtt_server_handshake_context *self,
                                uint16_t* key_length,

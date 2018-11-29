@@ -22,6 +22,7 @@
 
 #include <xtt/certificates.h>
 #include <xtt/context.h>
+#include <xtt/crypto.h>
 #include <xtt/crypto_wrapper.h>
 #include <xtt/crypto_types.h>
 #include <xtt/daa_wrapper.h>

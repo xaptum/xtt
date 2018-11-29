@@ -1,13 +1,13 @@
 /******************************************************************************
  *
  * Copyright 2018 Xaptum, Inc.
- * 
+ *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
  *    You may obtain a copy of the License at
- * 
+ *
  *        http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  *    Unless required by applicable law or agreed to in writing, software
  *    distributed under the License is distributed on an "AS IS" BASIS,
  *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -16,30 +16,48 @@
  *
  *****************************************************************************/
 
-#ifndef XTT_INTERNAL_KEY_DERIVATION_H
-#define XTT_INTERNAL_KEY_DERIVATION_H
 #pragma once
 
-#include <xtt/context.h>
-#include <xtt/crypto.h>
-#include <xtt/crypto_types.h>
-#include <xtt/return_codes.h>
+#ifndef XTT_CRYPTO_H
+#define XTT_CRYPTO_H
+
+#include "crypto_types.h"
+#include "crypto/aead.h"
+#include "crypto/hmac.h"
+#include "crypto/kx.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-xtt_return_code_type
-derive_handshake_keys(struct xtt_handshake_context *handshake_ctx,
-                      const unsigned char *client_init,
-                      const unsigned char *server_initandattest_uptocookie,
-                      const xtt_server_cookie *server_cookie,
-                      const struct xtt_crypto_kx_public* others_pubkey,
-                      int is_client);
+/**
+ * A generic interface for XTT cipher suite algorithms.
+ *
+ * A cipher suite specifies algorithms for key exchange, attestation,
+ * signing, AEAD, and HMAC.
+ *
+ * Note: Currently only the key exchange and HMAC algorithms are
+ * exposed.
+ */
+struct xtt_suite_ops {
+    struct xtt_crypto_kx_ops   *kx;
+    struct xtt_crypto_aead_ops *aead;
+    struct xtt_crypto_hmac_ops *hmac;
+};
+
+
+/**
+ * Gets the :xtt_suite_ops: for the given suite spec.
+ *
+ * @suite_spec the suite spec
+ * @returns pointer to the suite ops or :NULL: if the suite spec is
+ * not found
+ */
+const struct xtt_suite_ops*
+xtt_suite_ops_get(xtt_suite_spec suite_spec);
 
 #ifdef __cplusplus
 }
 #endif
 
 #endif
-
