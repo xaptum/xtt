@@ -29,13 +29,14 @@ env:
     - AMCL_CURVES=FP256BN,NIST256
     - ECDAA_TAG=v0.10.0
     - ECDAA_DIR=${TRAVIS_BUILD_DIR}/ecdaa
+    - SHARED_LIBS=ON
 
 before_script:
   - .travis/install-libsodium.sh ${LIBSODIUM_TAG} ${LIBSODIUM_DIR}
   - .travis/install-xaptum-tpm.sh ${XAPTUM_TPM_TAG} ${XAPTUM_TPM_DIR}
   - .travis/install-amcl.sh ${AMCL_TAG} ${AMCL_DIR} ${AMCL_CURVES}
   - .travis/install-ecdaa.sh ${ECDAA_TAG} ${ECDAA_DIR}
-  - cmake . -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DBUILD_EXAMPLES=ON
+  - cmake . -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DBUILD_EXAMPLES=ON -DBUILD_SHARED_LIBS=${SHARED_LIBS}
 
 script:
   - cmake --build . -- -j2
@@ -47,6 +48,11 @@ matrix:
       env:
         - TYPE=RELEASE
         - BUILD_TYPE=Release
+    - name: "Dev build, gcc, static library"
+      env:
+        - TYPE=DEV
+        - BUILD_TYPE=Dev
+        - SHARED_LIBS=OFF
     - name: "Debug build, gcc"
       env:
         - TYPE=DEBUG
