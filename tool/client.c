@@ -184,9 +184,11 @@ int run_client(struct cli_params* params)
     // 1i) Setup TPM TCTI, if using TPM
     TSS2_TCTI_CONTEXT *tcti_context = NULL;
 #ifdef USE_TPM
+    unsigned char tcti_context_buffer_s[256] = {0};
+    tcti_context = (TSS2_TCTI_CONTEXT*)tcti_context_buffer_s;
     int init_tcti_ret = 0;
     if (use_tpm) {
-        init_tcti_ret = initialize_tcti(&tcti_context, tcti_type, tcti_dev_file);
+        init_tcti_ret = initialize_tcti(tcti_context, tcti_type, tcti_dev_file);
         if (0 != init_tcti_ret) {
             fprintf(stderr, "Error initializing TPM TCTI context\n");
             goto finish;
@@ -335,13 +337,14 @@ int read_in_from_TPM(TSS2_TCTI_CONTEXT* tcti_context,
 {
 #ifdef USE_TPM
     size_t sapi_ctx_size = Tss2_Sys_GetContextSize(0);
-    TSS2_SYS_CONTEXT *sapi_context = malloc(sapi_ctx_size);
+    unsigned char sapi_context_buffer[sapi_ctx_size];
+    TSS2_SYS_CONTEXT *sapi_context = (TSS2_SYS_CONTEXT *)sapi_context_buffer;
     uint16_t length_read = 0;
     int nvram_ret = 0;
     nvram_ret = initialize_sapi(sapi_context, sapi_ctx_size, tcti_context);
     if (0 != nvram_ret) {
         fprintf(stderr, "Error creating SAPI context\n");
-        goto finish;
+        return nvram_ret;
     }
 
     nvram_ret = xtt_read_object(basename,
@@ -351,7 +354,7 @@ int read_in_from_TPM(TSS2_TCTI_CONTEXT* tcti_context,
                                sapi_context);
     if (0 != nvram_ret) {
         fprintf(stderr, "Error reading basename from TPM NVRAM\n");
-        goto finish;
+        return nvram_ret;
     }
     *basename_len = length_read;
 
@@ -364,7 +367,7 @@ int read_in_from_TPM(TSS2_TCTI_CONTEXT* tcti_context,
     if (0 != nvram_ret) {
         fprintf(stderr, "Error reading GPK from TPM NVRAM");
         nvram_ret = TPM_ERROR;
-        goto finish;
+        return nvram_ret;
     }
 
     length_read = 0;
@@ -376,7 +379,7 @@ int read_in_from_TPM(TSS2_TCTI_CONTEXT* tcti_context,
     if (0 != nvram_ret) {
         fprintf(stderr, "Error reading credential from TPM NVRAM");
         nvram_ret = TPM_ERROR;
-        goto finish;
+        return nvram_ret;
     }
 
     length_read = 0;
@@ -388,12 +391,11 @@ int read_in_from_TPM(TSS2_TCTI_CONTEXT* tcti_context,
     if (0 != nvram_ret) {
         fprintf(stderr, "Error reading root's certificate from TPM NVRAM");
         nvram_ret = TPM_ERROR;
-        goto finish;
+        return nvram_ret;
     }
 
-finish:
-    free(sapi_context);
-    return nvram_ret;
+    return 0;
+
 #else
     fprintf(stderr, "Attempted to use a TPM, but not built with TPM enabled!\n");
     return TPM_ERROR;

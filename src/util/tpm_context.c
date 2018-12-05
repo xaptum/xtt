@@ -26,21 +26,21 @@
  const char *tpm_hostname_g = "localhost";
  const char *tpm_port_g = "2321";
 
- int initialize_tcti(TSS2_TCTI_CONTEXT **tcti_context, xtt_tcti_type tcti_type, const char *dev_file)
+ int initialize_tcti(TSS2_TCTI_CONTEXT *tcti_context, xtt_tcti_type tcti_type, const char *dev_file)
  {
-     static unsigned char tcti_context_buffer_s[256];
-     *tcti_context = (TSS2_TCTI_CONTEXT*)tcti_context_buffer_s;
+     if (NULL == tcti_context) {
+         fprintf(stderr, "Error allocating memory for TPM TCTI context\n");
+         return TPM_ERROR;
+     }
      switch (tcti_type) {
          case XTT_TCTI_SOCKET:
-             assert(tss2_tcti_getsize_socket() < sizeof(tcti_context_buffer_s));
-             if (TSS2_RC_SUCCESS != tss2_tcti_init_socket(tpm_hostname_g, tpm_port_g, *tcti_context)) {
+             if (TSS2_RC_SUCCESS != tss2_tcti_init_socket(tpm_hostname_g, tpm_port_g, tcti_context)) {
                  fprintf(stderr, "Error: Unable to initialize socket TCTI context\n");
                  return TPM_ERROR;
              }
              break;
          case XTT_TCTI_DEVICE:
-             assert(tss2_tcti_getsize_device() < sizeof(tcti_context_buffer_s));
-             if (TSS2_RC_SUCCESS != tss2_tcti_init_device(dev_file, strlen(dev_file), *tcti_context)) {
+             if (TSS2_RC_SUCCESS != tss2_tcti_init_device(dev_file, strlen(dev_file), tcti_context)) {
                  fprintf(stderr, "Error: Unable to initialize device TCTI context\n");
                  return TPM_ERROR;
              }
