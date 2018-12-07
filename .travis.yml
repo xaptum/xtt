@@ -31,24 +31,18 @@ env:
     - ECDAA_DIR=${TRAVIS_BUILD_DIR}/ecdaa
     - SHARED_LIBS=ON
     - XTT_INSTALL_DIR=${TRAVIS_BUILD_DIR}/install
-    - XTT_BUILD_DIR=${TRAVIS_BUILD_DIR}/build
 
 before_script:
   - .travis/install-libsodium.sh ${LIBSODIUM_TAG} ${LIBSODIUM_DIR}
   - .travis/install-xaptum-tpm.sh ${XAPTUM_TPM_TAG} ${XAPTUM_TPM_DIR}
   - .travis/install-amcl.sh ${AMCL_TAG} ${AMCL_DIR} ${AMCL_CURVES}
   - .travis/install-ecdaa.sh ${ECDAA_TAG} ${ECDAA_DIR}
-  - mkdir -p ${XTT_BUILD_DIR}
   - mkdir -p ${XTT_INSTALL_DIR}
-  - pushd ${XTT_BUILD_DIR}
   - cmake . -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DCMAKE_INSTALL_PREFIX=${XTT_INSTALL_DIR} -DBUILD_SHARED_LIBS=${SHARED_LIBS}
-  - popd
 
 script:
-  - pushd ${XTT_BUILD_DIR}
   - cmake --build . --target install -- -j2
   - ctest -E tpm -VV
-  - popd
 
 matrix:
   include:
