@@ -25,10 +25,10 @@
 
 TSS2_RC
 xtt_read_object(unsigned char* out_buffer,
-                 uint16_t out_buffer_size,
-                 uint16_t *out_length,
-                 enum xtt_object_name object_name,
-                 TSS2_SYS_CONTEXT *sapi_context)
+                uint16_t out_buffer_size,
+                uint16_t *out_length,
+                enum xtt_object_name object_name,
+                struct xtt_tpm_context *tpm_ctx)
 {
     TPM_HANDLE index = 0;
 
@@ -54,7 +54,7 @@ xtt_read_object(unsigned char* out_buffer,
     }
 
     uint16_t size = 0;
-    TSS2_RC ret = xtt_get_nvram_size(&size, index, sapi_context);
+    TSS2_RC ret = xtt_get_nvram_size(&size, index, tpm_ctx);
     if (TSS2_RC_SUCCESS != ret)
         return ret;
 
@@ -63,14 +63,14 @@ xtt_read_object(unsigned char* out_buffer,
 
     *out_length = size;
 
-    return xtt_read_nvram(out_buffer, size, index, sapi_context);
+    return xtt_read_nvram(out_buffer, size, index, tpm_ctx);
 }
 
 TSS2_RC
 xtt_read_nvram(unsigned char *out,
-                uint16_t size,
-                TPM_HANDLE index,
-                TSS2_SYS_CONTEXT *sapi_context)
+               uint16_t size,
+               TPM_HANDLE index,
+               struct xtt_tpm_context *tpm_ctx)
 {
     TSS2_RC ret = TSS2_RC_SUCCESS;
 
@@ -102,7 +102,7 @@ xtt_read_nvram(unsigned char *out,
 
         TPM2B_MAX_NV_BUFFER nv_data = {.size=0};
 
-        ret = Tss2_Sys_NV_Read(sapi_context,
+        ret = Tss2_Sys_NV_Read(tpm_ctx->sapi_context,
                                index,
                                index,
                                &sessionsData,
@@ -126,8 +126,8 @@ xtt_read_nvram(unsigned char *out,
 
 TSS2_RC
 xtt_get_nvram_size(uint16_t *size_out,
-                    TPM_HANDLE index,
-                    TSS2_SYS_CONTEXT *sapi_context)
+                   TPM_HANDLE index,
+                   struct xtt_tpm_context *tpm_ctx)
 {
     TSS2_SYS_CMD_AUTHS sessionsData = {.cmdAuthsCount = 0};
     TSS2_SYS_RSP_AUTHS sessionsDataOut = {.rspAuthsCount = 0};
@@ -136,7 +136,7 @@ xtt_get_nvram_size(uint16_t *size_out,
 
     TPM2B_NAME nv_name = {0};
 
-    TSS2_RC rval = Tss2_Sys_NV_ReadPublic(sapi_context,
+    TSS2_RC rval = Tss2_Sys_NV_ReadPublic(tpm_ctx->sapi_context,
                                           index,
                                           &sessionsData,
                                           &nv_public,

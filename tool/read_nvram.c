@@ -40,7 +40,7 @@ int read_nvram(const struct xtt_tpm_params *params, const char* outfile, enum xt
     unsigned char output_data[MAX_NVRAM_SIZE];
     uint16_t output_length;
     printf("Reading object from NVRAM...");
-    TSS2_RC read_ret = xtt_read_object(output_data, sizeof(output_data), &output_length, obj_name, ctx.sapi_context);
+    TSS2_RC read_ret = xtt_read_object(output_data, sizeof(output_data), &output_length, obj_name, &ctx);
     if (TSS2_RC_SUCCESS != read_ret) {
         fprintf(stderr, "Bad read_ret: %#X\n", read_ret);
         return TPM_ERROR;

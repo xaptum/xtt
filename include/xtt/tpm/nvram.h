@@ -20,7 +20,7 @@
 #define XTT_TPM_NVRAM_H
 #pragma once
 
-#include <tss2/tss2_sys.h>
+#include <xtt/tpm/context.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -37,21 +37,21 @@ enum xtt_object_name {
 
 TSS2_RC
 xtt_read_object(unsigned char* out_buffer,
-                 uint16_t out_buffer_size,
-                 uint16_t *out_length,
-                 enum xtt_object_name object_name,
-                 TSS2_SYS_CONTEXT *sapi_context);
+                uint16_t out_buffer_size,
+                uint16_t *out_length,
+                enum xtt_object_name object_name,
+                struct xtt_tpm_context *tpm_ctx);
 
 TSS2_RC
 xtt_read_nvram(unsigned char *out,
-                uint16_t size,
-                TPM_HANDLE index,
-                TSS2_SYS_CONTEXT *sapi_context);
+               uint16_t size,
+               TPM_HANDLE index,
+               struct xtt_tpm_context *tpm_ctx);
 
 TSS2_RC
 xtt_get_nvram_size(uint16_t *size_out,
-                    TPM_HANDLE index,
-                    TSS2_SYS_CONTEXT *sapi_context);
+                   TPM_HANDLE index,
+                   struct xtt_tpm_context *tpm_ctx);
 
 #ifdef __cplusplus
 }

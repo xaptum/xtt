@@ -315,7 +315,7 @@ int read_in_from_TPM(struct xtt_tpm_context *tpm_ctx,
                                *basename_len,
                                &length_read,
                                XTT_BASENAME,
-                               tpm_ctx->sapi_context);
+                               tpm_ctx);
     if (0 != nvram_ret) {
         fprintf(stderr, "Error reading basename from TPM NVRAM\n");
         return nvram_ret;
@@ -327,7 +327,7 @@ int read_in_from_TPM(struct xtt_tpm_context *tpm_ctx,
                                 sizeof(xtt_daa_group_pub_key_lrsw),
                                 &length_read,
                                 XTT_GROUP_PUBLIC_KEY,
-                                tpm_ctx->sapi_context);
+                                tpm_ctx);
     if (0 != nvram_ret) {
         fprintf(stderr, "Error reading GPK from TPM NVRAM");
         return TPM_ERROR;
@@ -338,7 +338,7 @@ int read_in_from_TPM(struct xtt_tpm_context *tpm_ctx,
                                 sizeof(xtt_daa_credential_lrsw),
                                 &length_read,
                                 XTT_CREDENTIAL,
-                                tpm_ctx->sapi_context);
+                                tpm_ctx);
     if (0 != nvram_ret) {
         fprintf(stderr, "Error reading credential from TPM NVRAM");
         return TPM_ERROR;
@@ -349,7 +349,7 @@ int read_in_from_TPM(struct xtt_tpm_context *tpm_ctx,
                                 sizeof(xtt_root_certificate),
                                 &length_read,
                                 XTT_ROOT_XTT_CERTIFICATE,
-                                tpm_ctx->sapi_context);
+                                tpm_ctx);
     if (0 != nvram_ret) {
         fprintf(stderr, "Error reading root's certificate from TPM NVRAM");
         return TPM_ERROR;
