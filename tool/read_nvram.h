@@ -25,11 +25,9 @@ extern "C" {
 #endif
 
 #include <xtt/tpm/nvram.h>
+#include <xtt/tpm/context.h>
 
-
-int read_nvram(const char* tcti_str, const char* devfile, const char* tpmhostname,
-               const char* tpmport, const char* outfile, enum xtt_object_name obj_name);
-
+int read_nvram(const struct xtt_tpm_params *params, const char* outfile, enum xtt_object_name obj_name);
 
 
 #ifdef __cplusplus

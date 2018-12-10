@@ -15,68 +15,49 @@
  *    limitations under the License
  *
  *****************************************************************************/
- #include <stdlib.h>
- #include <stdio.h>
- #include <string.h>
- #include <assert.h>
 
- #include <xtt/util/util_errors.h>
- #include <xtt/tpm/context.h>
+#include <xtt/util/util_errors.h>
+#include <xtt/tpm/context.h>
 
- const char *tpm_hostname_g = "localhost";
- const char *tpm_port_g = "2321";
+#include <tss2/tss2_tcti_device.h>
+#include <tss2/tss2_tcti_socket.h>
 
- int initialize_tcti(TSS2_TCTI_CONTEXT **tcti_context, xtt_tcti_type tcti_type, const char *dev_file)
- {
-     static unsigned char tcti_context_buffer_s[256];
-     *tcti_context = (TSS2_TCTI_CONTEXT*)tcti_context_buffer_s;
-     switch (tcti_type) {
-         case XTT_TCTI_SOCKET:
-             assert(tss2_tcti_getsize_socket() < sizeof(tcti_context_buffer_s));
-             if (TSS2_RC_SUCCESS != tss2_tcti_init_socket(tpm_hostname_g, tpm_port_g, *tcti_context)) {
-                 fprintf(stderr, "Error: Unable to initialize socket TCTI context\n");
-                 return TPM_ERROR;
-             }
-             break;
-         case XTT_TCTI_DEVICE:
-             assert(tss2_tcti_getsize_device() < sizeof(tcti_context_buffer_s));
-             if (TSS2_RC_SUCCESS != tss2_tcti_init_device(dev_file, strlen(dev_file), *tcti_context)) {
-                 fprintf(stderr, "Error: Unable to initialize device TCTI context\n");
-                 return TPM_ERROR;
-             }
-             break;
-     }
+#include <string.h>
+#include <assert.h>
 
-     return 0;
- }
+int xtt_init_tpm_context(struct xtt_tpm_context *ctx, const struct xtt_tpm_params *params)
+{
+    ctx->tcti_context = (TSS2_TCTI_CONTEXT*)ctx->tcti_context_buffer;
 
- int initialize_sapi(TSS2_SYS_CONTEXT *sapi_context,
-                      size_t sapi_ctx_size,
-                      TSS2_TCTI_CONTEXT *tcti_context)
- {
-     TSS2_RC ret = TSS2_RC_SUCCESS;
+    switch (params->tcti) {
+        case XTT_TCTI_SOCKET:
+            assert(tss2_tcti_getsize_socket() < sizeof(ctx->tcti_context_buffer));
+            if (TSS2_RC_SUCCESS != tss2_tcti_init_socket(params->hostname, params->port, ctx->tcti_context)) {
+                return TPM_ERROR;
+            }
+            break;
+        case XTT_TCTI_DEVICE:
+            assert(tss2_tcti_getsize_device() < sizeof(ctx->tcti_context_buffer));
+            if (TSS2_RC_SUCCESS != tss2_tcti_init_device(params->dev_file, strlen(params->dev_file), ctx->tcti_context)) {
+                return TPM_ERROR;
+            }
+            break;
+    }
 
-     if (NULL == sapi_context) {
-         fprintf(stderr, "Error allocating memory for TPM SAPI context\n");
-         return TPM_ERROR;
-     }
+    TSS2_ABI_VERSION abi_version = TSS2_ABI_CURRENT_VERSION;
+    size_t sapi_ctx_size = Tss2_Sys_GetContextSize(0);
+    assert(sapi_ctx_size < sizeof(ctx->sapi_context_buffer));
+    ctx->sapi_context = (TSS2_SYS_CONTEXT*)ctx->sapi_context_buffer;
+    TSS2_RC ret = Tss2_Sys_Initialize(ctx->sapi_context, sapi_ctx_size, ctx->tcti_context, &abi_version);
+    if (TSS2_RC_SUCCESS != ret) {
+        return TPM_ERROR;
+    }
 
-     TSS2_ABI_VERSION abi_version = TSS2_ABI_CURRENT_VERSION;
-     ret = Tss2_Sys_Initialize(sapi_context,
-                               sapi_ctx_size,
-                               tcti_context,
-                               &abi_version);
-     if (TSS2_RC_SUCCESS != ret) {
-         fprintf(stderr, "Error initializing TPM SAPI context\n");
-         goto finish;
-     }
+    return SUCCESS;
+}
 
- finish:
-     Tss2_Sys_Finalize(sapi_context);
-
-     if (ret == TSS2_RC_SUCCESS) {
-         return 0;
-     } else {
-         return TPM_ERROR;
-     }
- }
+void xtt_free_tpm_context(struct xtt_tpm_context *ctx)
+{
+    Tss2_Sys_Finalize(ctx->sapi_context);
+    tss2_tcti_finalize(ctx->tcti_context);
+}
