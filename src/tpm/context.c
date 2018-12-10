@@ -21,7 +21,7 @@
  #include <assert.h>
 
  #include <xtt/util/util_errors.h>
- #include <xtt/util/tpm_context.h>
+ #include <xtt/tpm/context.h>
 
  const char *tpm_hostname_g = "localhost";
  const char *tpm_port_g = "2321";

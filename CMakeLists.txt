@@ -59,16 +59,21 @@ set(XTT_SRCS
         src/util/generate_x509_certificate.c
         src/util/wrap_keys_asn1.c
         src/util/internal/asn1.c
-        src/util/tpm_context.c
         src/internal/byte_utils.c
         src/internal/key_derivation.c
         src/internal/crypto_utils.c
         src/internal/message_utils.c
         src/internal/server_cookie.c
         src/internal/signatures.c
+        )
+
+if(USE_TPM)
+  list(APPEND XTT_SRCS
+        src/tpm/context.c
         src/tpm/handles.c
         src/tpm/nvram.c
         )
+endif()
 
 ################################################################################
 # Shared Libary

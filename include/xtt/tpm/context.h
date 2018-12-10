@@ -16,8 +16,8 @@
  *
  *****************************************************************************/
 
-#ifndef XTT_UTIL_TPM_CONTEXT_H
-#define XTT_UTIL_TPM_CONTEXT_H
+#ifndef XTT_TPM_CONTEXT_H
+#define XTT_TPM_CONTEXT_H
 #pragma once
 
 #ifdef __cplusplus
