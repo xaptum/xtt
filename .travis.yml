@@ -46,6 +46,14 @@ script:
 
 matrix:
   include:
+    - name: "Dev build, gcc"
+      env:
+        - TYPE=DEV
+        - BUILD_TYPE=Dev
+    - name: "DevDebug build, gcc"
+      env:
+        - TYPE=DEBUG
+        - BUILD_TYPE=DevDebug
     - name: "Release build, gcc"
       env:
         - TYPE=RELEASE

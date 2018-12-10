@@ -72,18 +72,20 @@ ctest -V
 
 The following CMake configuration options are supported.
 
-| Option               | Values         | Default    | Description                                |
-|----------------------|----------------|------------|--------------------------------------------|
-| CMAKE_BUILD_TYPE     | Release        |            | With full optimizations.                   |
-|                      | Debug          |            | With debug symbols.                        |
-|                      | RelWithDebInfo |            | With full optimizations and debug symbols. |
-| CMAKE_INSTALL_PREFIX | <string>       | /usr/local | The directory to install the library in.   |
-| USE_TPM              | ON, OFF        | ON         | Build with support for using a TPM 2.0     |
-| BUILD_TOOL           | ON, OFF        | ON         | Build tool.                                |
-| BUILD_SHARED_LIBS    | ON, OFF        | ON         | Build shared libraries.                    |
-| BUILD_STATIC_LIBS    | ON, OFF        | OFF        | Build static libraries.                    |
-| BUILD_TESTING        | ON, OFF        | ON         | Build the test suite.                      |
-| STATIC_SUFFIX        | <string>       | <none>     | Appends a suffix to the static lib name.   |
+| Option               | Values         | Default    | Description                                            |
+|----------------------|----------------|------------|--------------------------------------------------------|
+| CMAKE_BUILD_TYPE     | Release        |            | With full optimizations.                               |
+|                      | Debug          |            | With debug symbols.                                    |
+|                      | RelWithDebInfo |            | With full optimizations and debug symbols.             |
+|                      | Dev            |            | With warnings treated as errors and full optimizations.|
+|                      | DevDebug       |            | With warnings treated as errors and debug symbols.     |
+| CMAKE_INSTALL_PREFIX |                | /usr/local | The directory to install the library in.               |
+| USE_TPM              | ON, OFF        | ON         | Build with support for using a TPM 2.0                 |
+| BUILD_TOOL           | ON, OFF        | ON         | Build tool.                                            |
+| BUILD_SHARED_LIBS    | ON, OFF        | ON         | Build shared libraries.                                |
+| BUILD_STATIC_LIBS    | ON, OFF        | OFF        | Build static libraries.                                |
+| BUILD_TESTING        | ON, OFF        | ON         | Build the test suite.                                  |
+| STATIC_SUFFIX        | <string>       | <none>     | Appends a suffix to the static lib name.               |
 
 ### Installing
 
@@ -107,7 +109,7 @@ To create root configuration data, run:
 ### Provisioning a Server        
 To create server configuration data under that root, run:  
 `xtt genkey -v server_priv.bin -b server_pub.bin` to create a server key pair.  
-`xtt genservercert -s <server id file>` to create a server certificate. 
+`xtt genservercert` to create a server certificate.
 
 ### Running a Test Server  
 The server executable can take the DAA Group Public Key and basename to use as parameter:  
@@ -124,7 +126,7 @@ and output the agreed-upon identity information exchanged with the client.
 The client executable can take the server's ID, DAA group public key, credentials, secret key, and basename to use as parameter:  
 (run `xtt runclient -h` for a full help on all available parameters):
 ```bash
-xtt runclient -r <server id file> -d <gpk file> -c <credential file> -k <secret key file> -n <basename file>
+xtt runclient -d <gpk file> -c <credential file> -k <secret key file> -n <basename file>
 ```
 
 The client will then initiate an identity-provisioning handshake with the server
