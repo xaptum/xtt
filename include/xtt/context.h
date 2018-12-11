@@ -20,6 +20,7 @@
 #define XTT_CONTEXT_H
 #pragma once
 
+#include <xtt/crypto.h>
 #include <xtt/crypto_types.h>
 #include <xtt/return_codes.h>
 #include <xtt/certificates.h>
@@ -80,43 +81,9 @@ typedef enum {
 } xtt_server_handshake_state;
 
 struct xtt_handshake_context {
-    void (*copy_dh_pubkey)(unsigned char* out,
-                           uint16_t* out_length,
-                           const struct xtt_handshake_context* self);
-
-    int (*do_diffie_hellman)(unsigned char* shared_secret,
-                             const unsigned char* other_pk,
-                             const struct xtt_handshake_context* self);
-
-    int (*prf)(unsigned char* out,
-               uint16_t out_len,
-               const unsigned char* in,
-               uint16_t in_len,
-               const unsigned char* key,
-               uint16_t key_len);
-
-    int (*encrypt)(unsigned char* ciphertext,
-                   uint16_t* ciphertext_len,
-                   const unsigned char* message,
-                   uint16_t msg_len,
-                   const unsigned char* addl_data,
-                   uint16_t addl_len,
-                   struct xtt_handshake_context *self);
-
-    int (*decrypt)(unsigned char* decrypted,
-                   uint16_t* decrypted_len,
-                   const unsigned char* ciphertext,
-                   uint16_t ciphertext_len,
-                   const unsigned char* addl_data,
-                   uint16_t addl_len,
-                   struct xtt_handshake_context *self);
-
-    int (*hash)(unsigned char* out,
-                uint16_t* out_length,
-                const unsigned char* in,
-                uint16_t in_len);
 
     xtt_suite_spec suite_spec;
+    const struct xtt_suite_ops* suite_ops;
     xtt_version version;
 
     unsigned char *in_buffer_start;
@@ -128,67 +95,23 @@ struct xtt_handshake_context {
 
     uint16_t longterm_key_length;
     uint16_t longterm_key_signature_length;
-    uint16_t shared_secret_length;
-    uint16_t hash_length;
-    uint16_t mac_length;
-    uint16_t key_length;
-    uint16_t iv_length;
 
     xtt_sequence_number tx_sequence_num;
     xtt_sequence_number rx_sequence_num;
 
-    union {
-        xtt_x25519_pub_key x25519;
-    } dh_pub_key;
-    union {
-        xtt_x25519_priv_key x25519;
-    } dh_priv_key;
+    struct xtt_crypto_kx_public kx_pubkey;
+    struct xtt_crypto_kx_secret kx_seckey;
+    struct xtt_crypto_kx_shared kx_shared;
 
-    union {
-        xtt_chacha_key chacha;
-        xtt_aes256_key aes256;
-    } rx_key;
-    union {
-        xtt_chacha_nonce chacha;
-        xtt_aes256_nonce aes256;
-    } rx_iv;
-    union {
-        xtt_chacha_key chacha;
-        xtt_aes256_key aes256;
-    } tx_key;
-    union {
-        xtt_chacha_nonce chacha;
-        xtt_aes256_nonce aes256;
-    } tx_iv;
+    struct xtt_crypto_aead_key rx_key;
+    struct xtt_crypto_aead_key tx_key;
+    struct xtt_crypto_aead_nonce rx_iv;
+    struct xtt_crypto_aead_nonce tx_iv;
 
-    union {
-        xtt_sha512 sha512;
-        xtt_blake2b blake2b;
-    } hash_out_buffer_raw;
-    unsigned char *hash_out_buffer;
-
-    union {
-        xtt_sha512 sha512;
-        xtt_blake2b blake2b;
-    } inner_hash_raw;
-    unsigned char *inner_hash;
-
-    union {
-        xtt_sha512 sha512;
-        xtt_blake2b blake2b;
-    } prf_key_raw;
-    unsigned char *prf_key;
-
-    union {
-        xtt_x25519_shared_secret x25519;
-    } shared_secret_raw;
-    unsigned char *shared_secret_buffer;
-
-    union {
-        xtt_sha512 sha512;
-        xtt_blake2b blake2b;
-    } handshake_secret_raw;
-    unsigned char *handshake_secret;
+    struct xtt_crypto_hmac hash_out;
+    struct xtt_crypto_hmac inner_hash;
+    struct xtt_crypto_hmac prf_key;
+    struct xtt_crypto_hmac handshake_secret;
 
     xtt_server_cookie server_cookie;
     unsigned char hash_buffer[HASH_BUFFER_SIZE];

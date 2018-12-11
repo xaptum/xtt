@@ -37,24 +37,11 @@ void printf_hex(unsigned char* raw, size_t len)
 }
 
 static
-void printf_char(unsigned char* raw, size_t len)
-{
-    for (size_t i = 0; i < len; i++) {
-        printf("%c", raw[i]);
-    }
-    printf("\n");
-}
-
-static
 void server_cert_out(struct xtt_server_certificate_raw_type* certificate)
 {
-    unsigned char* server_id = xtt_server_certificate_access_id(certificate);
-    printf("Server ID: ");
-    printf_hex(server_id, sizeof(xtt_identity_type));
-
-    unsigned char* expiry = xtt_server_certificate_access_expiry(certificate);
-    printf("Expiry: ");
-    printf_char(expiry, sizeof(xtt_certificate_expiry));
+    unsigned char* reserved = xtt_server_certificate_access_reserved(certificate);
+    printf("Reserved: ");
+    printf_hex(reserved, sizeof(xtt_certificate_reserved));
 
     unsigned char* root_id = xtt_server_certificate_access_rootid(certificate);
     printf("Root ID: ");

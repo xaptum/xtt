@@ -1,13 +1,13 @@
 /******************************************************************************
  *
- * Copyright 2017 Xaptum, Inc.
- * 
+ * Copyright 2018 Xaptum, Inc.
+ *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
  *    You may obtain a copy of the License at
- * 
+ *
  *        http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  *    Unless required by applicable law or agreed to in writing, software
  *    distributed under the License is distributed on an "AS IS" BASIS,
  *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -16,35 +16,22 @@
  *
  *****************************************************************************/
 
-#include <stdint.h>
-#include <stdio.h>
+#ifndef XTT_TOOL_READ_NVRAM_H
+#define XTT_TOOL_READ_NVRAM_H
+#pragma once
 
-static int read_file_into_buffer(unsigned char *buffer, size_t bytes_to_read, const char *filename) {
-    FILE *ptr;
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-    ptr = fopen(filename, "rb");
-    if (NULL == ptr)
-        return -1;
+#include <xtt/tpm/nvram.h>
+#include <xtt/tpm/context.h>
 
-    size_t bytes_read = fread(buffer, 1, bytes_to_read, ptr);
+int read_nvram(const struct xtt_tpm_params *params, const char* outfile, enum xtt_object_name obj_name);
 
-    (void)fclose(ptr);
 
-    return (int)bytes_read;
+#ifdef __cplusplus
 }
+#endif
 
-static int write_buffer_to_file(const char *filename, unsigned char *buffer, size_t bytes_to_write)
-{
-    FILE *ptr;
-
-    ptr = fopen(filename, "wb");
-    if (NULL == ptr)
-        return -1;
-
-    size_t bytes_written = fwrite(buffer, 1, bytes_to_write, ptr);
-
-    (void)fclose(ptr);
-
-
-    return (int)bytes_written;
-}
+#endif

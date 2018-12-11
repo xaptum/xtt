@@ -24,29 +24,43 @@ env:
     - LIBSODIUM_DIR=${TRAVIS_BUILD_DIR}/libsodium
     - AMCL_TAG=4.7.0
     - AMCL_DIR=${TRAVIS_BUILD_DIR}/milagro-crypto-c/install
-    - XAPTUM_TPM_TAG=v0.5.6
+    - XAPTUM_TPM_TAG=v0.5.8
     - XAPTUM_TPM_DIR=${TRAVIS_BUILD_DIR}/xaptum-tpm/
     - AMCL_CURVES=FP256BN,NIST256
     - ECDAA_TAG=v0.10.0
     - ECDAA_DIR=${TRAVIS_BUILD_DIR}/ecdaa
+    - SHARED_LIBS=ON
+    - XTT_INSTALL_DIR=${TRAVIS_BUILD_DIR}/install
 
 before_script:
   - .travis/install-libsodium.sh ${LIBSODIUM_TAG} ${LIBSODIUM_DIR}
   - .travis/install-xaptum-tpm.sh ${XAPTUM_TPM_TAG} ${XAPTUM_TPM_DIR}
   - .travis/install-amcl.sh ${AMCL_TAG} ${AMCL_DIR} ${AMCL_CURVES}
   - .travis/install-ecdaa.sh ${ECDAA_TAG} ${ECDAA_DIR}
-  - cmake . -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DBUILD_EXAMPLES=ON
+  - mkdir -p ${XTT_INSTALL_DIR}
+  - cmake . -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DCMAKE_INSTALL_PREFIX=${XTT_INSTALL_DIR} -DBUILD_SHARED_LIBS=${SHARED_LIBS}
 
 script:
-  - cmake --build . -- -j2
+  - cmake --build . --target install -- -j2
   - ctest -E tpm -VV
 
 matrix:
   include:
+    - name: "Dev build, gcc"
+      env:
+        - TYPE=DEV
+        - BUILD_TYPE=Dev
+    - name: "DevDebug build, gcc"
+      env:
+        - TYPE=DEBUG
+        - BUILD_TYPE=DevDebug
     - name: "Release build, gcc"
       env:
         - TYPE=RELEASE
         - BUILD_TYPE=Release
+    - name: "Build with static library, gcc"
+      env:
+        - SHARED_LIBS=OFF
     - name: "Debug build, gcc"
       env:
         - TYPE=DEBUG

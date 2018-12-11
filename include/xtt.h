@@ -22,6 +22,7 @@
 
 #include <xtt/certificates.h>
 #include <xtt/context.h>
+#include <xtt/crypto.h>
 #include <xtt/crypto_wrapper.h>
 #include <xtt/crypto_types.h>
 #include <xtt/daa_wrapper.h>
@@ -35,6 +36,11 @@
 #include <xtt/util/generate_server_certificate.h>
 #include <xtt/util/file_io.h>
 #include <xtt/util/util_errors.h>
+
+#ifdef USE_TPM
+#include <xtt/tpm/context.h>
 #include <xtt/tpm/handles.h>
+#include <xtt/tpm/nvram.h>
+#endif
 
 #endif

@@ -33,11 +33,10 @@ extern "C" {
  *      READ_FROM_FILE_ERROR        an error occurred reading from a file
  *      KEY_CREATION_ERROR          an error occurred creating a keypair
  *      CERT_CREATION_ERROR         an error occurred creating the certificate
- *      EXPIRY_PASSED               expiry has already passed
 */
 int xtt_generate_server_certificate(const char* root_cert_file, const char* root_privatekey_file,
+                                    const char* reserved_file,
                                     const char* server_privatekey_file, const char* server_publickey_file,
-                                    const char* server_id_file, const char* expiry_in,
                                     const char* server_certificate_filename);
 
 #ifdef __cplusplus

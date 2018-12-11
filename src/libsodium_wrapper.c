@@ -81,108 +81,131 @@ void xtt_crypto_get_random(unsigned char* buffer, uint16_t buffer_length)
     randombytes_buf(buffer, buffer_length);
 }
 
-int xtt_crypto_create_x25519_key_pair(xtt_x25519_pub_key *pub, xtt_x25519_priv_key *priv)
+int xtt_crypto_kx_x25519_keypair(struct xtt_crypto_kx_public* public,
+                                 struct xtt_crypto_kx_secret* secret)
 {
-    randombytes_buf(priv->data, sizeof(xtt_x25519_priv_key));
+    public->len = sizeof(xtt_crypto_x25519_public);
+    secret->len = sizeof(xtt_crypto_x25519_secret);
 
-    return crypto_scalarmult_base(pub->data, priv->data);
+    randombytes_buf(&secret->buf, secret->len);
+    return crypto_scalarmult_base(&public->buf, &secret->buf);
 }
 
-int xtt_crypto_do_x25519_diffie_hellman(unsigned char* shared_secret,
-                                        const xtt_x25519_priv_key* my_sk,
-                                        const xtt_x25519_pub_key* other_pk)
+int xtt_crypto_kx_x25519_exchange(struct xtt_crypto_kx_shared* shared,
+                                  const struct xtt_crypto_kx_public* other_public,
+                                  const struct xtt_crypto_kx_secret* my_secret)
 {
-    int rc = crypto_scalarmult(shared_secret,
-                               my_sk->data,
-                               other_pk->data);
-    if (sodium_is_zero(shared_secret, crypto_scalarmult_BYTES))
+    shared->len = sizeof(xtt_crypto_x25519_shared);
+
+    if (0 != crypto_scalarmult(&shared->buf, &my_secret->buf,
+                               &other_public->buf))
         return XTT_RETURN_DIFFIE_HELLMAN;
 
-    return rc;
-}
-
-int xtt_crypto_hash_sha256(unsigned char* out,
-                           uint16_t* out_length,
-                           const unsigned char* in,
-                           uint16_t in_len)
-{
-    crypto_hash_sha256_state h;
-
-    *out_length = sizeof(xtt_sha256);
-
-    if (0 != crypto_hash_sha256_init(&h))
-        return -1;
-    if (0 != crypto_hash_sha256_update(&h, in, in_len))
-        return -1;
-    if (0 != crypto_hash_sha256_final(&h, out))
-        return -1;
+    if (sodium_is_zero(&shared->buf, shared->len))
+        return XTT_RETURN_DIFFIE_HELLMAN;
 
     return 0;
 }
 
-int xtt_crypto_hash_sha512(unsigned char* out,
-                           uint16_t* out_length,
-                           const unsigned char* in,
-                           uint16_t in_len)
+int xtt_crypto_aead_chacha20poly1305_encrypt(unsigned char* cipher,
+                                             const unsigned char* msg,
+                                             uint16_t msglen,
+                                             const unsigned char* ad,
+                                             uint16_t adlen,
+                                             const struct xtt_crypto_aead_nonce* nonce,
+                                             const struct xtt_crypto_aead_key* key)
 {
-    crypto_hash_sha512_state h;
+    return crypto_aead_chacha20poly1305_ietf_encrypt(cipher, NULL,
+                                                     msg, msglen,
+                                                     ad, adlen,
+                                                     NULL, &nonce->buf,
+                                                     &key->buf);
+}
 
-    *out_length = sizeof(xtt_sha512);
+int xtt_crypto_aead_chacha20poly1305_decrypt(unsigned char* msg,
+                                             const unsigned char* cipher,
+                                             uint16_t cipherlen,
+                                             const unsigned char* ad,
+                                             uint16_t adlen,
+                                             const struct xtt_crypto_aead_nonce* nonce,
+                                             const struct xtt_crypto_aead_key* key)
+{
+    return crypto_aead_chacha20poly1305_ietf_decrypt(msg, NULL,
+                                                     NULL,
+                                                     cipher, cipherlen,
+                                                     ad, adlen,
+                                                     &nonce->buf,
+                                                     &key->buf);
+}
+
+int xtt_crypto_aead_aes256gcm_encrypt(unsigned char* cipher,
+                                      const unsigned char* msg,
+                                      uint16_t msglen,
+                                      const unsigned char* ad,
+                                      uint16_t adlen,
+                                      const struct xtt_crypto_aead_nonce* nonce,
+                                      const struct xtt_crypto_aead_key* key)
+{
+    return crypto_aead_aes256gcm_encrypt(cipher, NULL,
+                                         msg, msglen,
+                                         ad, adlen,
+                                         NULL, &nonce->buf,
+                                         &key->buf);
+}
+
+int xtt_crypto_aead_aes256gcm_decrypt(unsigned char* msg,
+                                      const unsigned char* cipher,
+                                      uint16_t cipherlen,
+                                      const unsigned char* ad,
+                                      uint16_t adlen,
+                                      const struct xtt_crypto_aead_nonce* nonce,
+                                      const struct xtt_crypto_aead_key* key)
+{
+    return crypto_aead_aes256gcm_decrypt(msg, NULL,
+                                         NULL,
+                                         cipher, cipherlen,
+                                         ad, adlen,
+                                         &nonce->buf,
+                                         &key->buf);
+}
+
+int xtt_crypto_hash_sha512(struct xtt_crypto_hmac* out,
+                           const unsigned char* in,
+                           uint16_t inlen)
+{
+    out->len = sizeof(xtt_crypto_sha512);
+
+    crypto_hash_sha512_state h;
 
     if (0 != crypto_hash_sha512_init(&h))
         return -1;
-    if (0 != crypto_hash_sha512_update(&h, in, in_len))
+    if (0 != crypto_hash_sha512_update(&h, in, inlen))
         return -1;
-    if (0 != crypto_hash_sha512_final(&h, out))
+    if (0 != crypto_hash_sha512_final(&h, &out->buf))
         return -1;
 
     return 0;
 }
 
-int xtt_crypto_hash_blake2b(unsigned char* out,
-                            uint16_t* out_length,
+int xtt_crypto_hash_blake2b(struct xtt_crypto_hmac* out,
                             const unsigned char* in,
-                            uint16_t in_len)
+                            uint16_t inlen)
 {
-    crypto_generichash_blake2b_state h;
+    out->len = sizeof(xtt_crypto_blake2b);
 
-    *out_length = sizeof(xtt_blake2b);
+    crypto_generichash_blake2b_state h;
 
     if (0 != crypto_generichash_blake2b_init(&h,
                                              NULL,
                                              0,
-                                             sizeof(xtt_blake2b)))
+                                             out->len))
         return -1;
-    if (0 != crypto_generichash_blake2b_update(&h, in, in_len))
+    if (0 != crypto_generichash_blake2b_update(&h, in, inlen))
         return -1;
     if (0 != crypto_generichash_blake2b_final(&h,
-                                              out,
-                                              sizeof(xtt_blake2b)))
+                                              &out->buf,
+                                              out->len))
         return -1;
-
-    return 0;
-}
-
-int xtt_crypto_prf_sha256(unsigned char* out,
-                          uint16_t out_len,
-                          const unsigned char* in,
-                          uint16_t in_len,
-                          const unsigned char* key,
-                          uint16_t key_len)
-{
-    crypto_auth_hmacsha256_state h;
-    unsigned char buffer[crypto_hash_sha256_BYTES];
-
-    if (out_len > crypto_hash_sha256_BYTES)
-        return -1;
-    if (0 != crypto_auth_hmacsha256_init(&h, key, key_len))
-        return -1;
-    if (0 != crypto_auth_hmacsha256_update(&h, in, in_len))
-        return -1;
-    if (0 != crypto_auth_hmacsha256_final(&h, buffer))
-        return -1;
-
-    memcpy(out, buffer, out_len);
 
     return 0;
 }
@@ -235,116 +258,4 @@ int xtt_crypto_prf_blake2b(unsigned char* out,
         return -1;
 
     return 0;
-}
-
-int xtt_crypto_aead_chacha_encrypt(unsigned char* ciphertext,
-                                   uint16_t* ciphertext_len,
-                                   const unsigned char* message,
-                                   uint16_t msg_len,
-                                   const unsigned char* addl_data,
-                                   uint16_t addl_len,
-                                   const xtt_chacha_nonce* nonce,
-                                   const xtt_chacha_key* key)
-{
-    unsigned long long ciphertext_len_long;
-    int ret = crypto_aead_chacha20poly1305_ietf_encrypt(ciphertext,
-                                                        &ciphertext_len_long,
-                                                        message,
-                                                        msg_len,
-                                                        addl_data,
-                                                        addl_len,
-                                                        NULL,
-                                                        nonce->data,
-                                                        key->data);
-
-    if (ciphertext_len_long <= UINT32_MAX) {
-        *ciphertext_len = ciphertext_len_long;
-        return ret;
-    } else {
-        return XTT_RETURN_UINT32_OVERFLOW;
-    }
-}
-
-int xtt_crypto_aead_chacha_decrypt(unsigned char* decrypted,
-                                   uint16_t* decrypted_len,
-                                   const unsigned char* ciphertext,
-                                   uint16_t ciphertext_len,
-                                   const unsigned char* addl_data,
-                                   uint16_t addl_len,
-                                   const xtt_chacha_nonce* nonce,
-                                   const xtt_chacha_key* key)
-{
-    unsigned long long decrypted_len_long;
-    int ret = crypto_aead_chacha20poly1305_ietf_decrypt(decrypted,
-                                                        &decrypted_len_long,
-                                                        NULL,
-                                                        ciphertext,
-                                                        ciphertext_len,
-                                                        addl_data,
-                                                        addl_len,
-                                                        nonce->data,
-                                                        key->data);
-
-    if (decrypted_len_long <= UINT32_MAX) {
-        *decrypted_len = decrypted_len_long;
-        return ret;
-    } else {
-        return XTT_RETURN_UINT32_OVERFLOW;
-    }
-}
-
-int xtt_crypto_aead_aes256_encrypt(unsigned char* ciphertext,
-                                   uint16_t* ciphertext_len,
-                                   const unsigned char* message,
-                                   uint16_t msg_len,
-                                   const unsigned char* addl_data,
-                                   uint16_t addl_len,
-                                   const xtt_aes256_nonce* nonce,
-                                   const xtt_aes256_key* key)
-{
-    unsigned long long ciphertext_len_long;
-    int ret = crypto_aead_aes256gcm_encrypt(ciphertext,
-                                            &ciphertext_len_long,
-                                            message,
-                                            msg_len,
-                                            addl_data,
-                                            addl_len,
-                                            NULL,
-                                            nonce->data,
-                                            key->data);
-
-    if (ciphertext_len_long <= UINT32_MAX) {
-        *ciphertext_len = ciphertext_len_long;
-        return ret;
-    } else {
-        return XTT_RETURN_UINT32_OVERFLOW;
-    }
-}
-
-int xtt_crypto_aead_aes256_decrypt(unsigned char* decrypted,
-                                   uint16_t* decrypted_len,
-                                   const unsigned char* ciphertext,
-                                   uint16_t ciphertext_len,
-                                   const unsigned char* addl_data,
-                                   uint16_t addl_len,
-                                   const xtt_aes256_nonce* nonce,
-                                   const xtt_aes256_key* key)
-{
-    unsigned long long decrypted_len_long;
-    int ret = crypto_aead_aes256gcm_decrypt(decrypted,
-                                            &decrypted_len_long,
-                                            NULL,
-                                            ciphertext,
-                                            ciphertext_len,
-                                            addl_data,
-                                            addl_len,
-                                            nonce->data,
-                                            key->data);
-
-    if (decrypted_len_long <= UINT32_MAX) {
-        *decrypted_len = decrypted_len_long;
-        return ret;
-    } else {
-        return XTT_RETURN_UINT32_OVERFLOW;
-    }
 }

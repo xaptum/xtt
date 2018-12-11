@@ -18,30 +18,21 @@
 #include <xtt/certificates.h>
 #include <xtt/crypto_wrapper.h>
 #include <xtt/util/util_errors.h>
-#include <time.h>
 #include <assert.h>
 #include <string.h>
-#include <stdio.h>
 
-
-//used to test creation of certificates in /example
 xtt_return_code_type
 xtt_generate_server_certificate_ecdsap256(unsigned char *cert_out,
-                                        xtt_identity_type *servers_id,
+                                        xtt_certificate_reserved *reserved_in,
                                         xtt_ecdsap256_pub_key *servers_pub_key,
-                                        xtt_certificate_expiry *expiry,
                                         xtt_certificate_root_id *roots_id,
                                         xtt_ecdsap256_priv_key *roots_priv_key)
 {
     struct xtt_server_certificate_raw_type *cert_ptr = (struct xtt_server_certificate_raw_type*)cert_out;
 
-    memcpy(xtt_server_certificate_access_id(cert_ptr),
-           servers_id->data,
-           sizeof(xtt_identity_type));
-
-    memcpy(xtt_server_certificate_access_expiry(cert_ptr),
-           expiry->data,
-           sizeof(xtt_certificate_expiry));
+    memcpy(xtt_server_certificate_access_reserved(cert_ptr),
+           reserved_in,
+           sizeof(xtt_certificate_reserved));
 
     memcpy(xtt_server_certificate_access_rootid(cert_ptr),
            roots_id->data,
@@ -69,8 +60,7 @@ xtt_server_certificate_length_fromsignaturetype(xtt_server_signature_type type)
     uint16_t ret;
     switch (type) {
         case XTT_SERVER_SIGNATURE_TYPE_ECDSAP256:
-            ret = sizeof(xtt_identity_type)
-                       + sizeof(xtt_certificate_expiry)
+            ret = sizeof(xtt_certificate_reserved)
                        + sizeof(xtt_certificate_root_id)
                        + sizeof(xtt_ecdsap256_pub_key)
                        + sizeof(xtt_ecdsap256_signature);
@@ -104,8 +94,7 @@ xtt_server_certificate_length_uptosignature_fromsignaturetype(xtt_server_signatu
 {
     switch (type) {
         case XTT_SERVER_SIGNATURE_TYPE_ECDSAP256:
-            return sizeof(xtt_identity_type)
-                       + sizeof(xtt_certificate_expiry)
+            return sizeof(xtt_certificate_reserved)
                        + sizeof(xtt_certificate_root_id)
                        + sizeof(xtt_ecdsap256_pub_key);
     }
@@ -130,32 +119,23 @@ xtt_server_certificate_length_uptosignature(xtt_suite_spec suite_spec)
 }
 
 unsigned char*
-xtt_server_certificate_access_id(const struct xtt_server_certificate_raw_type *certificate)
+xtt_server_certificate_access_reserved(const struct xtt_server_certificate_raw_type *certificate)
 {
     return (unsigned char*)(certificate);
-}
-
-unsigned char*
-xtt_server_certificate_access_expiry(const struct xtt_server_certificate_raw_type *certificate)
-{
-    return (unsigned char*)(certificate)
-                            + sizeof(xtt_identity_type);
 }
 
 unsigned char*
 xtt_server_certificate_access_rootid(const struct xtt_server_certificate_raw_type *certificate)
 {
     return (unsigned char*)(certificate)
-                            + sizeof(xtt_identity_type)
-                            + sizeof(xtt_certificate_expiry);
+                            + sizeof(xtt_certificate_reserved);
 }
 
 unsigned char*
 xtt_server_certificate_access_pubkey(const struct xtt_server_certificate_raw_type *certificate)
 {
     return (unsigned char*)(certificate)
-                            + sizeof(xtt_identity_type)
-                            + sizeof(xtt_certificate_expiry)
+                            + sizeof(xtt_certificate_reserved)
                             + sizeof(xtt_certificate_root_id);
 }
 
@@ -166,8 +146,7 @@ xtt_server_certificate_access_rootsignature_fromsignaturetype(const struct xtt_s
     switch (type) {
         case XTT_SERVER_SIGNATURE_TYPE_ECDSAP256:
             return (unsigned char*)(certificate)
-                                    + sizeof(xtt_identity_type)
-                                    + sizeof(xtt_certificate_expiry)
+                                    + sizeof(xtt_certificate_reserved)
                                     + sizeof(xtt_certificate_root_id)
                                     + sizeof(xtt_ecdsap256_pub_key);
     }
@@ -189,31 +168,5 @@ xtt_server_certificate_access_rootsignature(const struct xtt_server_certificate_
     }
 
     assert(0);
-    return 0;
-}
-
-int
-xtt_check_expiry(const xtt_certificate_expiry *expiry)
-{
-    time_t now_timet = time(NULL);
-    struct tm *now = gmtime(&now_timet);
-
-    int year, month, day;
-
-    if (3 != sscanf(expiry->data, "%4d%2d%2d", &year, &month, &day))
-        return EXPIRY_PASSED;
-
-    if ((year-1900) < now->tm_year) {
-        return EXPIRY_PASSED;
-    } else if ((year-1900) == now->tm_year) {
-        if ((month-1) < now->tm_mon) {
-            return EXPIRY_PASSED;
-        } else if ((month-1) == now->tm_mon) {
-            if (day <= now->tm_mday) {
-                return EXPIRY_PASSED;
-            }
-        }
-    }
-
     return 0;
 }

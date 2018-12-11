@@ -15,64 +15,40 @@
  *    limitations under the License
  *
  *****************************************************************************/
-#define _POSIX_C_SOURCE 200809L
 
 #include <xtt/certificates.h>
 #include <xtt/crypto_types.h>
-#include <xtt/util/root.h>
-#include <xtt/crypto_wrapper.h>
-#include <xtt/util/util_errors.h>
 #include <xtt/util/file_io.h>
-#include <string.h>
-#include <time.h>
-#include <stdlib.h>
-#include <stdio.h>
+#include <xtt/util/generate_server_certificate.h>
+#include <xtt/util/root.h>
+#include <xtt/util/util_errors.h>
 
-static
-int create_expiry(const char* expiry_in, xtt_certificate_expiry* expiry) {
-    if (NULL != expiry_in) {
-        size_t max_check_len = sizeof(xtt_certificate_expiry) + 1; // +1 so strnlen return of max_check_len indicates error
-        size_t expiry_in_len = strnlen(expiry_in, max_check_len);
-        if (sizeof(xtt_certificate_expiry) != expiry_in_len) {
-            return EXPIRY_PASSED;
-        }
-        memcpy(expiry->data, expiry_in, sizeof(xtt_certificate_expiry));
-    } else {
-        time_t today = time(NULL);
-        struct tm* tm_today = gmtime(&today);
-        int expiry_day = tm_today->tm_mday;
-        int expiry_mon = tm_today->tm_mon + 1; // +1 because tm months are zero-indexed
-        int expiry_year = tm_today->tm_year + 1900 + 1; // +1900 because tm years are 1900-indexed
-        char temp_str[sizeof(xtt_certificate_expiry) + 1] = {0};
-        int format_ret = snprintf(&temp_str[0], sizeof(temp_str), "%04d%02d%02d", expiry_year, expiry_mon, expiry_day);
-        if (sizeof(xtt_certificate_expiry) != format_ret) {
-            return EXPIRY_PASSED;
-        }
-        memcpy(expiry->data, temp_str, sizeof(xtt_certificate_expiry));
-    }
-
-    int ret = xtt_check_expiry(expiry);
-    if(0 != ret){
-        return EXPIRY_PASSED;
-    }
-
-    return 0;
-}
+// To allow deployed Xaptum clients (which may still be checking server id and expiry)
+// to continue accepting new certificates,
+// just use the following as the default "reserved" field for now.
+// This corresponds, in the old schema of server certificates,
+// to a server-id of "XAPTUMSERVER0001"
+// and an expiry of 9999-12-31 (December 31 in the year 9999).
+// These bytes are simply ignored by newer clients.
+const xtt_certificate_reserved reserved_default = {.data="XAPTUMSERVER000199991231"};
 
 int xtt_generate_server_certificate(const char* root_cert_file, const char* root_privatekey_file,
+                                    const char* reserved_file,
                                     const char* server_privatekey_file, const char* server_publickey_file,
-                                    const char* server_id_file, const char* expiry_in,
                                     const char* server_certificate_filename)
 {
     int read_ret = 0;
     int write_ret = 0;
-    int ret = 0;
 
-    // 1) Read in expiry, and check if it's valid; if no expiry is given, add one year from today
-    xtt_certificate_expiry expiry = {.data = {0}};
-    ret = create_expiry(expiry_in, &expiry);
-    if (ret != 0) {
-        return EXPIRY_PASSED;
+    // 1) Read reserved field in from file, assigning the default if there is no file given
+    xtt_certificate_reserved reserved = {.data = {0}};
+    if (NULL != reserved_file) {
+        read_ret = xtt_read_from_file(reserved_file, reserved.data, sizeof(xtt_certificate_reserved));
+        if(read_ret < 0){
+            return READ_FROM_FILE_ERROR;
+        }
+    } else {
+        reserved = reserved_default;
     }
 
     // 2) Read root_certificate and private key from file
@@ -93,13 +69,7 @@ int xtt_generate_server_certificate(const char* root_cert_file, const char* root
         return READ_FROM_FILE_ERROR;
     }
 
-    // 4) Read server id, public key and private key from files
-    xtt_identity_type server_id = {.data = {0}};
-    read_ret = xtt_read_from_file(server_id_file, server_id.data, sizeof(xtt_identity_type));
-    if (read_ret < 0) {
-        return READ_FROM_FILE_ERROR;
-    }
-
+    // 4) Read server public key and private key from files
     xtt_ecdsap256_pub_key server_public_key = {.data = {0}};
     xtt_ecdsap256_priv_key server_private_key = {.data = {0}};
 
@@ -117,9 +87,8 @@ int xtt_generate_server_certificate(const char* root_cert_file, const char* root
     unsigned char serialized_certificate[XTT_SERVER_CERTIFICATE_ECDSAP256_LENGTH] = {0};
     xtt_return_code_type rc = 0;
     rc = xtt_generate_server_certificate_ecdsap256(serialized_certificate,
-                                             &server_id,
+                                             &reserved,
                                              &server_public_key,
-                                             &expiry,
                                              &root_id,
                                              &root_priv);
     if (XTT_RETURN_SUCCESS != rc) {

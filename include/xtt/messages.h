@@ -101,7 +101,6 @@ xtt_handshake_client_build_idclientattest(uint16_t *io_bytes_requested,
                                           unsigned char **io_ptr,
                                           const struct xtt_server_root_certificate_context* root_server_certificate,
                                           const xtt_identity_type* requested_client_id,
-                                          const xtt_identity_type* intended_server_id,
                                           struct xtt_client_group_context* group_ctx,
                                           struct xtt_client_handshake_context* handshake_ctx);
 
