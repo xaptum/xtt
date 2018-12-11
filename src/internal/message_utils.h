@@ -20,6 +20,7 @@
 #define XTT_MESSAGE_UTILS_H
 #pragma once
 
+#include <xtt/crypto.h>
 #include <xtt/crypto_types.h>
 #include <xtt/certificates.h>
 
@@ -45,7 +46,8 @@ xtt_access_version(const unsigned char* msg_start);
 
 /* ClientInit */
 uint16_t xtt_clientinit_length(xtt_version version,
-                               xtt_suite_spec suite_spec);
+                               xtt_suite_spec suite_spec,
+                               const struct xtt_suite_ops* suite_ops);
 
 unsigned char*
 xtt_clientinit_access_suite_spec(const unsigned char* msg_start,
@@ -60,18 +62,21 @@ xtt_clientinit_access_ecdhe_key(const unsigned char* msg_start,
 
 /* ServerInitAndAttest */
 uint16_t xtt_serverinitandattest_unencrypted_part_length(xtt_version version,
-                                                         xtt_suite_spec suite_spec);
+                                                         xtt_suite_spec suite_spec,
+                                                         const struct xtt_suite_ops* suite_ops);
 
 uint16_t xtt_serverinitandattest_encrypted_part_length(xtt_version version,
                                                        xtt_suite_spec suite_spec);
 
 uint16_t
 xtt_serverinitandattest_total_length(xtt_version version,
-                                     xtt_suite_spec suite_spec);
+                                     xtt_suite_spec suite_spec,
+                                     const struct xtt_suite_ops* suite_ops);
 
 uint16_t
 xtt_serverinitandattest_uptosignature_length(xtt_version version,
-                                            xtt_suite_spec suite_spec);
+                                             xtt_suite_spec suite_spec,
+                                             const struct xtt_suite_ops* suite_ops);
 
 uint16_t
 xtt_serverinitandattest_encrypted_part_uptosignature_length(xtt_version version,
@@ -79,7 +84,8 @@ xtt_serverinitandattest_encrypted_part_uptosignature_length(xtt_version version,
 
 uint16_t
 xtt_serverinitandattest_uptocookie_length(xtt_version version,
-                                         xtt_suite_spec suite_spec);
+                                          xtt_suite_spec suite_spec,
+                                          const struct xtt_suite_ops* suite_ops);
 
 unsigned char*
 xtt_serverinitandattest_access_suite_spec(const unsigned char* msg_start,
@@ -92,7 +98,8 @@ xtt_serverinitandattest_access_ecdhe_key(const unsigned char* msg_start,
 xtt_server_cookie*
 xtt_serverinitandattest_access_server_cookie(const unsigned char* msg_start,
                                              xtt_version version,
-                                             xtt_suite_spec suite_spec);
+                                             xtt_suite_spec suite_spec,
+                                             const struct xtt_suite_ops* suite_ops);
 
 /* encrypted_start = part of message _after_ the additional data */
 struct xtt_server_certificate_raw_type*
@@ -112,7 +119,8 @@ uint16_t xtt_identityclientattest_encrypted_part_length(xtt_version version,
 
 uint16_t
 xtt_identityclientattest_total_length(xtt_version version,
-                                      xtt_suite_spec suite_spec);
+                                      xtt_suite_spec suite_spec,
+                                      const struct xtt_suite_ops* suite_ops);
 
 uint16_t
 xtt_identityclientattest_uptofirstsignature_length(xtt_version version,
@@ -163,7 +171,8 @@ uint16_t xtt_identityserverfinished_encrypted_part_length(xtt_version version,
 
 uint16_t
 xtt_identityserverfinished_total_length(xtt_version version,
-                                        xtt_suite_spec suite_spec);
+                                        xtt_suite_spec suite_spec,
+                                        const struct xtt_suite_ops* suite_ops);
 
 unsigned char*
 xtt_identityserverfinished_access_suite_spec(const unsigned char *msg_start,

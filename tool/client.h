@@ -34,11 +34,6 @@ typedef int TSS2_TCTI_CONTEXT;
 
 #include "parse_cli.h"
 
-typedef enum {
-    XTT_TCTI_SOCKET,
-    XTT_TCTI_DEVICE,
-} xtt_tcti_type;
-
 int run_client(struct cli_params* params);
 
 

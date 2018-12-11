@@ -25,6 +25,7 @@ extern "C" {
 #endif
 
 #include <xtt/crypto_types.h>
+#include <xtt/crypto.h>
 
 int xtt_crypto_initialize_crypto();
 
@@ -34,33 +35,20 @@ void xtt_crypto_secure_clear(unsigned char* memory, uint16_t memory_length);
 
 void xtt_crypto_get_random(unsigned char* buffer, uint16_t buffer_length);
 
-int xtt_crypto_create_x25519_key_pair(xtt_x25519_pub_key *pub, xtt_x25519_priv_key *priv);
+int xtt_crypto_kx_x25519_keypair(struct xtt_crypto_kx_public* public,
+                                 struct xtt_crypto_kx_secret* secret);
 
-int xtt_crypto_do_x25519_diffie_hellman(unsigned char* shared_secret,
-                                        const xtt_x25519_priv_key* my_sk,
-                                        const xtt_x25519_pub_key* other_pk);
+int xtt_crypto_kx_x25519_exchange(struct xtt_crypto_kx_shared* shared,
+                                  const struct xtt_crypto_kx_public* other_public,
+                                  const struct xtt_crypto_kx_secret* my_secret);
 
-int xtt_crypto_hash_sha256(unsigned char* out,
-                           uint16_t* out_length,
+int xtt_crypto_hash_sha512(struct xtt_crypto_hmac* out,
                            const unsigned char* in,
-                           uint16_t in_len);
+                           uint16_t inlen);
 
-int xtt_crypto_hash_sha512(unsigned char* out,
-                           uint16_t* out_length,
-                           const unsigned char* in,
-                           uint16_t in_len);
-
-int xtt_crypto_hash_blake2b(unsigned char* out,
-                            uint16_t* out_length,
+int xtt_crypto_hash_blake2b(struct xtt_crypto_hmac* out,
                             const unsigned char* in,
-                            uint16_t in_len);
-
-int xtt_crypto_prf_sha256(unsigned char* out,
-                          uint16_t out_len,
-                          const unsigned char* in,
-                          uint16_t in_len,
-                          const unsigned char* key,
-                          uint16_t key_len);
+                            uint16_t inlen);
 
 int xtt_crypto_prf_sha512(unsigned char* out,
                           uint16_t out_len,
@@ -89,43 +77,37 @@ int xtt_crypto_verify_ecdsap256(const unsigned char* signature,
                               uint16_t msg_len,
                               const xtt_ecdsap256_pub_key* pub_key);
 
-int xtt_crypto_aead_chacha_encrypt(unsigned char* ciphertext,
-                                   uint16_t* ciphertext_len,
-                                   const unsigned char* message,
-                                   uint16_t msg_len,
-                                   const unsigned char* addl_data,
-                                   uint16_t addl_len,
-                                   const xtt_chacha_nonce* nonce,
-                                   const xtt_chacha_key* key);
+int xtt_crypto_aead_chacha20poly1305_encrypt(unsigned char* cipher,
+                                             const unsigned char* msg,
+                                             uint16_t msglen,
+                                             const unsigned char* ad,
+                                             uint16_t adlen,
+                                             const struct xtt_crypto_aead_nonce* nonce,
+                                             const struct xtt_crypto_aead_key* key);
 
-int xtt_crypto_aead_chacha_decrypt(unsigned char* decrypted,
-                                   uint16_t* decrypted_len,
-                                   const unsigned char* ciphertext,
-                                   uint16_t ciphertext_len,
-                                   const unsigned char* addl_data,
-                                   uint16_t addl_len,
-                                   const xtt_chacha_nonce* nonce,
-                                   const xtt_chacha_key* key);
+int xtt_crypto_aead_chacha20poly1305_decrypt(unsigned char* msg,
+                                             const unsigned char* cipher,
+                                             uint16_t cipherlen,
+                                             const unsigned char* ad_data,
+                                             uint16_t adlen,
+                                             const struct xtt_crypto_aead_nonce* nonce,
+                                             const struct xtt_crypto_aead_key* key);
 
-int xtt_crypto_aead_aes256_encrypt(unsigned char* ciphertext,
-                                   uint16_t* ciphertext_len,
-                                   const unsigned char* message,
-                                   uint16_t msg_len,
-                                   const unsigned char* addl_data,
-                                   uint16_t addl_len,
-                                   const xtt_aes256_nonce* nonce,
-                                   const xtt_aes256_key* key);
+int xtt_crypto_aead_aes256gcm_encrypt(unsigned char* cipher,
+                                      const unsigned char* msg,
+                                      uint16_t msglen,
+                                      const unsigned char* ad,
+                                      uint16_t adlen,
+                                      const struct xtt_crypto_aead_nonce* nonce,
+                                      const struct xtt_crypto_aead_key* key);
 
-int xtt_crypto_aead_aes256_decrypt(unsigned char* decrypted,
-                                   uint16_t* decrypted_len,
-                                   const unsigned char* ciphertext,
-                                   uint16_t ciphertext_len,
-                                   const unsigned char* addl_data,
-                                   uint16_t addl_len,
-                                   const xtt_aes256_nonce* nonce,
-                                   const xtt_aes256_key* key);
-
-
+int xtt_crypto_aead_aes256gcm_decrypt(unsigned char* msg,
+                                      const unsigned char* cipher,
+                                      uint16_t cipherlen,
+                                      const unsigned char* ad_data,
+                                      uint16_t adlen,
+                                      const struct xtt_crypto_aead_nonce* nonce,
+                                      const struct xtt_crypto_aead_key* key);
 
 #ifdef __cplusplus
 }

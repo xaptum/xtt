@@ -4,7 +4,7 @@ list(APPEND CMAKE_MODULE_PATH CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/cmake)
 
 project(xtt
         LANGUAGES C
-        VERSION "0.10.0"
+        VERSION "0.10.1"
         )
 
 set(XTT_VERSION ${PROJECT_VERSION})
@@ -25,7 +25,7 @@ find_package(sodium 1.0.11 REQUIRED QUIET)
 
 if(USE_TPM)
         add_definitions(-DUSE_TPM)
-        find_package(xaptum-tpm 0.5.0 REQUIRED QUIET)
+        find_package(xaptum-tpm 0.5.7 REQUIRED QUIET)
         find_package(ecdaa 0.10.0 COMPONENTS tpm REQUIRED QUIET)
 endif()
 
@@ -36,8 +36,10 @@ if(NOT DEFINED BUILD_SHARED_LIBS OR NOT  "${BUILD_SHARED_LIBS}")
   set(BUILD_STATIC_LIBS ON CACHE BOOL "Build as a static library" FORCE)
 endif()
 
-add_compile_options(-std=c99 -Werror -Wall -Wextra -Wno-missing-field-initializers)
+add_compile_options(-std=c99 -Wall -Wextra -Wno-missing-field-initializers)
 set(CMAKE_C_FLAGS_RELWITHSANITIZE "${CMAKE_C_FLAGS_RELWITHSANITIZE} -O2 -g -fsanitize=address,undefined -fsanitize=unsigned-integer-overflow")
+set(CMAKE_C_FLAGS_DEV "${CMAKE_C_FLAGS_RELEASE} -Werror")
+set(CMAKE_C_FLAGS_DEVDEBUG "${CMAKE_C_FLAGS_DEBUG} -Werror")
 
 set(XTT_SRCS
         src/libsodium_wrapper.c
@@ -45,6 +47,7 @@ set(XTT_SRCS
         src/ecdaa_wrapper.c
         src/certificates.c
         src/context.c
+        src/crypto.c
         src/crypto_types.c
         src/messages.c
         src/return_codes.c
@@ -62,8 +65,15 @@ set(XTT_SRCS
         src/internal/message_utils.c
         src/internal/server_cookie.c
         src/internal/signatures.c
-        src/tpm/handles.c
         )
+
+if(USE_TPM)
+  list(APPEND XTT_SRCS
+        src/tpm/context.c
+        src/tpm/handles.c
+        src/tpm/nvram.c
+        )
+endif()
 
 ################################################################################
 # Shared Libary
@@ -184,13 +194,6 @@ install(FILES
   ${CMAKE_CURRENT_BINARY_DIR}/xtt-config-version.cmake
   DESTINATION ${INSTALL_CONFIGDIR}
 )
-
-################################################################################
-# Examples
-################################################################################
-if(BUILD_EXAMPLES)
-    add_subdirectory(examples)
-endif()
 
 ################################################################################
 # Tests

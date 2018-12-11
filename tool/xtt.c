@@ -15,29 +15,27 @@
  *    limitations under the License
  *
  *****************************************************************************/
+
+#include "server.h"
+#include "client.h"
+#include "parse_cli.h"
+#include "infocert.h"
+#ifdef USE_TPM
+#include "read_nvram.h"
+#endif
+
 #include <xtt/util/generate_ecdsap256_keys.h>
 #include <xtt/util/generate_x509_certificate.h>
 #include <xtt/util/wrap_keys_asn1.h>
 #include <xtt/util/root.h>
 #include <xtt/util/generate_server_certificate.h>
 #include <xtt/util/util_errors.h>
-#include "server.h"
-#include "client.h"
-#include "parse_cli.h"
-#include "infocert.h"
-#include <getopt.h>
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-#include <assert.h>
 
+#include <stdio.h>
 
 int main(int argc, char **argv)
 {
-    struct cli_params params = {.privkey = NULL, .pubkey = NULL, .id = NULL, .cert = NULL, .asn1 = NULL, .server_id = NULL, .time=NULL,
-                                .rootcert = NULL, .servercert = NULL, .basename = NULL, .daagpk = NULL, .port = 0, .usetpm = 0, .tcti = NULL,
-                                .suitespec = NULL, .serverhost = NULL, .devfile = NULL, .daacred = NULL, .daasecretkey = NULL, .requestid = NULL,
-                                .longtermcert = NULL, .longtermpriv = NULL, .serverpriv = NULL, .serverpub = NULL};
+    struct cli_params params;
     parse_cli(argc, argv, &params);
     int out = 0;
     switch(params.command) {
@@ -51,10 +49,10 @@ int main(int argc, char **argv)
             out = xtt_wrap_keys_asn1(params.privkey, params.pubkey, params.asn1);
             break;
         case action_genrootcert:
-            out = xtt_generate_root(params.privkey, params.pubkey, params.id, params.rootcert);
+            out = xtt_generate_root(params.pubkey, params.id, params.rootcert);
             break;
         case action_genservercert:
-            out = xtt_generate_server_certificate(params.rootcert, params.rootpriv, params.serverpriv, params.serverpub, params.server_id, params.time, params.servercert);
+            out = xtt_generate_server_certificate(params.rootcert, params.rootpriv, params.certreserved, params.serverpriv, params.serverpub, params.servercert);
             break;
         case action_runserver:
             out = run_server(&params);
@@ -73,6 +71,15 @@ int main(int argc, char **argv)
             } else {
                 out = PARSE_CERT_ERROR;
             }
+            break;
+        }
+        case action_readnvram: {
+#ifdef USE_TPM
+            out = read_nvram(&params.tpm_params, params.outfile, params.obj_name);
+#else
+            fprintf(stderr, "Attempted to use a TPM, but not built with TPM enabled!\n");
+            out = TPM_ERROR;
+#endif
             break;
         }
         case action_help:
@@ -94,9 +101,6 @@ int main(int argc, char **argv)
             break;
         case ASN1_CREATION_ERROR:
             fprintf(stderr, "Error creating ASN.1 wrapped keys\n");
-            break;
-        case EXPIRY_PASSED:
-            fprintf(stderr, "Expiry has already passed\n");
             break;
         case SERVER_ERROR:
             fprintf(stderr, "Error while server is running xtt\n");

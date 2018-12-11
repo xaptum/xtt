@@ -81,11 +81,6 @@ typedef struct {unsigned char data[258];} xtt_daa_group_pub_key_lrsw;
 typedef struct {unsigned char data[421];} xtt_daa_signature_lrsw;
 typedef struct {unsigned char data[65];} xtt_daa_pseudonym_lrsw;
 
-/* Diffie-Hellman */
-typedef struct {unsigned char data[32];} xtt_x25519_pub_key;
-typedef struct {unsigned char data[32];} xtt_x25519_priv_key;
-typedef struct {unsigned char data[32];} xtt_x25519_shared_secret;
-
 /* LongtermSignature types */
 typedef enum xtt_server_signature_type {
     XTT_SERVER_SIGNATURE_TYPE_ECDSAP256 = 1,
@@ -95,26 +90,10 @@ typedef struct {unsigned char data[65];} xtt_ecdsap256_pub_key;
 typedef struct {unsigned char data[32];} xtt_ecdsap256_priv_key;
 typedef struct {unsigned char data[64];} xtt_ecdsap256_signature;
 
-typedef struct {char data[8];} xtt_certificate_expiry;
+typedef struct {unsigned char data[24];} xtt_certificate_reserved;
 
 typedef struct {unsigned char data[16];} xtt_certificate_root_id;
 extern const xtt_certificate_root_id xtt_null_server_root_id;
-
-/* AEAD key types */
-typedef struct {unsigned char data[32];} xtt_chacha_key;
-typedef struct {unsigned char data[12];} xtt_chacha_nonce;
-typedef struct {unsigned char data[16];} xtt_chacha_mac;
-
-typedef struct {unsigned char data[32];} xtt_aes256_key;
-typedef struct {unsigned char data[12];} xtt_aes256_nonce;
-typedef struct {unsigned char data[16];} xtt_aes256_mac;
-
-/* Hash/HMAC/KDF */
-typedef struct {unsigned char data[32];} xtt_sha256;
-
-typedef struct {unsigned char data[64];} xtt_sha512;
-
-typedef struct {unsigned char data[64];} xtt_blake2b;
 
 int
 xtt_identity_to_string(const xtt_identity_type *identity_in,

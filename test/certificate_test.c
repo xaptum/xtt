@@ -68,10 +68,10 @@ int main(){
     TEST_ASSERT(certificate[index] == UTF8STRING_ATTRTYPE);
     index += name_string_length;
     index += check_seq(certificate, index);
-    TEST_ASSERT(certificate[index] == UTCTIME_TAG);
-    index += utctime_length;
-    TEST_ASSERT(certificate[index] == UTCTIME_TAG);
-    index += utctime_length;
+    TEST_ASSERT(certificate[index] == GENERALIZEDTIME_TAG);
+    index += generalizedtime_length;
+    TEST_ASSERT(certificate[index] == GENERALIZEDTIME_TAG);
+    index += generalizedtime_length;
     index += check_seq(certificate, index);
     TEST_ASSERT(certificate[index] == SET_TAG);
     index += 2;

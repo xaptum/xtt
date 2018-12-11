@@ -32,7 +32,7 @@ void xtt_deserialize_root_certificate(xtt_ecdsap256_pub_key *pub_key, xtt_certif
     memcpy(pub_key->data, &root_cert_in->data[sizeof(xtt_certificate_root_id)], sizeof(xtt_ecdsap256_pub_key));
 }
 
-int xtt_generate_root(const char *privkey_filename, const char *pubkey_filename, const char *id_filename, const char *cert_filename)
+int xtt_generate_root(const char *pubkey_filename, const char *id_filename, const char *cert_filename)
 {
     int read_ret = 0;
     // 1) Read root id from file, assigning root_id a random number if there is no file given
@@ -49,15 +49,9 @@ int xtt_generate_root(const char *privkey_filename, const char *pubkey_filename,
 
     // 2) Generate root's keypair
     xtt_ecdsap256_pub_key pub = {.data = {0}};
-    xtt_ecdsap256_priv_key priv = {.data = {0}};
 
     read_ret = xtt_read_from_file(pubkey_filename, pub.data, sizeof(xtt_ecdsap256_pub_key));
     if(read_ret < 0){
-        return READ_FROM_FILE_ERROR;
-    }
-
-    read_ret = xtt_read_from_file(privkey_filename, priv.data, sizeof(xtt_ecdsap256_priv_key));
-    if (read_ret < 0){
         return READ_FROM_FILE_ERROR;
     }
 
@@ -67,11 +61,6 @@ int xtt_generate_root(const char *privkey_filename, const char *pubkey_filename,
 
     // 4) Save info to files
     int write_ret = xtt_save_to_file(pub.data, sizeof(xtt_ecdsap256_pub_key), pubkey_filename);
-    if(write_ret < 0){
-        return SAVE_TO_FILE_ERROR;
-    }
-
-    write_ret = xtt_save_to_file(priv.data, sizeof(xtt_ecdsap256_priv_key), privkey_filename);
     if(write_ret < 0){
         return SAVE_TO_FILE_ERROR;
     }

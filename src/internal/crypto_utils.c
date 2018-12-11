@@ -27,33 +27,6 @@
 #include <string.h>
 #include <assert.h>
 
-static
-void prepare_nonce(unsigned char* nonce,
-                   xtt_sequence_number sequence_number,
-                   const unsigned char* iv,
-                   uint32_t length);
-
-void copy_dh_pubkey_x25519(unsigned char* out,
-                           uint16_t* out_length,
-                           const struct xtt_handshake_context* self)
-{
-    memcpy(out,
-           self->dh_pub_key.x25519.data,
-           sizeof(xtt_x25519_pub_key));
-
-    if (NULL != out_length)
-        *out_length = sizeof(xtt_x25519_pub_key);
-}
-
-int do_diffie_hellman_x25519(unsigned char* shared_secret,
-                             const unsigned char* other_pk,
-                             const struct xtt_handshake_context* self)
-{
-    return xtt_crypto_do_x25519_diffie_hellman(shared_secret,
-                                               &self->dh_priv_key.x25519,
-                                               (xtt_x25519_pub_key*)other_pk);
-}
-
 void copy_longterm_key_ecdsap256(unsigned char* out,
                                uint16_t* out_length,
                                const struct xtt_client_handshake_context* self)
@@ -72,176 +45,6 @@ int compare_longterm_keys_ecdsap256(unsigned char *other_key,
     return xtt_crypto_memcmp(self->longterm_key.ecdsap256.data,
                              other_key,
                              sizeof(xtt_ecdsap256_pub_key));
-}
-
-int encrypt_null(unsigned char* ciphertext,
-                 uint16_t* ciphertext_len,
-                 const unsigned char* message,
-                 uint16_t msg_len,
-                 const unsigned char* addl_data,
-                 uint16_t addl_len,
-                 struct xtt_handshake_context *self)
-{
-    (void)addl_data;
-    (void)addl_len;
-    (void)self;
-
-    memcpy(ciphertext,
-           message,
-           msg_len);
-
-    *ciphertext_len = msg_len;
-
-    return 0;
-}
-
-int encrypt_chacha(unsigned char* ciphertext,
-                   uint16_t* ciphertext_len,
-                   const unsigned char* message,
-                   uint16_t msg_len,
-                   const unsigned char* addl_data,
-                   uint16_t addl_len,
-                   struct xtt_handshake_context *self)
-{
-    int ret;
-    xtt_chacha_nonce nonce;
-
-    prepare_nonce(nonce.data,
-                  self->tx_sequence_num,
-                  self->tx_iv.chacha.data,
-                  sizeof(nonce));
-
-    self->tx_sequence_num++;
-
-    ret = xtt_crypto_aead_chacha_encrypt(ciphertext,
-                                         ciphertext_len,
-                                         message,
-                                         msg_len,
-                                         addl_data,
-                                         addl_len,
-                                         &nonce,
-                                         &self->tx_key.chacha);
-
-    xtt_crypto_secure_clear(nonce.data, sizeof(nonce));
-
-    return ret;
-}
-
-int encrypt_aes256(unsigned char* ciphertext,
-                   uint16_t* ciphertext_len,
-                   const unsigned char* message,
-                   uint16_t msg_len,
-                   const unsigned char* addl_data,
-                   uint16_t addl_len,
-                   struct xtt_handshake_context *self)
-{
-    int ret;
-    xtt_aes256_nonce nonce;
-
-    prepare_nonce(nonce.data,
-                  self->tx_sequence_num,
-                  self->tx_iv.aes256.data,
-                  sizeof(nonce));
-
-    self->tx_sequence_num++;
-
-    ret = xtt_crypto_aead_aes256_encrypt(ciphertext,
-                                         ciphertext_len,
-                                         message,
-                                         msg_len,
-                                         addl_data,
-                                         addl_len,
-                                         &nonce,
-                                         &self->tx_key.aes256);
-
-    xtt_crypto_secure_clear(nonce.data, sizeof(nonce));
-
-    return ret;
-}
-
-int decrypt_null(unsigned char* decrypted,
-                 uint16_t* decrypted_len,
-                 const unsigned char* ciphertext,
-                 uint16_t ciphertext_len,
-                 const unsigned char* addl_data,
-                 uint16_t addl_len,
-                 struct xtt_handshake_context *self)
-{
-    (void)addl_data;
-    (void)addl_len;
-    (void)self;
-
-    memcpy(decrypted,
-           ciphertext,
-           ciphertext_len);
-
-    *decrypted_len = ciphertext_len;
-
-    return 0;
-}
-
-int decrypt_chacha(unsigned char* decrypted,
-                   uint16_t* decrypted_len,
-                   const unsigned char* ciphertext,
-                   uint16_t ciphertext_len,
-                   const unsigned char* addl_data,
-                   uint16_t addl_len,
-                   struct xtt_handshake_context *self)
-{
-    int ret;
-    xtt_chacha_nonce nonce;
-
-    prepare_nonce(nonce.data,
-                  self->rx_sequence_num,
-                  self->rx_iv.chacha.data,
-                  sizeof(nonce));
-
-    self->rx_sequence_num++;
-
-    ret = xtt_crypto_aead_chacha_decrypt(decrypted,
-                                         decrypted_len,
-                                         ciphertext,
-                                         ciphertext_len,
-                                         addl_data,
-                                         addl_len,
-                                         &nonce,
-                                         &self->rx_key.chacha);
-
-    xtt_crypto_secure_clear(nonce.data, sizeof(nonce));
-
-    return ret;
-}
-
-int decrypt_aes256(unsigned char* decrypted,
-                   uint16_t* decrypted_len,
-                   const unsigned char* ciphertext,
-                   uint16_t ciphertext_len,
-                   const unsigned char* addl_data,
-                   uint16_t addl_len,
-                   struct xtt_handshake_context *self)
-{
-    int ret;
-    xtt_aes256_nonce nonce;
-
-    prepare_nonce(nonce.data,
-                  self->rx_sequence_num,
-                  self->rx_iv.aes256.data,
-                  sizeof(nonce));
-
-    self->rx_sequence_num++;
-
-    ret = xtt_crypto_aead_aes256_decrypt(decrypted,
-                                         decrypted_len,
-                                         ciphertext,
-                                         ciphertext_len,
-                                         addl_data,
-                                         addl_len,
-                                         &nonce,
-                                         &self->rx_key.aes256);
-
-    xtt_crypto_secure_clear(nonce.data, sizeof(nonce));
-
-    return ret;
 }
 
 void read_longterm_key_ecdsap256(struct xtt_server_handshake_context *self,
@@ -409,18 +212,18 @@ int copy_in_pseudonym_client_lrsw(struct xtt_client_handshake_context *self,
                                signature_in);
 }
 
-void prepare_nonce(unsigned char* nonce,
-                   xtt_sequence_number sequence_number,
-                   const unsigned char* iv,
-                   uint32_t nonce_length)
+void prepare_aead_nonce(struct xtt_crypto_aead_nonce* nonce,
+                        xtt_sequence_number* seqnum,
+                        const struct xtt_crypto_aead_nonce* iv)
 {
-    uint32_t padding_length = nonce_length - sizeof(xtt_sequence_number);
-    assert(nonce_length > sizeof(xtt_sequence_number));
+    assert(nonce->len > sizeof(*seqnum));
+    assert(sizeof(*seqnum) == sizeof(uint32_t));
 
-    memset(nonce, 0U, padding_length);
+    uint32_t padlen = nonce->len - sizeof(*seqnum);
+    memset(nonce, 0U, padlen);
 
-    assert(sizeof(xtt_sequence_number) == sizeof(uint32_t));
-    long_to_bigendian(sequence_number, nonce + padding_length);
+    long_to_bigendian(*seqnum, &nonce->buf + padlen);
+    *seqnum += 1;
 
-    xor_equals(nonce, iv, nonce_length);
+    xor_equals(&nonce->buf, &iv->buf, nonce->len);
 }

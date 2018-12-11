@@ -1,13 +1,13 @@
 /******************************************************************************
  *
  * Copyright 2018 Xaptum, Inc.
- * 
+ *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
  *    You may obtain a copy of the License at
- * 
+ *
  *        http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  *    Unless required by applicable law or agreed to in writing, software
  *    distributed under the License is distributed on an "AS IS" BASIS,
  *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -16,30 +16,42 @@
  *
  *****************************************************************************/
 
-#ifndef XTT_INTERNAL_KEY_DERIVATION_H
-#define XTT_INTERNAL_KEY_DERIVATION_H
+#ifndef XTT_TPM_CONTEXT_H
+#define XTT_TPM_CONTEXT_H
 #pragma once
-
-#include <xtt/context.h>
-#include <xtt/crypto.h>
-#include <xtt/crypto_types.h>
-#include <xtt/return_codes.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-xtt_return_code_type
-derive_handshake_keys(struct xtt_handshake_context *handshake_ctx,
-                      const unsigned char *client_init,
-                      const unsigned char *server_initandattest_uptocookie,
-                      const xtt_server_cookie *server_cookie,
-                      const struct xtt_crypto_kx_public* others_pubkey,
-                      int is_client);
+#include <tss2/tss2_sys.h>
+#include <tss2/tss2_tcti.h>
+
+typedef enum {
+    XTT_TCTI_SOCKET,
+    XTT_TCTI_DEVICE,
+} xtt_tcti_type;
+
+struct xtt_tpm_params {
+    xtt_tcti_type tcti;
+    const char *dev_file;
+    const char *hostname;
+    const char *port;
+};
+
+struct xtt_tpm_context {
+    unsigned char tcti_context_buffer[256];
+    TSS2_TCTI_CONTEXT *tcti_context;
+    unsigned char sapi_context_buffer[5120];
+    TSS2_SYS_CONTEXT *sapi_context;
+};
+
+int xtt_init_tpm_context(struct xtt_tpm_context *ctx, const struct xtt_tpm_params *params);
+
+void xtt_free_tpm_context(struct xtt_tpm_context *ctx);
 
 #ifdef __cplusplus
 }
 #endif
 
 #endif
-

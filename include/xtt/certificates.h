@@ -33,9 +33,8 @@ struct xtt_server_certificate_raw_type;
 
 xtt_return_code_type
 xtt_generate_server_certificate_ecdsap256(unsigned char *cert_out,
-                                        xtt_identity_type *servers_id,
+                                        xtt_certificate_reserved *reserved_in,
                                         xtt_ecdsap256_pub_key *servers_pub_key,
-                                        xtt_certificate_expiry *expiry,
                                         xtt_certificate_root_id *roots_id,
                                         xtt_ecdsap256_priv_key *roots_priv_key);
 
@@ -52,10 +51,7 @@ uint16_t
 xtt_server_certificate_length_uptosignature(xtt_suite_spec suite_spec);
 
 unsigned char*
-xtt_server_certificate_access_id(const struct xtt_server_certificate_raw_type *certificate);
-
-unsigned char*
-xtt_server_certificate_access_expiry(const struct xtt_server_certificate_raw_type *certificate);
+xtt_server_certificate_access_reserved(const struct xtt_server_certificate_raw_type *certificate);
 
 unsigned char*
 xtt_server_certificate_access_rootid(const struct xtt_server_certificate_raw_type *certificate);
@@ -70,9 +66,6 @@ xtt_server_certificate_access_rootsignature_fromsignaturetype(const struct xtt_s
 unsigned char*
 xtt_server_certificate_access_rootsignature(const struct xtt_server_certificate_raw_type *certificate,
                                             xtt_suite_spec suite_spec);
-
-int
-xtt_check_expiry(const xtt_certificate_expiry *expiry);
 
 #ifdef __cplusplus
 }

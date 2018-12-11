@@ -84,8 +84,6 @@ void server_step_one(struct xtt_server_ctxhelper* server, struct network_helper*
 
 void client_step_two(struct xtt_client_ctxhelper* client, struct network_helper* network){
     xtt_certificate_root_id claimed_root_out;
-    const xtt_identity_type intended_server_id = {.data = {0x31, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30,
-        0x30, 0x30, 0x30, 0x31}};
 
     client_read_from_network(client, network);
     EXPECT_EQ(client->rc, XTT_RETURN_WANT_READ);
@@ -100,7 +98,7 @@ void client_step_two(struct xtt_client_ctxhelper* client, struct network_helper*
     EXPECT_EQ(client->rc, XTT_RETURN_WANT_BUILDIDCLIENTATTEST);
     client->rc=xtt_handshake_client_build_idclientattest(&client->bytes_requested, &client->io_ptr,
                                                     &client->server_root_cert, &xtt_null_identity,
-                                                    &intended_server_id, &client->group_ctx,
+                                                    &client->group_ctx,
                                                     &client->ctx);
     EXPECT_EQ(client->rc, XTT_RETURN_WANT_WRITE);
     client_write_to_network(client, network);

@@ -32,8 +32,8 @@ void ecdsa_check_k_vals();
 void reinitialization_is_ok();
 void size_sanity();
 void x25519_keys_independent();
-void dh_gives_same_secret();
-void bad_dh_fails();
+void x25519_dh_gives_same_secret();
+void x25519_bad_dh_fails();
 
 void initialize() {
     TEST_ASSERT(0 == ECDH_OK);
@@ -47,8 +47,8 @@ int main() {
     reinitialization_is_ok();
     size_sanity();
     x25519_keys_independent();
-    dh_gives_same_secret();
-    bad_dh_fails();
+    x25519_dh_gives_same_secret();
+    x25519_bad_dh_fails();
 
     ecdsa_regression_test();
     ecdsa_hard_code_keypair();
@@ -71,7 +71,7 @@ void size_sanity()
     printf("starting wrapper_sanity-test::size_sanity...\n");
 
     // TODO
-    EXPECT_EQ(sizeof(xtt_x25519_pub_key), sizeof(xtt_x25519_priv_key));
+    EXPECT_EQ(sizeof(xtt_crypto_x25519_public), sizeof(xtt_crypto_x25519_secret));
 
     printf("ok\n");
 }
@@ -80,100 +80,67 @@ void x25519_keys_independent()
 {
     printf("starting wrapper_sanity-test::x25519_keys_independent...\n");
 
-    xtt_x25519_pub_key pub;
-    xtt_x25519_priv_key priv;
-    xtt_crypto_create_x25519_key_pair(&pub, &priv);
+    struct xtt_crypto_kx_public pub1;
+    struct xtt_crypto_kx_secret sec1;
+    xtt_crypto_kx_x25519_keypair(&pub1, &sec1);
 
-    xtt_x25519_pub_key pub_two;
-    xtt_x25519_priv_key priv_two;
-    xtt_crypto_create_x25519_key_pair(&pub_two, &priv_two);
+    struct xtt_crypto_kx_public pub2;
+    struct xtt_crypto_kx_secret sec2;
+    xtt_crypto_kx_x25519_keypair(&pub2, &sec2);
 
     // pub_key_length == priv_key_length (cf. earlier test)
-    EXPECT_NE(memcmp(pub.data,
-                     priv.data,
-                     sizeof(xtt_x25519_pub_key)),
-              0);
-
-    EXPECT_NE(memcmp(pub_two.data,
-                     priv_two.data,
-                     sizeof(xtt_x25519_pub_key)),
-              0);
-
-    EXPECT_NE(memcmp(pub.data,
-                     pub_two.data,
-                     sizeof(xtt_x25519_pub_key)),
-              0);
-
-    EXPECT_NE(memcmp(priv.data,
-                     priv_two.data,
-                     sizeof(xtt_x25519_priv_key)),
-              0);
+    EXPECT_NE(memcmp(&pub1.buf, &sec1.buf, sizeof(pub1.len)), 0);
+    EXPECT_NE(memcmp(&pub2.buf, &sec2.buf, sizeof(pub2.len)), 0);
+    EXPECT_NE(memcmp(&pub1.buf, &pub2.buf, sizeof(pub1.len)), 0);
+    EXPECT_NE(memcmp(&sec1.buf, &sec2.buf, sizeof(sec1.len)), 0);
 
     printf("ok\n");
 }
 
-void dh_gives_same_secret()
+void x25519_dh_gives_same_secret()
 {
-    printf("starting wrapper_sanity-test::dh_gives_same_secret...\n");
+    printf("starting wrapper_sanity-test::x25519_dh_gives_same_secret...\n");
 
-    xtt_x25519_pub_key client_pub;
-    xtt_x25519_priv_key client_priv;
-    xtt_crypto_create_x25519_key_pair(&client_pub, &client_priv);
+    struct xtt_crypto_kx_public c_pub;
+    struct xtt_crypto_kx_secret c_sec;
+    xtt_crypto_kx_x25519_keypair(&c_pub, &c_sec);
 
-    xtt_x25519_pub_key server_pub;
-    xtt_x25519_priv_key server_priv;
-    xtt_crypto_create_x25519_key_pair(&server_pub, &server_priv);
+    struct xtt_crypto_kx_public s_pub;
+    struct xtt_crypto_kx_secret s_sec;
+    xtt_crypto_kx_x25519_keypair(&s_pub, &s_sec);
 
-    xtt_x25519_shared_secret shared_secret_client_copy;
-    EXPECT_EQ(xtt_crypto_do_x25519_diffie_hellman((unsigned char*)&shared_secret_client_copy,
-                                                  &client_priv,
-                                                  &server_pub),
-              0);
+    struct xtt_crypto_kx_shared c_shared;
+    EXPECT_EQ(xtt_crypto_kx_x25519_exchange(&c_shared, &s_pub, &c_sec), 0);
 
-    xtt_x25519_shared_secret shared_secret_server_copy;
-    EXPECT_EQ(xtt_crypto_do_x25519_diffie_hellman((unsigned char*)&shared_secret_server_copy,
-                                                  &server_priv,
-                                                  &client_pub),
-              0);
+    struct xtt_crypto_kx_shared s_shared;
+    EXPECT_EQ(xtt_crypto_kx_x25519_exchange(&s_shared, &c_pub, &s_sec), 0);
 
-    EXPECT_EQ(memcmp(shared_secret_client_copy.data,
-                     shared_secret_server_copy.data,
-                     sizeof(xtt_x25519_shared_secret)),
-              0);
+    EXPECT_EQ(memcmp(&c_shared.buf, &s_shared.buf, c_shared.len), 0);
 
     printf("ok\n");
 }
 
-void bad_dh_fails()
+void x25519_bad_dh_fails()
 {
     printf("starting wrapper_sanity-test::bad_dh_fails...\n");
 
-    xtt_x25519_pub_key client_pub;
-    xtt_x25519_priv_key client_priv;
-    xtt_crypto_create_x25519_key_pair(&client_pub, &client_priv);
+    struct xtt_crypto_kx_public c_pub;
+    struct xtt_crypto_kx_secret c_sec;
+    xtt_crypto_kx_x25519_keypair(&c_pub, &c_sec);
 
     // Create garbage keys
-    xtt_x25519_pub_key server_pub;
-    xtt_x25519_priv_key server_priv;
-    xtt_crypto_get_random(server_pub.data, sizeof(xtt_x25519_pub_key));
-    xtt_crypto_get_random(server_priv.data, sizeof(xtt_x25519_priv_key));
+    struct xtt_crypto_kx_public s_pub;
+    struct xtt_crypto_kx_secret s_sec;
+    xtt_crypto_get_random(&s_pub.buf, sizeof(xtt_crypto_x25519_public));
+    xtt_crypto_get_random(&s_sec.buf, sizeof(xtt_crypto_x25519_secret));
 
-    xtt_x25519_shared_secret shared_secret_client_copy;
-    EXPECT_EQ(xtt_crypto_do_x25519_diffie_hellman((unsigned char*)&shared_secret_client_copy,
-                                                  &client_priv,
-                                                  &server_pub),
-              0);
+    struct xtt_crypto_kx_shared c_shared;
+    EXPECT_EQ(xtt_crypto_kx_x25519_exchange(&c_shared, &s_pub, &c_sec), 0);
 
-    xtt_x25519_shared_secret shared_secret_server_copy;
-    EXPECT_EQ(xtt_crypto_do_x25519_diffie_hellman((unsigned char*)&shared_secret_server_copy,
-                                                  &server_priv,
-                                                  &client_pub),
-              0);
+    struct xtt_crypto_kx_shared s_shared;
+    EXPECT_EQ(xtt_crypto_kx_x25519_exchange(&s_shared, &c_pub, &s_sec), 0);
 
-    EXPECT_NE(memcmp(shared_secret_client_copy.data,
-                     shared_secret_server_copy.data,
-                     sizeof(xtt_x25519_shared_secret)),
-              0);
+    EXPECT_NE(memcmp(&c_shared.buf, &s_shared.buf, c_shared.len), 0);
 
     printf("ok\n");
 }
