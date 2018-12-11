@@ -25,7 +25,11 @@ extern "C" {
 #endif
 
 #include <stdbool.h>
+
+#ifdef USE_TPM
+#include <xtt/tpm/context.h>
 #include <xtt/tpm/nvram.h>
+#endif
 
 typedef enum {
     action_genkey,
@@ -58,20 +62,20 @@ struct cli_params {
     const char* portstr;
     unsigned short port;
     bool usetpm;
-    const char* tcti;
     const char* suitespec;
     const char* serverhost;
-    const char* devfile;
     const char* daacred;
     const char* daasecretkey;
     const char* requestid;
     const char* longtermcert;
     const char* longtermpriv;
     const char* assignedid;
-    const char* tpmhostname;
-    const char* tpmport;
     const char* outfile;
+
+#ifdef USE_TPM
+    struct xtt_tpm_params tpm_params;
     enum xtt_object_name obj_name;
+#endif
 
 };
 

@@ -16,11 +16,12 @@
  *
  *****************************************************************************/
 
+#include "parse_cli.h"
+
 #include <getopt.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "parse_cli.h"
 
 static
 void parse_genkey_cli(int argc, char **argv, struct cli_params *params)
@@ -353,6 +354,7 @@ void parse_runclient_cli(int argc, char** argv, struct cli_params *params){
     params->longtermcert = "longterm_cert.bin";
     params->longtermpriv = "longterm_priv.bin";
     params->assignedid = "client_id.txt";
+    params->requestid = NULL;
     params->basename = "basename.bin";
     params->rootcert = "root_cert.bin";
     params->daagpk = "daa_gpk.bin";
@@ -360,10 +362,19 @@ void parse_runclient_cli(int argc, char** argv, struct cli_params *params){
     params->daasecretkey = "daa_secretkey.bin";
     params->usetpm = 0;
     params->suitespec = "X25519_LRSW_ECDSAP256_CHACHA20POLY1305_SHA512";
-    params->tcti = "device";
+#ifdef USE_TPM
+    char *tcti_str = "device";
+    params->tpm_params.dev_file = "/dev/tpm0";
+    params->tpm_params.hostname = "localhost";
+    params->tpm_params.port = "2321";
+#endif
     const char *usage_str = "Run XTT client.\n\n"
         "Usage: %s %s [-h] [-p <file>] [-s option] [-a <file>] [-q <file>] [-r <file>] [-d <file>] [-c <file>] [-k <file>]"
-        "[-e <file>] [-n <file>] [-m <file>] [-t <file>] [-f <file>] [-i <file>] [b <file>][-v <file>]\n"
+        "[-e <file>] [-n <file>] [-i <file>] [b <file>] [-v <file>]"
+#ifdef USE_TPM
+        " [-m <file>] [-t <file>] [-f <file>]"
+#endif
+        "\n"
         "\tOptions:\n"
         "\t\t-h --help                    Display this message.\n"
         "\t\t-p --port                    Port to connect to [default port: 4444]\n"
@@ -379,12 +390,14 @@ void parse_runclient_cli(int argc, char** argv, struct cli_params *params){
         "\t\t-k --daasecret               DAA Secret Key input location [default = daa_secretkey.bin]\n"
         "\t\t-e --rcert                   Root Certificate input location [default = root_cert.bin]\n"
         "\t\t-n --basename                Basename input location [default = basename.bin]\n"
-        "\t\t-m --tpmuse                  Indicates to use TPM\n"
-        "\t\t-t --tctitype                Which TCTI socket is used ('device' or 'socket') [default = device]\n"
-        "\t\t-f --devfile                 Device file input location if tcti == device\n"
         "\t\t-i --assignedid              Assigned ID output location [default = client_id.txt]\n"
         "\t\t-b --longtermpub             Longterm Public Key output location [default = longterm_cert.bin]\n"
         "\t\t-v --longtermpriv            Longterm Private Key output location [default = longterm_priv.bin]\n"
+#ifdef USE_TPM
+        "\t\t-m --tpmuse                  Indicates to use TPM [default = false]\n"
+        "\t\t-t --tctitype                Which TCTI socket is used ('device' or 'socket') [default = device]\n"
+        "\t\t-f --devfile                 Device file input location if tcti == device [default = /dev/tpm0]\n"
+#endif
         ;
 
     static struct option cli_options[] =
@@ -398,13 +411,15 @@ void parse_runclient_cli(int argc, char** argv, struct cli_params *params){
         {"daasecret", required_argument, NULL, 'k'},
         {"rcert", required_argument, NULL, 'e'},
         {"basename", required_argument, NULL, 'n'},
-        {"tpmuse", no_argument, NULL, 'm'},
-        {"tctitype", required_argument, NULL, 't'},
-        {"devfile", required_argument, NULL, 'f'},
         {"assignedid", required_argument, NULL, 'i'},
         {"longtermpub", required_argument, NULL, 'b'},
         {"longtermpriv", required_argument, NULL, 'v'},
         {"help", no_argument, NULL, 'h'},
+#ifdef USE_TPM
+        {"tpmuse", no_argument, NULL, 'm'},
+        {"tctitype", required_argument, NULL, 't'},
+        {"devfile", required_argument, NULL, 'f'},
+#endif
 
         {NULL, 0, NULL, 0}
     };
@@ -452,17 +467,6 @@ void parse_runclient_cli(int argc, char** argv, struct cli_params *params){
                 params->basename = optarg;
                 break;
             }
-            case 'm':
-                params->usetpm = 1;
-                break;
-            case 't':
-                params->tcti = optarg;
-                break;
-            case 'f':
-            {
-                params->devfile = optarg;
-                break;
-            }
             case 'i':
             {
                 params->assignedid = optarg;
@@ -478,20 +482,48 @@ void parse_runclient_cli(int argc, char** argv, struct cli_params *params){
                 params->longtermpriv = optarg;
                 break;
             }
+#ifdef USE_TPM
+            case 'm':
+                params->usetpm = 1;
+                break;
+            case 't':
+                tcti_str = optarg;
+                break;
+            case 'f':
+                params->tpm_params.dev_file = optarg;
+                break;
+#else
+            case 'm':
+            case 't':
+            case 'f':
+                printf("TPM options are not supported, because not built with TPM support.");
+#endif
             case 'h':
             printf(usage_str, argv[0], argv[1]);
             exit(1);
         }
     }
+
+#ifdef USE_TPM
+    if (0 == strcmp(tcti_str, "device")) {
+        params->tpm_params.tcti = XTT_TCTI_DEVICE;
+    } else if (0 == strcmp(tcti_str, "socket")) {
+        params->tpm_params.tcti = XTT_TCTI_SOCKET;
+    } else {
+        fprintf(stderr, "Unknown tcti_type '%s'\n", tcti_str);
+        exit(1);
+    }
+#endif
 }
 
 static
 void parse_nvram_cli(int argc, char** argv, struct cli_params *params)
 {
-    params->tcti = "device";
-    params->devfile = "/dev/tpm0";
-    params->tpmhostname = "localhost";
-    params->tpmport = "2321";
+#ifdef USE_TPM
+    char *tcti_str = "device";
+    params->tpm_params.dev_file = "/dev/tpm0";
+    params->tpm_params.hostname = "localhost";
+    params->tpm_params.port = "2321";
     params->outfile = NULL;
     const char *usage_str = "Dump to file an NVRAM object provisioned on a Xaptum TPM.\n\n"
         "Usage: %s [-h] [-t device|socket] [-d <path>] [-a <ip>] [-p <port>] [-o <file>] <object-name>\n"
@@ -521,16 +553,16 @@ void parse_nvram_cli(int argc, char** argv, struct cli_params *params)
     while ((c = getopt_long(argc, argv, "t:d:a:p:o:h", cli_options, NULL)) != -1) {
         switch (c) {
             case 't':
-                params->tcti = optarg;
+                tcti_str = optarg;
                 break;
             case 'd':
-                params->devfile = optarg;
+                params->tpm_params.dev_file = optarg;
                 break;
             case 'a':
-                params->tpmhostname = optarg;
+                params->tpm_params.hostname = optarg;
                 break;
             case 'p':
-                params->tpmport = optarg;
+                params->tpm_params.port = optarg;
                 break;
             case 'o':
                 params->outfile = optarg;
@@ -573,6 +605,22 @@ void parse_nvram_cli(int argc, char** argv, struct cli_params *params)
         fprintf(stderr, "Must specify object name\n");
         exit(1);
     }
+
+    if (0 == strcmp(tcti_str, "device")) {
+        params->tpm_params.tcti = XTT_TCTI_DEVICE;
+    } else if (0 == strcmp(tcti_str, "socket")) {
+        params->tpm_params.tcti = XTT_TCTI_SOCKET;
+    } else {
+        fprintf(stderr, "Unknown tcti_type '%s'\n", tcti_str);
+        exit(1);
+    }
+#else
+    (void)argc;
+    (void)argv;
+    (void)params;
+    printf("NVRAM operations are not supported, because not built with TPM support.");
+    exit(1);
+#endif
 }
 
 void parse_cli(int argc, char** argv, struct cli_params *params)

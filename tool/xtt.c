@@ -15,30 +15,27 @@
  *    limitations under the License
  *
  *****************************************************************************/
+
+#include "server.h"
+#include "client.h"
+#include "parse_cli.h"
+#include "infocert.h"
+#ifdef USE_TPM
+#include "read_nvram.h"
+#endif
+
 #include <xtt/util/generate_ecdsap256_keys.h>
 #include <xtt/util/generate_x509_certificate.h>
 #include <xtt/util/wrap_keys_asn1.h>
 #include <xtt/util/root.h>
 #include <xtt/util/generate_server_certificate.h>
 #include <xtt/util/util_errors.h>
-#include "server.h"
-#include "client.h"
-#include "parse_cli.h"
-#include "infocert.h"
-#include "read_nvram.h"
-#include <getopt.h>
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-#include <assert.h>
 
+#include <stdio.h>
 
 int main(int argc, char **argv)
 {
-    struct cli_params params = {.privkey = NULL, .pubkey = NULL, .id = NULL, .cert = NULL, .asn1 = NULL,
-                                .rootcert = NULL, .servercert = NULL, .basename = NULL, .daagpk = NULL, .port = 0, .usetpm = 0, .tcti = NULL,
-                                .suitespec = NULL, .serverhost = NULL, .devfile = NULL, .daacred = NULL, .daasecretkey = NULL, .requestid = NULL,
-                                .longtermcert = NULL, .longtermpriv = NULL, .serverpriv = NULL, .serverpub = NULL};
+    struct cli_params params;
     parse_cli(argc, argv, &params);
     int out = 0;
     switch(params.command) {
@@ -76,9 +73,15 @@ int main(int argc, char **argv)
             }
             break;
         }
-        case action_readnvram:
-            out = read_nvram(params.tcti, params.devfile, params.tpmhostname, params.tpmport, params.outfile, params.obj_name);
+        case action_readnvram: {
+#ifdef USE_TPM
+            out = read_nvram(&params.tpm_params, params.outfile, params.obj_name);
+#else
+            fprintf(stderr, "Attempted to use a TPM, but not built with TPM enabled!\n");
+            out = TPM_ERROR;
+#endif
             break;
+        }
         case action_help:
             break;
     }
