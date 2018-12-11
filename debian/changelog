@@ -1,3 +1,63 @@
+xtt (0.10.1-1) unstable; urgency=medium
+
+  [ Kathryn Fejer ]
+  * Take out unnecessary examples/
+  * Update README for tool
+  * tool: update help messages
+  * tool: read root cert fix
+  * tool: priv key out of genrootcert
+
+  [ Zane Beckwith ]
+  * util: Include the correct header for generate_server_certificate.
+  * Convert server-id and expiry to "reserved" in server cert.
+  * x509: Use unexpiring validity dates when wrapping in x509
+  * return_codes: Explicitly number the codes in the enum.
+
+  [ David R. Bild ]
+  * crypto: add polymorphic interface for HMAC operations
+  * context: encapsulate all HMAC ops behind suite spec
+  * crypto: remove deprecated hash wrapper methods
+
+  [ Zane Beckwith ]
+  * crypto: don't use outlen output param in hash
+
+  [ David R. Bild ]
+  * crypto: add polymorphic interface for key exchange operations
+  * context: encapsulate all key exchange ops behind suite spec
+  * crypto: remove deprecated x25519 wrapper methods
+  * crypto: add polymorphic interface for AEAD operations
+  * context: encapsulate all AEAD ops behind suite spec
+  * crypto: remove deprecated AEAD wrapper methods
+  * context: remove suite spec switch statements
+
+  [ Zane Beckwith ]
+  * Make hash function take struct, not raw pointer.
+
+  [ Unknown ]
+  * Add nvram.c and handles
+  * start changing client code to use xtt_read_nvram
+
+  [ Kathryn Fejer ]
+  * tool: separate nvram reads and file reads into different functions
+  * tool: add capability to read data from TPM
+  * tool: move tcti and sapi context init functions
+  * data: remove server_id files
+  * travis: add build static libs test
+  * travis: add build to check install
+  * cmake: add dev and devdebug
+  * travis: add dev and devdebug builds
+  * add debug builds to README
+
+  [ Zane Beckwith ]
+  * cmake: Require xaptum-tpm v0.5.7 or higher.
+  * travis: Use v0.5.8 for xaptum-tpm
+  * util: Move tpm_context under tpm, and use USE_TPM in omnibus header
+  * tpm: Reorganize tpm_context.
+  * tpm: Use new tpm/context in tpm/nvram functions.
+  * Bump patch number.
+
+ -- Zane Beckwith <zane.beckwith@xaptum.com>  Tue, 11 Dec 2018 22:24:37 +0000
+
 xtt (0.10.0-1) unstable; urgency=medium
 
   [ David R. Bild ]
