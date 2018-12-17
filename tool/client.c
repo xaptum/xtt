@@ -79,6 +79,7 @@ static int read_in_from_TPM(struct xtt_tpm_context *tpm_ctx,
                   xtt_root_certificate* root_certificate);
 
 static int read_in_from_files(unsigned char* basename,
+                       uint16_t basename_buffer_len,
                        uint16_t* basename_len,
                        const char* basename_file,
                        xtt_daa_group_pub_key_lrsw* gpk,
@@ -182,7 +183,7 @@ int run_client(struct cli_params* params)
     if (use_tpm) {
         read_ret = read_in_from_TPM(&tpm_ctx, basename, &basename_len, &gpk, &cred, &root_certificate);
     } else {
-        read_ret = read_in_from_files(basename, &basename_len, basename_file,
+        read_ret = read_in_from_files(basename, sizeof(basename), &basename_len, basename_file,
                                       &gpk, daa_gpk_file,
                                       &cred, daa_cred_file,
                                       &daa_priv_key, daa_secretkey_file,
@@ -370,6 +371,7 @@ int read_in_from_TPM(struct xtt_tpm_context *tpm_ctx,
 
 static
 int read_in_from_files(unsigned char* basename,
+                       uint16_t basename_buffer_len,
                        uint16_t* basename_len,
                        const char* basename_file,
                        xtt_daa_group_pub_key_lrsw* gpk,
@@ -381,7 +383,7 @@ int read_in_from_files(unsigned char* basename,
                        xtt_root_certificate* root_certificate,
                        const char* root_cert_file)
 {
-    int read_ret = xtt_read_from_file(basename_file, basename, sizeof(basename));
+    int read_ret = xtt_read_from_file(basename_file, basename, basename_buffer_len);
     if (read_ret < 0) {
         return READ_FROM_FILE_ERROR;
     }
