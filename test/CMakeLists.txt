@@ -52,3 +52,5 @@ add_test(NAME "tool_test"
   ${PROJECT_SOURCE_DIR}/data/client
   ${CURRENT_TEST_BINARY_DIR}
   )
+
+add_subdirectory(cpp)
