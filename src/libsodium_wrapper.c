@@ -81,14 +81,14 @@ void xtt_crypto_get_random(unsigned char* buffer, uint16_t buffer_length)
     randombytes_buf(buffer, buffer_length);
 }
 
-int xtt_crypto_kx_x25519_keypair(struct xtt_crypto_kx_public* public,
-                                 struct xtt_crypto_kx_secret* secret)
+int xtt_crypto_kx_x25519_keypair(struct xtt_crypto_kx_public* public_key,
+                                 struct xtt_crypto_kx_secret* secret_key)
 {
-    public->len = sizeof(xtt_crypto_x25519_public);
-    secret->len = sizeof(xtt_crypto_x25519_secret);
+    public_key->len = sizeof(xtt_crypto_x25519_public);
+    secret_key->len = sizeof(xtt_crypto_x25519_secret);
 
-    randombytes_buf(&secret->buf, secret->len);
-    return crypto_scalarmult_base(&public->buf, &secret->buf);
+    randombytes_buf(&secret_key->buf, secret_key->len);
+    return crypto_scalarmult_base(&public_key->buf, &secret_key->buf);
 }
 
 int xtt_crypto_kx_x25519_exchange(struct xtt_crypto_kx_shared* shared,

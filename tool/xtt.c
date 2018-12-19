@@ -123,4 +123,10 @@ int main(int argc, char **argv)
         case VOID_SUCCESS:
             break;
     }
+
+    if (0 == out) {
+        return 0;
+    } else {
+        return 1;
+    }
 }

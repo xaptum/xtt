@@ -16,14 +16,14 @@ TODO: Actually briefly summarize protocol justification and features.
 `xtt` is available for the following distributions. It may also be
 built from source.
 
-### Debian (Jessie or Stretch)
+### Debian (Stretch)
 
 ``` bash
 # Install the Xaptum API repo GPG signing key.
 apt-key adv --keyserver keyserver.ubuntu.com --recv-keys c615bfaa7fe1b4ca
 
-# Add the repository to your APT sources, replacing <dist> with either jessie or stretch.
-echo "deb http://dl.bintray.com/xaptum/deb <dist> main" > /etc/apt/sources.list.d/xaptum.list
+# Add the repository to your APT sources
+echo "deb http://dl.bintray.com/xaptum/deb stretch main" > /etc/apt/sources.list.d/xaptum.list
 
 # Install the library.
 sudo apt-get install libxtt-dev

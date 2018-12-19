@@ -79,6 +79,7 @@ static int read_in_from_TPM(struct xtt_tpm_context *tpm_ctx,
                   xtt_root_certificate* root_certificate);
 
 static int read_in_from_files(unsigned char* basename,
+                       uint16_t basename_buffer_len,
                        uint16_t* basename_len,
                        const char* basename_file,
                        xtt_daa_group_pub_key_lrsw* gpk,
@@ -127,8 +128,8 @@ int run_client(struct cli_params* params)
 
     ret = xtt_crypto_initialize_crypto();
     if (0 != ret) {
-        fprintf(stderr, "Error initializing cryptography library: %d\n", ret);
-        return 1;
+        ret = CLIENT_ERROR;
+        goto finish;
     }
     setbuf(stdout, NULL);
 
@@ -139,7 +140,8 @@ int run_client(struct cli_params* params)
     }else{
         read_ret = xtt_read_from_file(requested_client_id_file, requested_client_id.data, sizeof(xtt_identity_type));
         if (read_ret < 0) {
-            return READ_FROM_FILE_ERROR;
+            ret = READ_FROM_FILE_ERROR;
+            goto finish;
         }
     }
 
@@ -182,13 +184,14 @@ int run_client(struct cli_params* params)
     if (use_tpm) {
         read_ret = read_in_from_TPM(&tpm_ctx, basename, &basename_len, &gpk, &cred, &root_certificate);
     } else {
-        read_ret = read_in_from_files(basename, &basename_len, basename_file,
+        read_ret = read_in_from_files(basename, sizeof(basename), &basename_len, basename_file,
                                       &gpk, daa_gpk_file,
                                       &cred, daa_cred_file,
                                       &daa_priv_key, daa_secretkey_file,
                                       &root_certificate, root_cert_file);
     }
     if (read_ret != 0) {
+        ret = read_ret;
         goto finish;
     }
 
@@ -199,6 +202,7 @@ int run_client(struct cli_params* params)
     ret = init_daa_ret;
     if (0 != init_daa_ret) {
         fprintf(stderr, "Error initializing DAA context\n");
+        ret = init_daa_ret;
         goto finish;
     }
     // 1iii) Initialize Certificates
@@ -212,7 +216,7 @@ int run_client(struct cli_params* params)
     printf("Connecting to server at %s:%s ...\t", server_ip, server_port);
     socket = connect_to_server(server_ip, (char*)server_port);
     if (socket < 0) {
-        ret = 1;
+        ret = CLIENT_ERROR;
         goto finish;
     }
     printf("ok\n");
@@ -225,8 +229,8 @@ int run_client(struct cli_params* params)
     struct xtt_client_handshake_context ctx;
     xtt_return_code_type rc = xtt_initialize_client_handshake_context(&ctx, in_buffer, sizeof(in_buffer), out_buffer, sizeof(out_buffer), version_g_client, suite_spec);
     if (XTT_RETURN_SUCCESS != rc) {
-        ret = 1;
         fprintf(stderr, "Error initializing client handshake context: %d\n", rc);
+        ret = CLIENT_ERROR;
         goto finish;
     }
 
@@ -239,10 +243,13 @@ int run_client(struct cli_params* params)
     // 5) Print the results (what we and the server now agree on post-handshake)
         ret = report_results_client(&requested_client_id,
                              &ctx, assigned_client_id_out_file, longterm_public_key_out_file, longterm_private_key_out_file);
-        if (0 != ret)
+        if (0 != ret){
+            ret = CLIENT_ERROR;
             goto finish;
+        }
     } else {
         fprintf(stderr, "Handshake failed!\n");
+        ret = CLIENT_ERROR;
         goto finish;
     }
 
@@ -254,11 +261,7 @@ finish:
         xtt_free_tpm_context(&tpm_ctx);
     }
 #endif
-    if (0 == ret) {
-        return 0;
-    } else {
-        return 1;
-    }
+    return ret;
 }
 
 static
@@ -370,6 +373,7 @@ int read_in_from_TPM(struct xtt_tpm_context *tpm_ctx,
 
 static
 int read_in_from_files(unsigned char* basename,
+                       uint16_t basename_buffer_len,
                        uint16_t* basename_len,
                        const char* basename_file,
                        xtt_daa_group_pub_key_lrsw* gpk,
@@ -381,7 +385,7 @@ int read_in_from_files(unsigned char* basename,
                        xtt_root_certificate* root_certificate,
                        const char* root_cert_file)
 {
-    int read_ret = xtt_read_from_file(basename_file, basename, sizeof(basename));
+    int read_ret = xtt_read_from_file(basename_file, basename, basename_buffer_len);
     if (read_ret < 0) {
         return READ_FROM_FILE_ERROR;
     }
