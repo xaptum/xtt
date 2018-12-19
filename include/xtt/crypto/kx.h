@@ -91,18 +91,18 @@ struct xtt_crypto_kx_shared {
 /**
  * Set the value of a :xtt_crypto_kx_public: key.
  *
- * @public the public key to set
+ * @public_key the public key to set
  * @buf the buffer holding the value
  * @buflen the size in bytes of value
  */
 inline static
 void
-xtt_crypto_kx_public_set(struct xtt_crypto_kx_public* public,
+xtt_crypto_kx_public_set(struct xtt_crypto_kx_public* public_key,
                          unsigned char* buf,
                          uint16_t buflen)
 {
-    public->len = buflen;
-    memcpy(&public->buf, buf, public->len);
+    public_key->len = buflen;
+    memcpy(&public_key->buf, buf, public_key->len);
 }
 
 /**
@@ -122,11 +122,11 @@ struct xtt_crypto_kx_ops {
     /**
      * Generates a new key pair.
      *
-     * @public the destination for the generated public key
-     * @secret the destination for the generated secret key
+     * @public_key the destination for the generated public key
+     * @secret_key the destination for the generated secret key
      */
-    int (*keypair)(struct xtt_crypto_kx_public* public,
-                   struct xtt_crypto_kx_secret* secret);
+    int (*keypair)(struct xtt_crypto_kx_public* public_key,
+                   struct xtt_crypto_kx_secret* secret_key);
 
     /**
      * Computes the shared secret.

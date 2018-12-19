@@ -35,8 +35,8 @@ void xtt_crypto_secure_clear(unsigned char* memory, uint16_t memory_length);
 
 void xtt_crypto_get_random(unsigned char* buffer, uint16_t buffer_length);
 
-int xtt_crypto_kx_x25519_keypair(struct xtt_crypto_kx_public* public,
-                                 struct xtt_crypto_kx_secret* secret);
+int xtt_crypto_kx_x25519_keypair(struct xtt_crypto_kx_public* public_key,
+                                 struct xtt_crypto_kx_secret* secret_key);
 
 int xtt_crypto_kx_x25519_exchange(struct xtt_crypto_kx_shared* shared,
                                   const struct xtt_crypto_kx_public* other_public,
