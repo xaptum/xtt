@@ -6,5 +6,5 @@ includedir=${prefix}/@CMAKE_INSTALL_INCLUDEDIR@
 Name: xtt
 Description: Library for XTT: Trusted Transit protocol
 Version: @XTT_VERSION@
-Libs: -L{libdir} -lxtt
+Libs: -L${libdir} -lxtt
 Cflags: -I${includedir} @PC_COMPILE_DEFINITIONS@
