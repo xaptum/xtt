@@ -1,3 +1,21 @@
+xtt (0.10.2-1) unstable; urgency=medium
+
+  [ Zane Beckwith ]
+  * tool: The client was using sizeof(pointer) for a buffer size.
+
+  [ Kathryn Fejer ]
+  * tool: return 0 on success and 1 on failure
+  * test: add tests to check tool and handshake functionality
+
+  [ Zane Beckwith ]
+  * pkg-config: Add a missing $ in Libs for pkg-config file
+  * Don't use `public` as an id, to avoid problems with C++ compilers
+  * test: Add a test that our headers can compile on a C++ compiler
+  * README: Remove reference to Jessie deb.
+  * Bump patch number.
+
+ -- Zane Beckwith <zane.beckwith@xaptum.com>  Wed, 19 Dec 2018 21:24:27 +0000
+
 xtt (0.10.1-1) unstable; urgency=medium
 
   [ Kathryn Fejer ]
