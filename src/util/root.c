@@ -47,10 +47,10 @@ int xtt_generate_root(const char *pubkey_filename, const char *id_filename, cons
         xtt_crypto_get_random(root_id.data, sizeof(xtt_certificate_root_id));
     }
 
-    // 2) Generate root's keypair
+    // 2) Get root's public key
     xtt_ecdsap256_pub_key pub = {.data = {0}};
-
-    read_ret = xtt_read_from_file(pubkey_filename, pub.data, sizeof(xtt_ecdsap256_pub_key));
+    xtt_ecdsap256_priv_key priv = {.data = {0}};
+    read_ret = xtt_read_ecdsap256_keypair(keypair_filename, &pub, &priv);
     if(read_ret < 0){
         return READ_FROM_FILE_ERROR;
     }
@@ -60,12 +60,8 @@ int xtt_generate_root(const char *pubkey_filename, const char *id_filename, cons
     xtt_serialize_root_certificate(&pub, &root_id, &root_certificate);
 
     // 4) Save info to files
-    int write_ret = xtt_save_to_file(pub.data, sizeof(xtt_ecdsap256_pub_key), pubkey_filename);
-    if(write_ret < 0){
-        return SAVE_TO_FILE_ERROR;
-    }
 
-    write_ret = xtt_save_to_file(root_certificate.data, sizeof(xtt_root_certificate), cert_filename);
+    int write_ret = xtt_save_to_file(root_certificate.data, sizeof(xtt_root_certificate), cert_filename);
     if(write_ret < 0){
         return SAVE_TO_FILE_ERROR;
     }

@@ -171,9 +171,10 @@ int initialize_server(struct xtt_server_certificate_context *cert_ctx,
 
     // 6) Read in my private key from file
     xtt_ecdsap256_priv_key server_private_key = {.data = {0}};
-    read_ret = xtt_read_from_file(server_privatekey_file, server_private_key.data, sizeof(xtt_ecdsap256_priv_key));
-    if (sizeof(xtt_ecdsap256_priv_key) != read_ret) {
-        fprintf(stderr, "Error reading server's private key from file\n");
+    xtt_ecdsap256_pub_key server_public_key = {.data = {0}};
+    read_ret = xtt_read_ecdsap256_keypair(server_keypair_file, &server_public_key, &server_private_key);
+    if (0 != read_ret) {
+        fprintf(stderr, "Error reading key pair from file\n");
         return READ_FROM_FILE_ERROR;
     }
 
