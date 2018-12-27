@@ -15,30 +15,28 @@
  *    limitations under the License
  *
  *****************************************************************************/
+#include <xtt/crypto_wrapper.h>
+#include <xtt/crypto_types.h>
+#include <xtt/util/file_io.h>
+#include <xtt/util/util_errors.h>
+#include <xtt/util/asn1.h>
 
-#ifndef XTT_UTIL_WRAP_KEYS_H
-#define XTT_UTIL_WRAP_KEYS_H
-#pragma once
+int xtt_generate_ecdsap256_keypair(const char *keypair_file)
+{
+    xtt_ecdsap256_pub_key pub = {.data = {0}};
+    xtt_ecdsap256_priv_key priv  = {.data = {0}};
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+    // 1) Creat the ecdsa key pair
+    int ret = xtt_crypto_create_ecdsap256_key_pair(&pub, &priv);
+    if (0 != ret) {
+        return KEY_CREATION_ERROR;
+    }
 
-/**
- * Wraps keys from files as ASN.1 and writes to asn1_filename.
- *
- * Returns:
- *      0                       on success
- *      SAVE_TO_FILE_ERROR      an error occurred writing to a file
- *      READ_FROM_FILE_ERROR    an error occurred reading from a file
- *      KEY_CREATION_ERROR      an error occurred creating a keypair
- *      ASN1_CREATION_ERROR     an error occurred creating the wrapped pair
-*/
+    // 2) Create ASN.1 wrapped pair
+    ret = xtt_write_ecdsap256_keypair(&pub, &priv, keypair_file);
+    if (0 != ret) {
+        return ret;
+    }
 
-int xtt_wrap_keys_asn1(const char *privkey_filename, const char *pubkey_filename, const char *asn1_filename);
-
-#ifdef __cplusplus
+    return 0;
 }
-#endif
-
-#endif

@@ -20,13 +20,12 @@
 #include "client.h"
 #include "parse_cli.h"
 #include "infocert.h"
+#include "generate_ecdsap256_keypair.h"
 #ifdef USE_TPM
 #include "read_nvram.h"
 #endif
 
-#include <xtt/util/generate_ecdsap256_keys.h>
 #include <xtt/util/generate_x509_certificate.h>
-#include <xtt/util/wrap_keys_asn1.h>
 #include <xtt/util/root.h>
 #include <xtt/util/generate_server_certificate.h>
 #include <xtt/util/util_errors.h>

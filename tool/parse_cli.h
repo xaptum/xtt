@@ -34,7 +34,6 @@ extern "C" {
 typedef enum {
     action_genkey,
     action_genx509cert,
-    action_wrapkeys,
     action_genrootcert,
     action_genservercert,
     action_runserver,

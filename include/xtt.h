@@ -29,9 +29,7 @@
 #include <xtt/return_codes.h>
 #include <xtt/messages.h>
 #include <xtt/util/asn1.h>
-#include <xtt/util/generate_ecdsap256_keys.h>
 #include <xtt/util/generate_x509_certificate.h>
-#include <xtt/util/wrap_keys_asn1.h>
 #include <xtt/util/root.h>
 #include <xtt/util/generate_server_certificate.h>
 #include <xtt/util/file_io.h>
