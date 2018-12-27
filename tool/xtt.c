@@ -39,19 +39,16 @@ int main(int argc, char **argv)
     int out = 0;
     switch(params.command) {
         case action_genkey:
-            out = xtt_generate_ecdsap256_keys(params.privkey, params.pubkey);
+            out = xtt_generate_ecdsap256_keypair(params.keypair);
             break;
         case action_genx509cert:
-            out = xtt_generate_x509_certificate(params.privkey, params.pubkey, params.id, params.cert);
-            break;
-        case action_wrapkeys:
-            out = xtt_wrap_keys_asn1(params.privkey, params.pubkey, params.asn1);
+            out = xtt_generate_x509_certificate(params.keypair, params.id, params.cert);
             break;
         case action_genrootcert:
-            out = xtt_generate_root(params.pubkey, params.id, params.rootcert);
+            out = xtt_generate_root(params.keypair, params.id, params.rootcert);
             break;
         case action_genservercert:
-            out = xtt_generate_server_certificate(params.rootcert, params.rootpriv, params.certreserved, params.serverpriv, params.serverpub, params.servercert);
+            out = xtt_generate_server_certificate(params.rootcert, params.keypair, params.certreserved, params.serverkeypair, params.servercert);
             break;
         case action_runserver:
             out = run_server(&params);
@@ -68,7 +65,7 @@ int main(int argc, char **argv)
                 type = infocert_type_root;
                 out = info_cert(params.rootcert, type);
             } else {
-                out = PARSE_CERT_ERROR;
+                out = ASN1_PARSE_ERROR;
             }
             break;
         }
@@ -113,7 +110,7 @@ int main(int argc, char **argv)
         case CRYPTO_HASH_ERROR:
             fprintf(stderr, "Error while generating the gid\n");
             break;
-        case PARSE_CERT_ERROR:
+        case ASN1_PARSE_ERROR:
             fprintf(stderr, "Error parsing certificate: must pass in a certificate\n");
             break;
         case SUCCESS:

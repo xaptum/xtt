@@ -22,6 +22,7 @@
 #include <xtt/util/generate_server_certificate.h>
 #include <xtt/util/root.h>
 #include <xtt/util/util_errors.h>
+#include <xtt/util/asn1.h>
 
 // To allow deployed Xaptum clients (which may still be checking server id and expiry)
 // to continue accepting new certificates,
@@ -32,9 +33,9 @@
 // These bytes are simply ignored by newer clients.
 const xtt_certificate_reserved reserved_default = {.data="XAPTUMSERVER000199991231"};
 
-int xtt_generate_server_certificate(const char* root_cert_file, const char* root_privatekey_file,
+int xtt_generate_server_certificate(const char* root_cert_file, const char* root_keypair_file,
                                     const char* reserved_file,
-                                    const char* server_privatekey_file, const char* server_publickey_file,
+                                    const char* server_keypair_file,
                                     const char* server_certificate_filename)
 {
     int read_ret = 0;
@@ -51,7 +52,7 @@ int xtt_generate_server_certificate(const char* root_cert_file, const char* root
         reserved = reserved_default;
     }
 
-    // 2) Read root_certificate and private key from file
+    // 2) Read root_certificate and key pair from file
     xtt_root_certificate root_certificate = {.data = {0}};
     read_ret = xtt_read_from_file(root_cert_file, root_certificate.data, sizeof(xtt_root_certificate));
     if( read_ret < 0){

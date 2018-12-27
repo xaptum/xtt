@@ -104,7 +104,6 @@ int xtt_read_ecdsap256_keypair(const char* keypair_file, xtt_ecdsap256_pub_key *
     unsigned char keypair[XTT_ASN1_PRIVATE_KEY_LENGTH] = {0};
     int ret = xtt_read_from_file(keypair_file, keypair, XTT_ASN1_PRIVATE_KEY_LENGTH);
     if(ret < 0){
-        fprintf(stderr, "problem reading server keypair\n");
         return READ_FROM_FILE_ERROR;
     }
 

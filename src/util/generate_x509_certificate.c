@@ -22,7 +22,7 @@
 #include <xtt/util/util_errors.h>
 #include <xtt/util/generate_x509_certificate.h>
 
-int xtt_generate_x509_certificate(const char *privkey_filename, const char *pubkey_filename, const char *id_filename, const char *certificate_filename)
+int xtt_generate_x509_certificate(const char *keypair_filename, const char *id_filename, const char *certificate_filename)
 {
     int read_ret = 0;
     int write_ret = 0;
@@ -40,8 +40,7 @@ int xtt_generate_x509_certificate(const char *privkey_filename, const char *pubk
     xtt_identity_type id = {.data = {0}};
     if (NULL != id_filename) {
         read_ret = xtt_read_from_file(id_filename, id.data, sizeof(xtt_identity_type));
-        if(read_ret < 0){
-            fprintf(stderr, "2\n" );
+        if (read_ret < 0) {
             return READ_FROM_FILE_ERROR;
         }
     } else

@@ -34,9 +34,9 @@ extern "C" {
  *      KEY_CREATION_ERROR          an error occurred creating a keypair
  *      CERT_CREATION_ERROR         an error occurred creating the certificate
 */
-int xtt_generate_server_certificate(const char* root_cert_file, const char* root_privatekey_file,
+int xtt_generate_server_certificate(const char* root_cert_file, const char* root_keypair_file,
                                     const char* reserved_file,
-                                    const char* server_privatekey_file, const char* server_publickey_file,
+                                    const char* server_keypair_file,
                                     const char* server_certificate_filename);
 
 #ifdef __cplusplus

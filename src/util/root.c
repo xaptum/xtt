@@ -21,6 +21,7 @@
 #include <xtt/util/root.h>
 #include <xtt/util/file_io.h>
 #include <xtt/util/util_errors.h>
+#include <xtt/util/asn1.h>
 
 void xtt_serialize_root_certificate(xtt_ecdsap256_pub_key *pub_key, xtt_certificate_root_id *root_id, xtt_root_certificate *info_out){
     memcpy(info_out->data, root_id->data, sizeof(xtt_certificate_root_id));
@@ -32,7 +33,7 @@ void xtt_deserialize_root_certificate(xtt_ecdsap256_pub_key *pub_key, xtt_certif
     memcpy(pub_key->data, &root_cert_in->data[sizeof(xtt_certificate_root_id)], sizeof(xtt_ecdsap256_pub_key));
 }
 
-int xtt_generate_root(const char *pubkey_filename, const char *id_filename, const char *cert_filename)
+int xtt_generate_root(const char *keypair_filename, const char *id_filename, const char *cert_filename)
 {
     int read_ret = 0;
     // 1) Read root id from file, assigning root_id a random number if there is no file given
