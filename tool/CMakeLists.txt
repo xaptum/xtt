@@ -22,7 +22,8 @@ SET(TOOL_SRCS
         parse_cli.c
         infocert.c
         server.c
-        client.c)
+        client.c
+        generate_ecdsap256_keypair.c)
 
 if(USE_TPM)
     list(APPEND TOOL_SRCS read_nvram.c)

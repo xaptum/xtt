@@ -33,6 +33,7 @@
 #include <xtt/messages.h>
 #include <xtt/util/util_errors.h>
 #include <xtt/util/file_io.h>
+#include <xtt/util/asn1.h>
 
 
 xtt_version version_g_server = XTT_VERSION_ONE;
@@ -43,7 +44,7 @@ struct xtt_group_public_key_context stored_gpk_ctx;
 static int initialize_server(struct xtt_server_certificate_context *cert_ctx,
                 struct xtt_server_cookie_context *cookie_ctx,
                 const char* daa_gpk_file, const char* basename_file,
-                const char* server_privatekey_file, const char* server_certificate_file);
+                const char* server_keypair_file, const char* server_certificate_file);
 
 static int open_socket(unsigned short);
 
@@ -65,7 +66,7 @@ int run_server(struct cli_params* params)
 {
     unsigned short server_port = params->port;
     const char *daa_gpk_file = params->daagpk;
-    const char *server_privatekey_file = params->privkey;
+    const char *server_keypair_file = params->serverkeypair;
     const char* basename_file = params->basename;
     const char* server_certificate_file = params->servercert;
 
@@ -80,7 +81,7 @@ int run_server(struct cli_params* params)
     printf("initializing server....\n");
     struct xtt_server_certificate_context cert_ctx;
     struct xtt_server_cookie_context cookie_ctx;
-    ret = initialize_server(&cert_ctx, &cookie_ctx, daa_gpk_file, basename_file, server_privatekey_file, server_certificate_file);
+    ret = initialize_server(&cert_ctx, &cookie_ctx, daa_gpk_file, basename_file, server_keypair_file, server_certificate_file);
     if (0 != ret) {
         fprintf(stderr, "Error initializing server handshake context\n");
         return SERVER_ERROR;
@@ -116,7 +117,7 @@ int run_server(struct cli_params* params)
 static
 int initialize_server(struct xtt_server_certificate_context *cert_ctx,
                struct xtt_server_cookie_context *cookie_ctx, const char* daa_gpk_file,
-                const char* basename_file, const char* server_privatekey_file, const char* server_certificate_file)
+                const char* basename_file, const char* server_keypair_file, const char* server_certificate_file)
 {
     int read_ret = 0;
     // 1) Read DAA GPK from file.
@@ -171,9 +172,10 @@ int initialize_server(struct xtt_server_certificate_context *cert_ctx,
 
     // 6) Read in my private key from file
     xtt_ecdsap256_priv_key server_private_key = {.data = {0}};
-    read_ret = xtt_read_from_file(server_privatekey_file, server_private_key.data, sizeof(xtt_ecdsap256_priv_key));
-    if (sizeof(xtt_ecdsap256_priv_key) != read_ret) {
-        fprintf(stderr, "Error reading server's private key from file\n");
+    xtt_ecdsap256_pub_key server_public_key = {.data = {0}};
+    read_ret = xtt_read_ecdsap256_keypair(server_keypair_file, &server_public_key, &server_private_key);
+    if (0 != read_ret) {
+        fprintf(stderr, "Error reading key pair from file\n");
         return READ_FROM_FILE_ERROR;
     }
 

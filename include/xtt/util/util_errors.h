@@ -8,7 +8,7 @@
 #define KEY_CREATION_ERROR -3
 #define CERT_CREATION_ERROR -4
 #define ASN1_CREATION_ERROR -5
-#define PARSE_CERT_ERROR -7
+#define ASN1_PARSE_ERROR -7
 #define SERVER_ERROR -8
 #define CLIENT_ERROR -9
 #define TPM_ERROR -10

@@ -22,6 +22,7 @@
 #include <xtt/util/generate_server_certificate.h>
 #include <xtt/util/root.h>
 #include <xtt/util/util_errors.h>
+#include <xtt/util/asn1.h>
 
 // To allow deployed Xaptum clients (which may still be checking server id and expiry)
 // to continue accepting new certificates,
@@ -32,9 +33,9 @@
 // These bytes are simply ignored by newer clients.
 const xtt_certificate_reserved reserved_default = {.data="XAPTUMSERVER000199991231"};
 
-int xtt_generate_server_certificate(const char* root_cert_file, const char* root_privatekey_file,
+int xtt_generate_server_certificate(const char* root_cert_file, const char* root_keypair_file,
                                     const char* reserved_file,
-                                    const char* server_privatekey_file, const char* server_publickey_file,
+                                    const char* server_keypair_file,
                                     const char* server_certificate_filename)
 {
     int read_ret = 0;
@@ -51,7 +52,7 @@ int xtt_generate_server_certificate(const char* root_cert_file, const char* root
         reserved = reserved_default;
     }
 
-    // 2) Read root_certificate and private key from file
+    // 2) Read root_certificate and key pair from file
     xtt_root_certificate root_certificate = {.data = {0}};
     read_ret = xtt_read_from_file(root_cert_file, root_certificate.data, sizeof(xtt_root_certificate));
     if( read_ret < 0){
@@ -63,25 +64,12 @@ int xtt_generate_server_certificate(const char* root_cert_file, const char* root
     xtt_ecdsap256_pub_key root_pub = {.data = {0}};
     xtt_ecdsap256_priv_key root_priv  = {.data = {0}};
     xtt_deserialize_root_certificate(&root_pub, &root_id, &root_certificate);
-
-    read_ret = xtt_read_from_file(root_privatekey_file, root_priv.data, sizeof(xtt_ecdsap256_priv_key));
-    if(read_ret < 0){
-        return READ_FROM_FILE_ERROR;
-    }
+    xtt_read_ecdsap256_keypair(root_keypair_file, &root_pub, &root_priv);
 
     // 4) Read server public key and private key from files
     xtt_ecdsap256_pub_key server_public_key = {.data = {0}};
     xtt_ecdsap256_priv_key server_private_key = {.data = {0}};
-
-    read_ret = xtt_read_from_file(server_publickey_file, server_public_key.data, sizeof(xtt_ecdsap256_pub_key));
-    if(read_ret < 0){
-        return READ_FROM_FILE_ERROR;
-    }
-
-    read_ret = xtt_read_from_file(server_privatekey_file, server_private_key.data, sizeof(xtt_ecdsap256_priv_key));
-    if (read_ret < 0){
-        return READ_FROM_FILE_ERROR;
-    }
+    xtt_read_ecdsap256_keypair(server_keypair_file, &server_public_key, &server_private_key);
 
     // 5) Create server certificate and write it to file
     unsigned char serialized_certificate[XTT_SERVER_CERTIFICATE_ECDSAP256_LENGTH] = {0};
