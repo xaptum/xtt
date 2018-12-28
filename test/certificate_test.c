@@ -97,7 +97,13 @@ int main(){
     printf("Generated certificate is correctly formatted\n");
 
     unsigned char asn1[XTT_ASN1_PRIVATE_KEY_LENGTH];
-    xtt_write_ecdsap256_keypair(&public_key, &private_key, "asn1.bin");
+    TEST_ASSERT(0 == xtt_write_ecdsap256_keypair(&public_key, &private_key, "asn1.bin"));
+    xtt_ecdsap256_pub_key public_key_2;
+    xtt_ecdsap256_priv_key private_key_2;
+    TEST_ASSERT(0 == xtt_read_ecdsap256_keypair("asn1.bin", &public_key_2, &private_key_2));
+    TEST_ASSERT(0 == memcmp(public_key.data, public_key_2.data, sizeof(xtt_ecdsap256_pub_key)));
+    TEST_ASSERT(0 == memcmp(private_key.data, private_key_2.data, sizeof(xtt_ecdsap256_priv_key)));
+
     xtt_read_from_file("asn1.bin", asn1, XTT_ASN1_PRIVATE_KEY_LENGTH);
 
     printf("ASN1 from private key: ");
