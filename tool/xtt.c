@@ -25,6 +25,7 @@
 #include "read_nvram.h"
 #endif
 
+#include <xtt/crypto_wrapper.h>
 #include <xtt/util/generate_x509_certificate.h>
 #include <xtt/util/root.h>
 #include <xtt/util/generate_server_certificate.h>
@@ -34,6 +35,14 @@
 
 int main(int argc, char **argv)
 {
+    // Initialize crypto primitives library
+    int ret = xtt_crypto_initialize_crypto();
+    if (0 != ret) {
+        fprintf(stderr, "Error initializing cryptography library: %d\n", ret);
+        return 1;
+    }
+
+
     struct cli_params params;
     parse_cli(argc, argv, &params);
     int out = 0;
