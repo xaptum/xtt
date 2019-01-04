@@ -126,11 +126,6 @@ int run_client(struct cli_params* params)
     int ret = 0;
     int read_ret = 0;
 
-    ret = xtt_crypto_initialize_crypto();
-    if (0 != ret) {
-        ret = CLIENT_ERROR;
-        goto finish;
-    }
     setbuf(stdout, NULL);
 
     //Read in requested client id, setting it to xtt_null_identity if no client ID is provided

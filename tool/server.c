@@ -70,12 +70,7 @@ int run_server(struct cli_params* params)
     const char* basename_file = params->basename;
     const char* server_certificate_file = params->servercert;
 
-    // 0) Initialize crypto primitives library
-    int ret = xtt_crypto_initialize_crypto();
-    if (0 != ret) {
-        fprintf(stderr, "Error initializing cryptography library: %d\n", ret);
-        return SERVER_ERROR;
-    }
+    int ret = SUCCESS;
 
     // 1) Setup XTT context
     printf("initializing server....\n");
