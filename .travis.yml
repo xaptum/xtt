@@ -22,8 +22,8 @@ env:
     - CMAKE_PREFIX_PATH=${INSTALL_PREFIX}
     - LIBSODIUM_TAG=1.0.11
     - LIBSODIUM_DIR=${TRAVIS_BUILD_DIR}/libsodium
-    - AMCL_TAG=4.7.0
-    - AMCL_DIR=${TRAVIS_BUILD_DIR}/milagro-crypto-c/install
+    - AMCL_TAG=4.7.3
+    - AMCL_DIR=${TRAVIS_BUILD_DIR}/amcl/install
     - XAPTUM_TPM_TAG=v0.5.8
     - XAPTUM_TPM_DIR=${TRAVIS_BUILD_DIR}/xaptum-tpm/
     - AMCL_CURVES=FP256BN,NIST256
