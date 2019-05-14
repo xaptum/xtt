@@ -20,7 +20,7 @@ if [[ $# -ne 3 ]]; then
         exit 1
 fi
 
-repo_url=https://github.com/milagro-crypto/milagro-crypto-c
+repo_url=https://github.com/xaptum/amcl
 source_tag="$1"
 source_dir="$2"
 curves="$3"
