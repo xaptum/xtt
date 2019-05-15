@@ -15,22 +15,22 @@
  *    limitations under the License
  *
  *****************************************************************************/
+ #define _POSIX_C_SOURCE 200809L
  #include <stdint.h>
  #include <stdio.h>
+ #include <unistd.h>
  #include <xtt/util/file_io.h>
  #include <xtt/util/util_errors.h>
 
- int xtt_save_to_file(unsigned char *buffer, size_t bytes_to_write, const char *filename)
+ int xtt_save_to_file(unsigned char *buffer, size_t bytes_to_write, const char *filename, mode_t permission)
  {
-     FILE *file_ptr = fopen(filename, "wb");
-     int ret = 0;
-     int close_ret = 0;
-
-     if (NULL == file_ptr){
-         return SAVE_TO_FILE_ERROR;
+     int fd = open(filename, O_WRONLY | O_CREAT | O_CLOEXEC, permission);
+     if (fd == -1){
+        return SAVE_TO_FILE_ERROR;
      }
 
-     size_t bytes_written = fwrite(buffer, 1, bytes_to_write, file_ptr);
+     size_t bytes_written = write(fd, buffer, bytes_to_write);
+     int ret = 0;
 
      if (bytes_to_write != bytes_written) {
          ret = SAVE_TO_FILE_ERROR;
@@ -40,11 +40,20 @@
      ret = (int) bytes_written;
 
 cleanup:
-     close_ret = fclose(file_ptr);
-     if (0 != close_ret) {
-        ret = SAVE_TO_FILE_ERROR;
+     if (-1 == close(fd)) {
+        return SAVE_TO_FILE_ERROR;
      }
      return ret;
+ }
+
+ int xtt_save_key_to_file(unsigned char *buffer, size_t bytes_to_write, const char *filename)
+ {
+     return xtt_save_to_file(buffer, bytes_to_write, filename, KEY_PERMISSION);
+ }
+
+ int xtt_save_cert_to_file(unsigned char *buffer, size_t bytes_to_write, const char *filename)
+ { 
+     return xtt_save_to_file(buffer, bytes_to_write, filename, CERT_PERMISSION);
  }
 
  int xtt_read_from_file(const char *filename, unsigned char *buffer, size_t bytes_to_read)

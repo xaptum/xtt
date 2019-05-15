@@ -62,7 +62,7 @@ int xtt_generate_root(const char *keypair_filename, const char *id_filename, con
 
     // 4) Save info to files
 
-    int write_ret = xtt_save_to_file(root_certificate.data, sizeof(xtt_root_certificate), cert_filename);
+    int write_ret = xtt_save_cert_to_file(root_certificate.data, sizeof(xtt_root_certificate), cert_filename);
     if(write_ret < 0){
         return SAVE_TO_FILE_ERROR;
     }

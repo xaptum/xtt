@@ -46,11 +46,10 @@ int read_nvram(const struct xtt_tpm_params *params, const char* outfile, enum xt
         return TPM_ERROR;
     }
 
-    xtt_save_to_file(output_data, (size_t)output_length, outfile);
+    xtt_save_to_file(output_data, (size_t)output_length, outfile, 0644);
 
     xtt_free_tpm_context(&ctx);
 
     printf("\tok\n");
     return SUCCESS;
 }
-
