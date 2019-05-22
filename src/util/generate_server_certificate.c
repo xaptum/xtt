@@ -83,7 +83,7 @@ int xtt_generate_server_certificate(const char* root_cert_file, const char* root
         return CERT_CREATION_ERROR;
     }
 
-    write_ret = xtt_save_to_file(serialized_certificate, XTT_SERVER_CERTIFICATE_ECDSAP256_LENGTH, server_certificate_filename);
+    write_ret = xtt_save_cert_to_file(serialized_certificate, XTT_SERVER_CERTIFICATE_ECDSAP256_LENGTH, server_certificate_filename);
     if(write_ret < 0){
         return SAVE_TO_FILE_ERROR;
     }

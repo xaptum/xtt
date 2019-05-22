@@ -15,32 +15,55 @@
  *    limitations under the License
  *
  *****************************************************************************/
- #ifndef XTT_UTIL_FILE_IO_H
- #define XTT_UTIL_FILE_IO_H
- #pragma once
+#ifndef XTT_UTIL_FILE_IO_H
+#define XTT_UTIL_FILE_IO_H
+#pragma once
 
- #ifdef __cplusplus
- extern "C" {
- #endif
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-#include <stdio.h>
+#include <fcntl.h>
+#include <stddef.h>
+
+#define KEY_PERMISSION     0600
+#define CERT_PERMISSION    0644
+
 /*
- * Writes given byte-string to the given file.
- *
- * Returns:
- * 'bytes_to_write' on success
- * SAVE_TO_FILE_ERROR on failure
+* Writes given byte-string to the given file with a given permission level.
+*
+* Returns:
+* 'bytes_to_write' on success
+* SAVE_TO_FILE_ERROR on failure
 */
-int xtt_save_to_file(unsigned char *buffer, size_t bytes_to_write, const char *filename);
+int xtt_save_to_file(unsigned char *buffer, size_t bytes_to_write, const char *filename, mode_t permission);
 
 /*
- * Read at-most `bytes_to_read` bytes from the given file.
- *
- * Reads until `bytes_to_read` bytes have been read, or until `EOF`, whichever comes first.
- *
- * Returns:
- * Number of bytes read into `buffer` on success
- * READ_FROM_FILE_ERROR on failure
+* Wrapper for xtt_save_to_file using KEY_PERMISSION level.
+* 
+* Returns:
+* 'bytes_to_write' on success
+* SAVE_TO_FILE_ERROR on failure
+*/
+int xtt_save_key_to_file(unsigned char *buffer, size_t bytes_to_write, const char *filename);
+
+/*
+* Wrapper for xtt_save_to_file using CERT_PERMISSION level.
+* 
+* Returns:
+* 'bytes_to_write' on success
+* SAVE_TO_FILE_ERROR on failure
+*/
+int xtt_save_cert_to_file(unsigned char *buffer, size_t bytes_to_write, const char *filename);
+
+/*
+* Read at-most `bytes_to_read` bytes from the given file.
+*
+* Reads until `bytes_to_read` bytes have been read, or until `EOF`, whichever comes first.
+*
+* Returns:
+* Number of bytes read into `buffer` on success
+* READ_FROM_FILE_ERROR on failure
 */
 int xtt_read_from_file(const char *filename, unsigned char *buffer, size_t bytes_to_read);
 

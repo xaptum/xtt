@@ -55,7 +55,7 @@ int xtt_generate_x509_certificate(const char *keypair_filename, const char *id_f
         return CERT_CREATION_ERROR;
     }
 
-    write_ret = xtt_save_to_file(cert_buf, sizeof(cert_buf), certificate_filename);
+    write_ret = xtt_save_cert_to_file(cert_buf, sizeof(cert_buf), certificate_filename);
     if (write_ret < 0) {
         return SAVE_TO_FILE_ERROR;
     }

@@ -666,7 +666,7 @@ int report_results_client(xtt_identity_type *requested_client_id,
         return 1;
     }
     printf("Server assigned me id: %s\n", my_assigned_id_as_string.data);
-    write_ret = xtt_save_to_file((unsigned char*)my_assigned_id_as_string.data, sizeof(xtt_identity_string), assigned_client_id_out_file);
+    write_ret = xtt_save_to_file((unsigned char*)my_assigned_id_as_string.data, sizeof(xtt_identity_string), assigned_client_id_out_file, 0644);
     if(write_ret < 0) {
         return SAVE_TO_FILE_ERROR;
     }
@@ -709,7 +709,7 @@ int report_results_client(xtt_identity_type *requested_client_id,
         fprintf(stderr, "Error creating X509 certificate\n");
         return CERT_CREATION_ERROR;
     }
-    write_ret = xtt_save_to_file(cert_buf, sizeof(cert_buf), longterm_public_key_out_file);
+    write_ret = xtt_save_to_file(cert_buf, sizeof(cert_buf), longterm_public_key_out_file, 0644);
     if(write_ret < 0){
         return SAVE_TO_FILE_ERROR;
     }

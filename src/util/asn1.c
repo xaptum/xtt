@@ -90,7 +90,7 @@ int xtt_write_ecdsap256_keypair(xtt_ecdsap256_pub_key *pub_key, xtt_ecdsap256_pr
     memcpy(pubkey_location, pub_key->data, sizeof(xtt_ecdsap256_pub_key));
 
     // 2) Write key pair to file
-    int save_ret = xtt_save_to_file(keypair, XTT_ASN1_PRIVATE_KEY_LENGTH, keypair_file);
+    int save_ret = xtt_save_key_to_file(keypair, XTT_ASN1_PRIVATE_KEY_LENGTH, keypair_file);
     if (save_ret < 0) {
         return SAVE_TO_FILE_ERROR;
     }
