@@ -53,11 +53,9 @@ set(XTT_SRCS
         src/return_codes.c
         src/util/asn1.c
         src/util/file_io.c
-        src/util/generate_ecdsap256_keys.c
         src/util/root.c
         src/util/generate_server_certificate.c
         src/util/generate_x509_certificate.c
-        src/util/wrap_keys_asn1.c
         src/util/internal/asn1.c
         src/internal/byte_utils.c
         src/internal/key_derivation.c

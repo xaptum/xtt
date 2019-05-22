@@ -88,7 +88,7 @@ int info_cert(const char* filename, enum infocert_type type)
         }
         root_cert_out(&root_certificate);
     } else {
-        return PARSE_CERT_ERROR;
+        return ASN1_PARSE_ERROR;
     }
 
     return VOID_SUCCESS;

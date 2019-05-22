@@ -26,31 +26,25 @@
 static
 void parse_genkey_cli(int argc, char **argv, struct cli_params *params)
 {
-    params->pubkey = "pub.bin";
-    params->privkey = "priv.bin";
+    params->keypair = "keys.asn1.bin";
     const char *usage_str = "Generate ECDSA keys for XTT.\n\n"
-        "Usage: %s %s [-h] [-v <file>] [-b <file>]\n"
+        "Usage: %s %s [-h] [-k <file>]\n"
         "\tOptions:\n"
         "\t\t-h --help             Display this message.\n"
-        "\t\t-v --privkey          Private key output location [default = priv.bin]\n"
-        "\t\t-b --pubkey           Public key output location [default = pub.bin]\n"
+        "\t\t-k --keypair          Key Pair output location [default = keys.asn1.bin]\n"
         ;
 
     static struct option cli_options[] =
     {
-        {"privkey", required_argument, NULL, 'v'},
-        {"pubkey", required_argument, NULL, 'b'},
+        {"keypair", required_argument, NULL, 'k'},
         {"help", no_argument, NULL, 'h'},
         {NULL, 0, NULL, 0}
     };
     int c;
-    while ((c = getopt_long(argc, argv, "v:b:h", cli_options, NULL)) != -1) {
+    while ((c = getopt_long(argc, argv, "k:h", cli_options, NULL)) != -1) {
         switch (c) {
-            case 'v':
-                params->privkey=optarg;
-                break;
-            case 'b':
-                params->pubkey=optarg;
+            case 'k':
+                params->keypair=optarg;
                 break;
             case 'h':
                 printf(usage_str, argv[0], argv[1]);
@@ -65,36 +59,30 @@ void parse_genx509cert_cli(int argc, char **argv, struct cli_params *params)
 {
     params->cert = "cert.bin";
     params->id = "id.bin";
-    params->privkey = "priv.bin";
-    params->pubkey = "pub.bin";
+    params->keypair = "keys.asn1.bin";
 
     const char *usage_str = "Generate x509 certificate.\n\n"
         "Usage: %s %s [-h] [-v <file>] [-b <file>] [-d <file>] [-c <file>]\n"
         "\tOptions:\n"
         "\t\t-h --help             Display this message.\n"
-        "\t\t-v --privkey          Private key input location [default = priv.bin]\n"
-        "\t\t-b --pubkey           Public key input location [default = pub.bin]\n"
+        "\t\t-k --keypair          Key pair input location [default = keys.asn1.bin]\n"
         "\t\t-d --id               ID input location [default = id.bin]\n"
         "\t\t-c --certificate      Certificate output location [default = cert.bin]\n"
         ;
 
     static struct option cli_options[] =
     {
-        {"privkey", required_argument, NULL, 'v'},
-        {"pubkey", required_argument, NULL, 'b'},
+        {"keypair", required_argument, NULL, 'k'},
         {"id", required_argument, NULL, 'd'},
         {"certificate", required_argument, NULL, 'c'},
         {"help", no_argument, NULL, 'h'},
         {NULL, 0, NULL, 0}
     };
     int c;
-    while ((c = getopt_long(argc, argv, "v:b:d:c:h", cli_options, NULL)) != -1) {
+    while ((c = getopt_long(argc, argv, "k:d:c:h", cli_options, NULL)) != -1) {
         switch (c) {
-            case 'v':
-                params->privkey = optarg;
-                break;
-            case 'b':
-                params->pubkey = optarg;
+            case 'k':
+                params->keypair = optarg;
                 break;
             case 'd':
                 params->id = optarg;
@@ -111,67 +99,23 @@ void parse_genx509cert_cli(int argc, char **argv, struct cli_params *params)
 
 
 static
-void parse_wrapkeys_cli(int argc, char **argv, struct cli_params *params)
-{
-    params->privkey = "priv.bin";
-    params->pubkey = "pub.bin";
-    params->asn1 = "priv.asn1.bin";
-    const char *usage_str = "Wrap keys in ASN.1 formatting.\n\n"
-        "Usage: %s %s [-h] [-v <file>] [-b <file>] [-a <file>]\n"
-        "\tOptions:\n"
-        "\t\t-h --help              Display this message.\n"
-        "\t\t-v --priv              Private key input location [default = priv.bin]\n"
-        "\t\t-b --pub               Public key input location [default = pub.bin]\n"
-        "\t\t-a --out-asn1          ASN.1 output location [default = priv.asn1.bin]\n"
-        ;
-
-    static struct option cli_options[] =
-    {
-        {"in-priv", required_argument, NULL, 'v'},
-        {"in-pub", required_argument, NULL, 'b'},
-        {"out-asn1", required_argument, NULL, 'a'},
-        {"help", no_argument, NULL, 'h'},
-        {NULL, 0, NULL, 0}
-    };
-
-    int c;
-    while ((c = getopt_long(argc, argv, "v:b:d:a:h", cli_options, NULL)) != -1) {
-        switch (c) {
-            case 'v':
-                params->privkey = optarg;
-                break;
-            case 'b':
-                params->pubkey = optarg;
-                break;
-            case 'a':
-                params->asn1 = optarg;
-                break;
-            case 'h':
-                printf(usage_str, argv[0], argv[1]);
-                exit(1);
-        }
-    }
-}
-
-
-static
 void parse_genroot_cli(int argc, char **argv, struct cli_params *params)
 {
-    params->pubkey = "root_pub.bin";
+    params->keypair = "root_keys.asn1.bin";
     params->id = NULL;
     params->rootcert = "root_cert.bin";
     const char *usage_str = "Generate a root certificate.\n\n"
-        "Usage: %s %s [-h] [-b <file>] [-d <file>] [-c <file>]\n"
+        "Usage: %s %s [-h] [-k <file>] [-d <file>] [-c <file>]\n"
         "\tOptions:\n"
         "\t\t-h --help                      Display this message.\n"
-        "\t\t-b --rpub                      Root's public key input location [default = root_pub.bin]\n"
+        "\t\t-k --keypair                   Root's key pair input location [default = root_keys.asn1.bin]\n"
         "\t\t-d --rid                       Root's ID input location [default generates a random ID]\n"
         "\t\t-c --rcert                     Root's certificate key output location [default = root_cert.bin]\n"
         ;
 
     static struct option cli_options[] =
     {
-        {"rpub", required_argument, NULL, 'b'},
+        {"keypair", required_argument, NULL, 'k'},
         {"rid", required_argument, NULL, 'd'},
         {"rcert", required_argument, NULL, 'c'},
         {"help", no_argument, NULL, 'h'},
@@ -179,10 +123,10 @@ void parse_genroot_cli(int argc, char **argv, struct cli_params *params)
     };
 
     int c;
-    while ((c = getopt_long(argc, argv, "b:d:c:h", cli_options, NULL)) != -1) {
+    while ((c = getopt_long(argc, argv, "k:d:c:h", cli_options, NULL)) != -1) {
         switch (c) {
-            case 'b':
-                params->pubkey = optarg;
+            case 'k':
+                params->keypair = optarg;
                 break;
             case 'd':
                 params->id = optarg;
@@ -202,50 +146,41 @@ static
 void parse_genservercert_cli(int argc, char **argv, struct cli_params *params)
 {
     params->rootcert = "root_cert.bin";
-    params->rootpriv = "root_priv.bin";
+    params->keypair = "root_keys.asn1.bin";
     params->servercert = "server_cert.bin";
-    params->serverpriv = "server_priv.bin";
-    params->serverpub = "server_pub.bin";
+    params->serverkeypair = "server_keys.asn1.bin";
     params->certreserved = NULL;
     const char *usage_str = "Generate server's certificate.\n\n"
         "Usage: %s %s [-h] [-r <file>] [-p <file>] [-v <file>] [-b <file>] [-x <file>] [-c <file>]\n"
         "\tOptions:\n"
         "\t\t-h --help                    Display this message.\n"
         "\t\t-r --rcert                   Root certificate input location [default = root_cert.bin]\n"
-        "\t\t-p --rpriv                   Root private key input location [default = root_priv.bin]\n"
-        "\t\t-v --serverpriv              Server private key input location [default = server_priv.bin]\n"
-        "\t\t-b --serverpub               Server public key input location [default = server_pub.bin]\n"
+        "\t\t-k --rkeypair                Root key pair input location [default = root_keys.asn1.bin]\n"
+        "\t\t-s --skeypair                Server key pair input location [default = server_keys.asn1.bin]\n"
         "\t\t-x --reserved                Certificate reserved field input location [default = use \"58415054554d534552564552303030313939393931323331\" for reserved field]\n"
         "\t\t-c --out-servercert          Server certificate output location [default = server_cert.bin]\n"        ;
 
     static struct option cli_options[] =
     {
         {"rcert", required_argument, NULL, 'r'},
-        {"rpriv", required_argument, NULL, 'p'},
-        {"serverpriv", required_argument, NULL, 'v'},
-        {"serverpub", required_argument, NULL, 'b'},
+        {"rkeypair", required_argument, NULL, 'k'},
+        {"skeypair", required_argument, NULL, 's'},
         {"reserved", required_argument, NULL, 'x'},
         {"out-servercert", required_argument, NULL, 'c'},
         {"help", no_argument, NULL, 'h'},
         {NULL, 0, NULL, 0}
     };
     int c;
-    while ((c = getopt_long(argc, argv, "r:p:v:b:x:c:h", cli_options, NULL)) != -1) {
+    while ((c = getopt_long(argc, argv, "r:k:s:x:c:h", cli_options, NULL)) != -1) {
         switch (c) {
             case 'r':
                 params->rootcert = optarg;
                 break;
-            case 'p':
-                params->rootpriv = optarg;
+            case 'k':
+                params->keypair = optarg;
                 break;
-            case 'v':
-                params->serverpriv = optarg;
-                break;
-            case 'b':
-                params->serverpub = optarg;
-                break;
-            case 'c':
-                params->servercert = optarg;
+            case 's':
+                params->serverkeypair = optarg;
                 break;
             case 'x':
                 params->certreserved = optarg;
@@ -298,7 +233,7 @@ void parse_runserver_cli(int argc, char** argv, struct cli_params *params){
     params->port=4444;
     params->servercert = "server_cert.bin";
     params->basename = "basename.bin";
-    params->privkey = "server_priv.bin";
+    params->serverkeypair = "server_keys.asn1.bin";
     params->daagpk = "daa_gpk.bin";
 
     const char *usage_str = "Run XTT server.\n\n"
@@ -307,7 +242,7 @@ void parse_runserver_cli(int argc, char** argv, struct cli_params *params){
         "\t\t-h --help                    Display this message.\n"
         "\t\t-p --port                    Specifies which port to start the server on [default port: 4444]\n"
         "\t\t-d --daagpk                  Specifies where DAA GPK can be found [default = daa_gpk.bin]\n"
-        "\t\t-v --privkey                 Specifies where server private key can be found [default = server_priv.bin]\n"
+        "\t\t-k --skeypair                Specifies where server's key pair can be found [default = server_keys.asn1.bin]\n"
         "\t\t-b --basename                Specifies where the basename can be found [default = basename.bin]\n"
         "\t\t-c --servercert              Specifies where server certificate can be found [default = server_cert.bin]\n"
         ;
@@ -316,14 +251,14 @@ void parse_runserver_cli(int argc, char** argv, struct cli_params *params){
     {
         {"port", required_argument, NULL, 'p'},
         {"daagpk", required_argument, NULL, 'd'},
-        {"privkey", required_argument, NULL, 'v'},
+        {"skeypair", required_argument, NULL, 'k'},
         {"basename", required_argument, NULL, 'b'},
         {"servercert", required_argument, NULL, 'c'},
         {"help", no_argument, NULL, 'h'},
         {NULL, 0, NULL, 0}
     };
     int c;
-    while ((c = getopt_long(argc, argv, "p:d:v:b:c:h", cli_options, NULL)) != -1) {
+    while ((c = getopt_long(argc, argv, "p:d:k:b:c:h", cli_options, NULL)) != -1) {
         switch (c) {
             case 'p':
                 params->port = atoi(optarg);
@@ -331,8 +266,8 @@ void parse_runserver_cli(int argc, char** argv, struct cli_params *params){
             case 'd':
                 params->daagpk = optarg;
                 break;
-            case 'v':
-                params->privkey = optarg;
+            case 'k':
+                params->serverkeypair = optarg;
                 break;
             case 'b':
                 params->basename = optarg;
@@ -628,9 +563,8 @@ void parse_cli(int argc, char** argv, struct cli_params *params)
     const char *usage_str =
         "Usage: %s [command] --command_options\n"
         "Commands:\n"
-        "\tgenkey                   Generate ECDSA keys for XTT.\n"
+        "\tgenkeypair               Generate ECDSA keys for XTT.\n"
         "\tgenx509cert              Generate x509 certificate.\n"
-        "\twrapkeys                 Generate ASN.1 wrapped keys.\n"
         "\tgenrootcert              Generate root certificate.\n"
         "\tgenservercert            Generate server certificate and server private key.\n"
         "\trunserver                Run a XTT server.\n"
@@ -644,7 +578,7 @@ void parse_cli(int argc, char** argv, struct cli_params *params)
         exit(1);
     }
 
-    if(strcmp(argv[1], "genkey")==0)
+    if(strcmp(argv[1], "genkeypair")==0)
     {
         params->command=action_genkey;
         parse_genkey_cli(argc, argv, params);
@@ -652,10 +586,6 @@ void parse_cli(int argc, char** argv, struct cli_params *params)
     {
         params->command=action_genx509cert;
         parse_genx509cert_cli(argc, argv, params);
-    }else if (strcmp(argv[1], "wrapkeys")==0)
-    {
-        params->command=action_wrapkeys;
-        parse_wrapkeys_cli(argc, argv, params);
     }else if (strcmp(argv[1], "genrootcert")==0)
     {
         params->command=action_genrootcert;

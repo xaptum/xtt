@@ -34,6 +34,7 @@ size_t xtt_x509_certificate_length(void);
 #define XTT_ASN1_PRIVATE_KEY_LENGTH 121
 size_t xtt_asn1_private_key_length(void);
 
+
 /*
  * Creates a x509 certificate from pub_key_in, priv_key_in, and common_name
  * and writes the certificate into certificate_out
@@ -47,19 +48,26 @@ int xtt_x509_from_ecdsap256_keypair(const xtt_ecdsap256_pub_key *pub_key_in,
                                   const xtt_identity_type *common_name,
                                   unsigned char *certificate_out,
                                   size_t certificate_out_length);
+/*
+ * Writes the ECDSA keypair from the keys given
+ *
+ * Returns:
+ *      0   on success
+ *      SAVE_TO_FILE_ERROR   an error occurred writing to a file
+ *      ASN1_CREATION_ERROR  an error occurred creating the ASN.1 keypair
+ *
+*/
+int xtt_write_ecdsap256_keypair(xtt_ecdsap256_pub_key *pub_key, xtt_ecdsap256_priv_key *priv_key, const char *keypair_file);
 
 /*
-* Wraps priv_key_in and pub_key_in with ASN.1
-* and writes into asn1_out
-*
-* Returns:
-* 0 on success
-* ASN1_CREATION_ERROR on failure
+ * Reads a ECDSA keypair and saves the keys to their own types
+ *
+ * Returns:
+ *      0   on success
+ *      READ_TO_FILE_ERROR   an error occurred reading from a file
+ *      ASN1_PARSE_ERROR     an error occurred parsing the given keypair
 */
-int xtt_asn1_from_ecdsap256_private_key(const xtt_ecdsap256_priv_key *priv_key_in,
-                                        const xtt_ecdsap256_pub_key *pub_key_in,
-                                        unsigned char *asn1_out,
-                                        size_t asn1_out_length);
+int xtt_read_ecdsap256_keypair(const char* keypair_file, xtt_ecdsap256_pub_key *pub_key, xtt_ecdsap256_priv_key *priv_key);
 
 #ifdef __cplusplus
 }

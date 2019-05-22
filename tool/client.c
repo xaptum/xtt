@@ -126,11 +126,6 @@ int run_client(struct cli_params* params)
     int ret = 0;
     int read_ret = 0;
 
-    ret = xtt_crypto_initialize_crypto();
-    if (0 != ret) {
-        ret = CLIENT_ERROR;
-        goto finish;
-    }
     setbuf(stdout, NULL);
 
     //Read in requested client id, setting it to xtt_null_identity if no client ID is provided
@@ -671,7 +666,7 @@ int report_results_client(xtt_identity_type *requested_client_id,
         return 1;
     }
     printf("Server assigned me id: %s\n", my_assigned_id_as_string.data);
-    write_ret = xtt_save_to_file((unsigned char*)my_assigned_id_as_string.data, sizeof(xtt_identity_string), assigned_client_id_out_file);
+    write_ret = xtt_save_to_file((unsigned char*)my_assigned_id_as_string.data, sizeof(xtt_identity_string), assigned_client_id_out_file, 0644);
     if(write_ret < 0) {
         return SAVE_TO_FILE_ERROR;
     }
@@ -714,20 +709,16 @@ int report_results_client(xtt_identity_type *requested_client_id,
         fprintf(stderr, "Error creating X509 certificate\n");
         return CERT_CREATION_ERROR;
     }
-    write_ret = xtt_save_to_file(cert_buf, sizeof(cert_buf), longterm_public_key_out_file);
+    write_ret = xtt_save_to_file(cert_buf, sizeof(cert_buf), longterm_public_key_out_file, 0644);
     if(write_ret < 0){
         return SAVE_TO_FILE_ERROR;
     }
 
-    unsigned char asn1_priv_buf[XTT_ASN1_PRIVATE_KEY_LENGTH] = {0};
-    if (0 != xtt_asn1_from_ecdsap256_private_key(&my_longterm_private_key, &my_longterm_key, asn1_priv_buf, sizeof(asn1_priv_buf))) {
+    if (0 != xtt_write_ecdsap256_keypair(&my_longterm_key, &my_longterm_private_key, longterm_private_key_out_file)){
         fprintf(stderr, "Error creating ASN.1 private key\n");
         return 1;
     }
-    write_ret = xtt_save_to_file(asn1_priv_buf, sizeof(asn1_priv_buf), longterm_private_key_out_file);
-    if(write_ret < 0) {
-        return SAVE_TO_FILE_ERROR;
-    }
+
 
     // 4) Get pseudonym
     xtt_daa_pseudonym_lrsw my_pseudonym = {.data = {0}};

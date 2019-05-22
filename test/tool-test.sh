@@ -21,24 +21,24 @@ function cleanup()
 trap cleanup INT KILL EXIT
 
 echo "Generating root keys..."
-${tool_dir}/xtt genkey -v ${tmp_dir}/root_priv.bin -b ${tmp_dir}/root_pub.bin
+${tool_dir}/xtt genkeypair -k ${tmp_dir}/root_keys.asn1.bin
 
 echo "Generating server keys..."
-${tool_dir}/xtt genkey -v ${tmp_dir}/server_priv.bin -b ${tmp_dir}/server_pub.bin
+${tool_dir}/xtt genkeypair -k ${tmp_dir}/server_keys.asn1.bin
 
 echo "Generating root certificate..."
-${tool_dir}/xtt genrootcert -b ${tmp_dir}/root_pub.bin -c ${tmp_dir}/root_cert.bin
+${tool_dir}/xtt genrootcert -k ${tmp_dir}/root_keys.asn1.bin -c ${tmp_dir}/root_cert.bin
 
 echo "Generating server certificate..."
-${tool_dir}/xtt genservercert -r ${tmp_dir}/root_cert.bin -p ${tmp_dir}/root_priv.bin \
-        -b ${tmp_dir}/server_pub.bin -v ${tmp_dir}/server_priv.bin -c ${tmp_dir}/server_cert.bin
+${tool_dir}/xtt genservercert -r ${tmp_dir}/root_cert.bin -k ${tmp_dir}/root_keys.asn1.bin \
+        -s ${tmp_dir}/server_keys.asn1.bin -c server_cert.bin
 
 echo "Starting server..."
-${tool_dir}/xtt runserver -d ${data_dir}/daa_gpk.bin -b ${data_dir}/basename.bin -v \
-        ${tmp_dir}/server_priv.bin -c ${tmp_dir}/server_cert.bin &
+${tool_dir}/xtt runserver -d ${data_dir}/daa_gpk.bin -b ${data_dir}/basename.bin -k \
+        ${tmp_dir}/server_keys.asn1.bin -c server_cert.bin &
 server_pid=$!
 
-sleep 1 
+sleep 1
 
 if kill -0 "$server_pid" 2>/dev/null; then
         echo "Running client..."

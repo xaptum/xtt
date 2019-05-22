@@ -22,7 +22,7 @@
 #include <xtt/util/util_errors.h>
 #include <xtt/util/generate_x509_certificate.h>
 
-int xtt_generate_x509_certificate(const char *privkey_filename, const char *pubkey_filename, const char *id_filename, const char *certificate_filename)
+int xtt_generate_x509_certificate(const char *keypair_filename, const char *id_filename, const char *certificate_filename)
 {
     int read_ret = 0;
     int write_ret = 0;
@@ -31,20 +31,22 @@ int xtt_generate_x509_certificate(const char *privkey_filename, const char *pubk
     // 1) Read in key pair.
     xtt_ecdsap256_pub_key pub = {.data = {0}};
     xtt_ecdsap256_priv_key priv  = {.data = {0}};
-    read_ret = xtt_read_from_file(privkey_filename, priv.data, sizeof(xtt_ecdsap256_priv_key));
-    if (read_ret < 0) {
-        return READ_FROM_FILE_ERROR;
-    }
-    read_ret = xtt_read_from_file(pubkey_filename, pub.data, sizeof(xtt_ecdsap256_pub_key));
-    if(read_ret < 0){
-        return READ_FROM_FILE_ERROR;
+    read_ret = xtt_read_ecdsap256_keypair(keypair_filename, &pub, &priv);
+    if (read_ret != 0) {
+        return read_ret;
     }
 
     // 2) Read in ID from file
-    xtt_identity_type id = xtt_null_identity;
-    read_ret = xtt_read_from_file(id_filename, id.data, sizeof(xtt_identity_type));
-    if(read_ret < 0)
-        return READ_FROM_FILE_ERROR;
+    xtt_identity_type id = {.data = {0}};
+    if (NULL != id_filename) {
+        read_ret = xtt_read_from_file(id_filename, id.data, sizeof(xtt_identity_type));
+        if (read_ret < 0) {
+            return READ_FROM_FILE_ERROR;
+        }
+    } else
+    {
+        id = xtt_null_identity;
+    }
 
     // 3) Create certificate and save to file.
     unsigned char cert_buf[XTT_X509_CERTIFICATE_LENGTH] = {0};
@@ -53,7 +55,7 @@ int xtt_generate_x509_certificate(const char *privkey_filename, const char *pubk
         return CERT_CREATION_ERROR;
     }
 
-    write_ret = xtt_save_to_file(cert_buf, sizeof(cert_buf), certificate_filename);
+    write_ret = xtt_save_cert_to_file(cert_buf, sizeof(cert_buf), certificate_filename);
     if (write_ret < 0) {
         return SAVE_TO_FILE_ERROR;
     }

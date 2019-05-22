@@ -103,13 +103,13 @@ Example data for the `client` and the `server` can be found in their respective 
 
 ### Creating a Root
 To create root configuration data, run:  
-`xtt genkey -v root_priv.bin -b root_pub.bin` to create a root key pair.  
+`xtt genkeypair -k root_keys.asn1.bin` to create a root key pair.  
 `xtt genrootcert` to create a root certificate.  
 
 ### Provisioning a Server        
-To create server configuration data under that root, run:  
-`xtt genkey -v server_priv.bin -b server_pub.bin` to create a server key pair.  
-`xtt genservercert` to create a server certificate.
+To create server configuration data under that root, run:
+`xtt genkeypair -k server_keys.asn1.bin` to create a server key pair.
+`xtt genservercert` to create a server certificate.  
 
 ### Running a Test Server  
 The server executable can take the DAA Group Public Key and basename to use as parameter:  

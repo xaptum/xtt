@@ -34,7 +34,6 @@ extern "C" {
 typedef enum {
     action_genkey,
     action_genx509cert,
-    action_wrapkeys,
     action_genrootcert,
     action_genservercert,
     action_runserver,
@@ -46,16 +45,12 @@ typedef enum {
 
 struct cli_params {
     action command;
-    const char* privkey;
-    const char* pubkey;
+    const char* keypair;
     const char* id;
     const char* cert;
-    const char* asn1;
     const char* certreserved;
     const char* rootcert;
-    const char* rootpriv;
-    const char* serverpriv;
-    const char* serverpub;
+    const char* serverkeypair;
     const char* servercert;
     const char* basename;
     const char* daagpk;

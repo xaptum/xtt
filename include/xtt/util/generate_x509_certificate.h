@@ -34,7 +34,7 @@ extern "C" {
  *      KEY_CREATION_ERROR          an error occurred creating a keypair
  *      CERT_CREATION_ERROR         an error occurred creating the certificate
 */
-int xtt_generate_x509_certificate(const char *privkey_filename, const char *pubkey_filename, const char *id_filename, const char *certificate_filename);
+int xtt_generate_x509_certificate(const char *keypair_filename, const char *id_filename, const char *certificate_filename);
 
 #ifdef __cplusplus
 }
