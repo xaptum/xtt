@@ -1,3 +1,22 @@
+xtt (0.10.3-1) unstable; urgency=medium
+
+  [ Kathryn Fejer ]
+  * Clean up files for generating keypairs
+  * Create read and write keypair functions
+  * Update tool to keypair
+  * Update README
+
+  [ Zane Beckwith ]
+  * Add tests for keypair writing/reading
+  * tool: Initialize crypto *always* (not just client/server).
+
+  [ Kathryn Fejer ]
+  * Change AMCL url since original is no longer supported
+  * Assign permissions to the files that xtt creates
+  * Fix spacing
+
+ -- Zane Beckwith <zane.beckwith@xaptum.com>  Wed, 22 May 2019 20:42:17 +0000
+
 xtt (0.10.2-1) unstable; urgency=medium
 
   [ Zane Beckwith ]
