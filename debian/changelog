@@ -1,3 +1,10 @@
+xtt (0.10.4-1) unstable; urgency=medium
+
+  [ Zane Beckwith ]
+  * cmake: Bump patch number, to 0.10.4.
+
+ -- Zane Beckwith <zane.beckwith@xaptum.com>  Thu, 23 May 2019 16:01:13 +0000
+
 xtt (0.10.3-1) unstable; urgency=medium
 
   [ Kathryn Fejer ]
