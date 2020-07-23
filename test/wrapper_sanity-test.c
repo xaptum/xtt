@@ -17,7 +17,7 @@
  *****************************************************************************/
 
 #include <xtt.h>
-#include <amcl/ecdh_NIST256.h>
+#include <amcl/include/ecdh_NIST256.h>
 #include "test-utils.h"
 
 #include <string.h>

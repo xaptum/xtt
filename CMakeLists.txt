@@ -14,6 +14,8 @@ set(XTT_SOVERSION ${PROJECT_VERSION_MAJOR})
 include(GNUInstallDirs)
 include(CTest)
 
+include_directories(/opt/)
+
 option(USE_TPM "use a TPM" ON)
 
 option(BUILD_SHARED_LIBS "Build as a shared library" ON)
