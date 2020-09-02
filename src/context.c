@@ -240,7 +240,7 @@ xtt_initialize_client_group_context_lrswTPM(struct xtt_client_group_context *ctx
                                             xtt_daa_credential_lrsw *cred,
                                             const unsigned char *basename,
                                             uint16_t basename_length,
-                                            TPM_HANDLE key_handle,
+                                            TPM2_HANDLE key_handle,
                                             const char *key_password,
                                             uint16_t key_password_length,
                                             TSS2_TCTI_CONTEXT *tcti_context)

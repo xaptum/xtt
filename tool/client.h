@@ -26,7 +26,7 @@ extern "C" {
 
 #ifdef USE_TPM
 #include <tss2/tss2_sys.h>
-#include <tss2/tss2_tcti_socket.h>
+#include <tss2/tss2_tcti_mssim.h>
 #include <tss2/tss2_tcti_device.h>
 #else
 typedef int TSS2_TCTI_CONTEXT;
