@@ -37,8 +37,6 @@
 
 #ifdef USE_TPM
 #include <xtt/tpm/context.h>
-#include <xtt/tpm/handles.h>
-#include <xtt/tpm/nvram.h>
 #endif
 
 #endif

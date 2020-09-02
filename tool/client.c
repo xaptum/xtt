@@ -31,8 +31,7 @@
 #include <xtt/util/root.h>
 
 #ifdef USE_TPM
-#include <xtt/tpm/handles.h>
-#include <xtt/tpm/nvram.h>
+#include <xaptum-tpm/nvram.h>
 #else
 struct xtt_tpm_context {
     char empty;
@@ -309,11 +308,11 @@ int read_in_from_TPM(struct xtt_tpm_context *tpm_ctx,
 {
 #ifdef USE_TPM
     uint16_t length_read = 0;
-    int nvram_ret = xtt_read_object(basename,
+    int nvram_ret = xtpm_read_object(basename,
                                *basename_len,
                                &length_read,
-                               XTT_BASENAME,
-                               tpm_ctx);
+                               XTPM_BASENAME,
+                               tpm_ctx->sapi_context);
     if (0 != nvram_ret) {
         fprintf(stderr, "Error reading basename from TPM NVRAM\n");
         return nvram_ret;
@@ -321,33 +320,33 @@ int read_in_from_TPM(struct xtt_tpm_context *tpm_ctx,
     *basename_len = length_read;
 
     length_read = 0;
-    nvram_ret = xtt_read_object(gpk->data,
+    nvram_ret = xtpm_read_object(gpk->data,
                                 sizeof(xtt_daa_group_pub_key_lrsw),
                                 &length_read,
-                                XTT_GROUP_PUBLIC_KEY,
-                                tpm_ctx);
+                                XTPM_GROUP_PUBLIC_KEY,
+                                tpm_ctx->sapi_context);
     if (0 != nvram_ret) {
         fprintf(stderr, "Error reading GPK from TPM NVRAM");
         return TPM_ERROR;
     }
 
     length_read = 0;
-    nvram_ret = xtt_read_object(cred->data,
+    nvram_ret = xtpm_read_object(cred->data,
                                 sizeof(xtt_daa_credential_lrsw),
                                 &length_read,
-                                XTT_CREDENTIAL,
-                                tpm_ctx);
+                                XTPM_CREDENTIAL,
+                                tpm_ctx->sapi_context);
     if (0 != nvram_ret) {
         fprintf(stderr, "Error reading credential from TPM NVRAM");
         return TPM_ERROR;
     }
 
     length_read = 0;
-    nvram_ret = xtt_read_object(root_certificate->data,
+    nvram_ret = xtpm_read_object(root_certificate->data,
                                 sizeof(xtt_root_certificate),
                                 &length_read,
-                                XTT_ROOT_XTT_CERTIFICATE,
-                                tpm_ctx);
+                                XTPM_ROOT_XTT_CERTIFICATE,
+                                tpm_ctx->sapi_context);
     if (0 != nvram_ret) {
         fprintf(stderr, "Error reading root's certificate from TPM NVRAM");
         return TPM_ERROR;
@@ -446,7 +445,7 @@ int initialize_daa(struct xtt_client_group_context *group_ctx,
                                                          cred,
                                                          basename,
                                                          basename_len,
-                                                         XTT_KEY_HANDLE,
+                                                         XTPM_ECDAA_KEY_HANDLE,
                                                          tpm_password,
                                                          tpm_password_len,
                                                          tpm_ctx->tcti_context);

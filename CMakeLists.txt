@@ -69,8 +69,6 @@ set(XTT_SRCS
 if(USE_TPM)
   list(APPEND XTT_SRCS
         src/tpm/context.c
-        src/tpm/handles.c
-        src/tpm/nvram.c
         )
 endif()
 
