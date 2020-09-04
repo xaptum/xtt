@@ -26,7 +26,7 @@ git clone --branch "${source_tag}" --depth 1 https://github.com/xaptum/ecdaa "${
 pushd "${source_dir}"
 mkdir -p build
 pushd build
-cmake .. -DCMAKE_INSTALL_PREFIX=${INSTALL_PREFIX} -DCMAKE_PREFIX_PATH=${local_install_dir}
+cmake .. -DCMAKE_INSTALL_PREFIX=${INSTALL_PREFIX}
 cmake --build .
 cmake --build . --target install
 popd
