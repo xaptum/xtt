@@ -169,6 +169,24 @@ int xtt_crypto_aead_aes256gcm_decrypt(unsigned char* msg,
                                          &key->buf);
 }
 
+int xtt_crypto_hash_sha256(struct xtt_crypto_hmac* out,
+                           const unsigned char* in,
+                           uint16_t inlen)
+{
+    out->len = sizeof(xtt_crypto_sha256);
+
+    crypto_hash_sha256_state h;
+
+    if (0 != crypto_hash_sha256_init(&h))
+        return -1;
+    if (0 != crypto_hash_sha256_update(&h, in, inlen))
+        return -1;
+    if (0 != crypto_hash_sha256_final(&h, &out->buf))
+        return -1;
+
+    return 0;
+}
+
 int xtt_crypto_hash_sha512(struct xtt_crypto_hmac* out,
                            const unsigned char* in,
                            uint16_t inlen)
