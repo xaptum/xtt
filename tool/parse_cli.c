@@ -358,6 +358,7 @@ void parse_runclient_cli(int argc, char** argv, struct cli_params *params){
 
         {NULL, 0, NULL, 0}
     };
+    bool nondefault_priv_file = false;
     int c;
     while ((c = getopt_long(argc, argv, "p:s:a:q:d:c:k:e:n:mt:f:i:b:v:h", cli_options, NULL)) != -1) {
         switch (c) {
@@ -415,6 +416,7 @@ void parse_runclient_cli(int argc, char** argv, struct cli_params *params){
             case 'v':
             {
                 params->longtermpriv = optarg;
+                nondefault_priv_file = true;
                 break;
             }
 #ifdef USE_TPM
@@ -432,6 +434,7 @@ void parse_runclient_cli(int argc, char** argv, struct cli_params *params){
             case 't':
             case 'f':
                 printf("TPM options are not supported, because not built with TPM support.");
+                exit(1);
 #endif
             case 'h':
             printf(usage_str, argv[0], argv[1]);
@@ -440,6 +443,9 @@ void parse_runclient_cli(int argc, char** argv, struct cli_params *params){
     }
 
 #ifdef USE_TPM
+    if (!nondefault_priv_file && 1 == params->usetpm)
+        params->longtermpriv = "longterm_priv.pem";
+
     if (0 == strcmp(tcti_str, "device")) {
         params->tpm_params.tcti = XTT_TCTI_DEVICE;
     } else if (0 == strcmp(tcti_str, "socket")) {
