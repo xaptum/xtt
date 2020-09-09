@@ -70,6 +70,15 @@ static int initialize_daa(struct xtt_client_group_context *group_ctx,
                 int use_tpm,
                 struct xtt_tpm_context *tpm_ctx);
 
+static int initialize_client_ctx(struct xtt_client_handshake_context *ctx,
+                                 unsigned char *in_buffer,
+                                 size_t in_buffer_length,
+                                 unsigned char *out_buffer,
+                                 size_t out_buffer_length,
+                                 xtt_suite_spec suite_spec,
+                                 struct xtt_tpm_context *tpm_ctx,
+                                 int use_tpm);
+
 static int read_in_from_TPM(struct xtt_tpm_context *tpm_ctx,
                   unsigned char* basename,
                   uint16_t* basename_len,
@@ -102,7 +111,9 @@ static int report_results_client(xtt_identity_type *requested_client_id,
                    struct xtt_client_handshake_context *ctx,
                    const char* assigned_client_id_out_file,
                    const char* longterm_public_key_out_file,
-                   const char* longterm_private_key_out_file);
+                   const char* longterm_private_key_out_file,
+                   int use_tpm,
+                   struct xtt_tpm_context *tpm_ctx);
 
 int run_client(struct cli_params* params)
 {
@@ -221,9 +232,16 @@ int run_client(struct cli_params* params)
     unsigned char in_buffer[MAX_HANDSHAKE_SERVER_MESSAGE_LENGTH] = {0};
     unsigned char out_buffer[MAX_HANDSHAKE_CLIENT_MESSAGE_LENGTH] = {0};
     struct xtt_client_handshake_context ctx;
-    xtt_return_code_type rc = xtt_initialize_client_handshake_context(&ctx, in_buffer, sizeof(in_buffer), out_buffer, sizeof(out_buffer), version_g_client, suite_spec);
-    if (XTT_RETURN_SUCCESS != rc) {
-        fprintf(stderr, "Error initializing client handshake context: %d\n", rc);
+    ret = initialize_client_ctx(&ctx,
+                                in_buffer,
+                                sizeof(in_buffer),
+                                out_buffer,
+                                sizeof(out_buffer),
+                                suite_spec,
+                                &tpm_ctx,
+                                use_tpm);
+    if (0 != ret) {
+        fprintf(stderr, "Error initializing client handshake context\n");
         ret = CLIENT_ERROR;
         goto finish;
     }
@@ -236,7 +254,12 @@ int run_client(struct cli_params* params)
     if (0 == ret) {
     // 5) Print the results (what we and the server now agree on post-handshake)
         ret = report_results_client(&requested_client_id,
-                             &ctx, assigned_client_id_out_file, longterm_public_key_out_file, longterm_private_key_out_file);
+                                    &ctx,
+                                    assigned_client_id_out_file,
+                                    longterm_public_key_out_file,
+                                    longterm_private_key_out_file,
+                                    use_tpm,
+                                    &tpm_ctx);
         if (0 != ret){
             ret = CLIENT_ERROR;
             goto finish;
@@ -471,6 +494,55 @@ int initialize_daa(struct xtt_client_group_context *group_ctx,
     return 0;
 }
 
+static int initialize_client_ctx(struct xtt_client_handshake_context *ctx,
+                                 unsigned char *in_buffer,
+                                 size_t in_buffer_length,
+                                 unsigned char *out_buffer,
+                                 size_t out_buffer_length,
+                                 xtt_suite_spec suite_spec,
+                                 struct xtt_tpm_context *tpm_ctx,
+                                 int use_tpm)
+{
+    xtt_return_code_type rc;
+
+    if (!use_tpm) {
+        (void)tpm_ctx;
+        rc = xtt_initialize_client_handshake_context(ctx,
+                                                     in_buffer,
+                                                     in_buffer_length,
+                                                     out_buffer,
+                                                     out_buffer_length,
+                                                     version_g_client,
+                                                     suite_spec);
+    } else {
+#ifdef USE_TPM
+        // Nb. Using defaults for hierarchy and parent_handle, and not allowing hierarchy password.
+        rc = xtt_initialize_client_handshake_context_TPM(ctx,
+                                                         in_buffer,
+                                                         in_buffer_length,
+                                                         out_buffer,
+                                                         out_buffer_length,
+                                                         version_g_client,
+                                                         suite_spec,
+                                                         0,
+                                                         NULL,
+                                                         0,
+                                                         0,
+                                                         tpm_ctx->tcti_context);
+#else
+        fprintf(stderr, "Attempted to use a TPM, but not built with TPM enabled!\n");
+        return TPM_ERROR;
+#endif
+    }
+
+    if (XTT_RETURN_SUCCESS != rc){
+        printf("%s", xtt_strerror(rc));
+        return TPM_ERROR;
+    }
+
+    return 0;
+}
+
 static
 int initialize_certs(xtt_root_certificate* root_certificate)
 {
@@ -648,7 +720,9 @@ int report_results_client(xtt_identity_type *requested_client_id,
                    struct xtt_client_handshake_context *ctx,
                    const char* assigned_client_id_out_file,
                    const char* longterm_public_key_out_file,
-                   const char* longterm_private_key_out_file)
+                   const char* longterm_private_key_out_file,
+                   int use_tpm,
+                   struct xtt_tpm_context *tpm_ctx)
 {
     int write_ret = 0;
 
@@ -696,28 +770,50 @@ int report_results_client(xtt_identity_type *requested_client_id,
             printf("}\n");
         }
     }
-    xtt_ecdsap256_priv_key my_longterm_private_key = {.data = {0}};
-    if (XTT_RETURN_SUCCESS != xtt_get_my_longterm_private_key_ecdsap256(&my_longterm_private_key, ctx)) {
-        printf("Error getting my longterm private key!\n");
-        return 1;
-    }
 
     // 3) Save longterm keypair as X509 certificate and ASN.1-encoded private key
-    unsigned char cert_buf[XTT_X509_CERTIFICATE_LENGTH] = {0};
-    if (0 != xtt_x509_from_ecdsap256_keypair(&my_longterm_key, &my_longterm_private_key, &my_assigned_id, cert_buf, sizeof(cert_buf))) {
-        fprintf(stderr, "Error creating X509 certificate\n");
-        return CERT_CREATION_ERROR;
-    }
-    write_ret = xtt_save_to_file(cert_buf, sizeof(cert_buf), longterm_public_key_out_file, 0644);
-    if(write_ret < 0){
-        return SAVE_TO_FILE_ERROR;
-    }
+    if (use_tpm) {
+#ifdef USE_TPM
+        unsigned char cert_buf[XTT_X509_CERTIFICATE_LENGTH] = {0};
+        if (0 != xtt_x509_from_ecdsap256_TPM(&my_longterm_key, &ctx->longterm_private_key_tpm, tpm_ctx->tcti_context, &my_assigned_id, cert_buf, sizeof(cert_buf))) {
+            fprintf(stderr, "Error creating X509 certificate\n");
+            return CERT_CREATION_ERROR;
+        }
+        write_ret = xtt_save_to_file(cert_buf, sizeof(cert_buf), longterm_public_key_out_file, 0644);
+        if(write_ret < 0){
+            return SAVE_TO_FILE_ERROR;
+        }
 
-    if (0 != xtt_write_ecdsap256_keypair(&my_longterm_key, &my_longterm_private_key, longterm_private_key_out_file)){
-        fprintf(stderr, "Error creating ASN.1 private key\n");
-        return 1;
-    }
+        if (TSS2_RC_SUCCESS != xtpm_write_key(&ctx->longterm_private_key_tpm, longterm_private_key_out_file)) {
+            fprintf(stderr, "Error creating ASN.1 private key\n");
+            return 1;
+        }
+#else
+        fprintf(stderr, "Attempted to use a TPM, but not built with TPM enabled!\n");
+        return TPM_ERROR;
+#endif
+    } else {
+        xtt_ecdsap256_priv_key my_longterm_private_key = {.data = {0}};
+        if (XTT_RETURN_SUCCESS != xtt_get_my_longterm_private_key_ecdsap256(&my_longterm_private_key, ctx)) {
+            printf("Error getting my longterm private key!\n");
+            return 1;
+        }
 
+        unsigned char cert_buf[XTT_X509_CERTIFICATE_LENGTH] = {0};
+        if (0 != xtt_x509_from_ecdsap256_keypair(&my_longterm_key, &my_longterm_private_key, &my_assigned_id, cert_buf, sizeof(cert_buf))) {
+            fprintf(stderr, "Error creating X509 certificate\n");
+            return CERT_CREATION_ERROR;
+        }
+        write_ret = xtt_save_to_file(cert_buf, sizeof(cert_buf), longterm_public_key_out_file, 0644);
+        if(write_ret < 0){
+            return SAVE_TO_FILE_ERROR;
+        }
+
+        if (0 != xtt_write_ecdsap256_keypair(&my_longterm_key, &my_longterm_private_key, longterm_private_key_out_file)){
+            fprintf(stderr, "Error creating ASN.1 private key\n");
+            return 1;
+        }
+    }
 
     // 4) Get pseudonym
     xtt_daa_pseudonym_lrsw my_pseudonym = {.data = {0}};
