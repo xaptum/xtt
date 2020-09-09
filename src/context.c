@@ -170,6 +170,104 @@ xtt_initialize_client_handshake_context(struct xtt_client_handshake_context* ctx
     return XTT_RETURN_SUCCESS;
 }
 
+#ifdef USE_TPM
+xtt_return_code_type
+xtt_initialize_client_handshake_context_TPM(struct xtt_client_handshake_context* ctx_out,
+                                            unsigned char *in_buffer,
+                                            uint16_t in_buffer_size,
+                                            unsigned char *out_buffer,
+                                            uint16_t out_buffer_size,
+                                            xtt_version version,
+                                            xtt_suite_spec suite_spec,
+                                            TPMI_RH_HIERARCHY hierarchy,
+                                            const char *hierarchy_password,
+                                            size_t hierarchy_password_length,
+                                            TPM2_HANDLE parent_handle,
+                                            TSS2_TCTI_CONTEXT *tcti_context)
+{
+    if (ctx_out == NULL)
+        return XTT_RETURN_NULL_BUFFER;
+
+    if (MAX_HANDSHAKE_SERVER_MESSAGE_LENGTH > in_buffer_size || MAX_HANDSHAKE_CLIENT_MESSAGE_LENGTH > out_buffer_size)
+        return XTT_RETURN_CONTEXT_BUFFER_OVERFLOW;
+
+    if (XTT_VERSION_ONE != version)
+        return XTT_RETURN_UNKNOWN_VERSION;
+
+    ctx_out->state = XTT_CLIENT_HANDSHAKE_STATE_START;
+
+    ctx_out->base.version = version;
+    ctx_out->base.suite_spec = suite_spec;
+    ctx_out->base.suite_ops = xtt_suite_ops_get(suite_spec);
+    if (NULL == ctx_out->base.suite_ops)
+        return XTT_RETURN_UNKNOWN_SUITE_SPEC;
+
+    ctx_out->base.in_buffer_start = in_buffer;
+    ctx_out->base.in_message_start = ctx_out->base.in_buffer_start;
+    ctx_out->base.in_end = ctx_out->base.in_buffer_start;
+    ctx_out->base.out_buffer_start = out_buffer;
+    ctx_out->base.out_message_start = ctx_out->base.out_buffer_start;
+    ctx_out->base.out_end = ctx_out->base.out_buffer_start;
+
+    xtt_crypto_hmac_init(&ctx_out->base.hash_out, ctx_out->base.suite_ops->hmac);
+    xtt_crypto_hmac_init(&ctx_out->base.inner_hash, ctx_out->base.suite_ops->hmac);
+    xtt_crypto_hmac_init(&ctx_out->base.prf_key, ctx_out->base.suite_ops->hmac);
+    xtt_crypto_hmac_init(&ctx_out->base.handshake_secret, ctx_out->base.suite_ops->hmac);
+
+    xtt_crypto_aead_key_init(&ctx_out->base.rx_key, ctx_out->base.suite_ops->aead);
+    xtt_crypto_aead_key_init(&ctx_out->base.tx_key, ctx_out->base.suite_ops->aead);
+    xtt_crypto_aead_nonce_init(&ctx_out->base.rx_iv, ctx_out->base.suite_ops->aead);
+    xtt_crypto_aead_nonce_init(&ctx_out->base.tx_iv, ctx_out->base.suite_ops->aead);
+
+    ctx_out->base.longterm_key_length = sizeof(xtt_ecdsap256_pub_key);
+    ctx_out->base.longterm_key_signature_length = sizeof(xtt_ecdsap256_signature);
+
+    ctx_out->base.tx_sequence_num = 0;
+    ctx_out->base.rx_sequence_num = 0;
+
+    ctx_out->verify_server_signature = verify_server_signature_ecdsap256;
+
+    ctx_out->copy_longterm_key = copy_longterm_key_ecdsap256;
+
+    ctx_out->compare_longterm_keys = compare_longterm_keys_ecdsap256;
+
+    ctx_out->hierarchy = hierarchy;
+
+    if (hierarchy_password_length > sizeof(ctx_out->hierarchy_password))
+        return XTT_RETURN_BAD_INIT;
+    memcpy(ctx_out->hierarchy_password,
+           hierarchy_password,
+           hierarchy_password_length);
+    ctx_out->hierarchy_password_length = hierarchy_password_length;
+
+    ctx_out->parent_handle = parent_handle;
+
+    ctx_out->tcti_context = tcti_context;
+
+    ctx_out->longterm_sign = longterm_sign_ecdsap256TPM;
+
+    ctx_out->copy_in_my_pseudonym = copy_in_pseudonym_client_lrsw;
+
+    if (0 != ctx_out->base.suite_ops->kx->keypair(&ctx_out->base.kx_pubkey,
+                                                  &ctx_out->base.kx_seckey))
+        return XTT_RETURN_CRYPTO;
+
+    if (TSS2_RC_SUCCESS != xtpm_gen_key(ctx_out->tcti_context,
+                                        ctx_out->parent_handle,
+                                        ctx_out->hierarchy,
+                                        ctx_out->hierarchy_password,
+                                        ctx_out->hierarchy_password_length,
+                                        &ctx_out->longterm_private_key_tpm))
+        return XTT_RETURN_CRYPTO;
+
+    if (TSS2_RC_SUCCESS != xtpm_get_public_key(&ctx_out->longterm_private_key_tpm,
+                                               ctx_out->longterm_key.ecdsap256.data))
+        return XTT_RETURN_CRYPTO;
+
+    return XTT_RETURN_SUCCESS;
+}
+#endif
+
 xtt_return_code_type
 xtt_initialize_server_cookie_context(struct xtt_server_cookie_context* ctx)
 {
