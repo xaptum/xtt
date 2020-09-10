@@ -62,6 +62,27 @@ static struct xtt_crypto_hmac_ops blake2b_ops =
      .prf  = xtt_crypto_prf_blake2b,
     };
 
+/** Auth Ops **/
+static struct xtt_crypto_auth_ops ecdsa_p256_ops =
+    {
+     .pub_len = sizeof(xtt_crypto_ecdsa_p256_public),
+     .sig_len = sizeof(xtt_cyrpto_ecdsa_p256_sig),
+     .generate = xtt_crypto_auth_ecdsa_p256_generate,
+     .sign  = xtt_crypto_auth_ecdsa_p256_sign,
+     .verify = xtt_crypto_auth_ecdsa_p256_verify,
+     .compare = xtt_crypto_auth_ecdsa_p256_compare,
+    };
+
+static struct xtt_crypto_auth_ops ecdsa_p256_tpm_ops =
+    {
+     .pub_len = sizeof(xtt_crypto_ecdsa_p256_public),
+     .sig_len = sizeof(xtt_cyrpto_ecdsa_p256_sig),
+     .generate = xtt_crypto_auth_ecdsa_p256_tpm_generate,
+     .sign  = xtt_crypto_auth_ecdsa_p256_tpm_sign,
+     .verify = xtt_crypto_auth_ecdsa_p256_verify,
+     .compare = xtt_crypto_auth_ecdsa_p256_compare,
+    };
+
 /**
   * A array of :xtt_suite_ops: indexed by the :xtt_suite_spec:
   * enum. Each instance points to the default implementations of the

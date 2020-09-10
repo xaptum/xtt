@@ -23,6 +23,7 @@
 
 #include "crypto_types.h"
 #include "crypto/aead.h"
+#include "crypto/auth.h"
 #include "crypto/hmac.h"
 #include "crypto/kx.h"
 
