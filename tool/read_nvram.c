@@ -19,15 +19,16 @@
 #include "read_nvram.h"
 
 #include <xtt/tpm/context.h>
-#include <xtt/tpm/nvram.h>
 #include <xtt/util/util_errors.h>
 #include <xtt/util/file_io.h>
+
+#include <xaptum-tpm/nvram.h>
 
 #include <stdio.h>
 
 #define MAX_NVRAM_SIZE 768
 
-int read_nvram(const struct xtt_tpm_params *params, const char* outfile, enum xtt_object_name obj_name)
+int read_nvram(const struct xtt_tpm_params *params, const char* outfile, enum xtpm_object_name obj_name)
 {
     struct xtt_tpm_context ctx;
 
@@ -40,7 +41,7 @@ int read_nvram(const struct xtt_tpm_params *params, const char* outfile, enum xt
     unsigned char output_data[MAX_NVRAM_SIZE];
     uint16_t output_length;
     printf("Reading object from NVRAM...");
-    TSS2_RC read_ret = xtt_read_object(output_data, sizeof(output_data), &output_length, obj_name, &ctx);
+    TSS2_RC read_ret = xtpm_read_object(output_data, sizeof(output_data), &output_length, obj_name, ctx.sapi_context);
     if (TSS2_RC_SUCCESS != read_ret) {
         fprintf(stderr, "Bad read_ret: %#X\n", read_ret);
         return TPM_ERROR;

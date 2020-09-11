@@ -509,27 +509,27 @@ void parse_nvram_cli(int argc, char** argv, struct cli_params *params)
     }
     if (argv[optind] != NULL) {
         if (0 == strcmp(argv[optind], "daa_gpk")) {
-            params->obj_name = XTT_GROUP_PUBLIC_KEY;
+            params->obj_name = XTPM_GROUP_PUBLIC_KEY;
             if (params->outfile == NULL)
                 params->outfile = "daa_gpk.bin";
         } else if (0 == strcmp(argv[optind], "daa_cred")) {
-            params->obj_name = XTT_CREDENTIAL;
+            params->obj_name = XTPM_CREDENTIAL;
             if (params->outfile == NULL)
                 params->outfile = "daa_cred.bin";
         } else if (0 == strcmp(argv[optind], "daa_cred_sig")) {
-            params->obj_name = XTT_CREDENTIAL_SIGNATURE;
+            params->obj_name = XTPM_CREDENTIAL_SIGNATURE;
             if (params->outfile == NULL)
                 params->outfile = "daa_cred_sig.bin";
         } else if (0 == strcmp(argv[optind], "root_asn1_cert")) {
-            params->obj_name = XTT_ROOT_ASN1_CERTIFICATE;
+            params->obj_name = XTPM_ROOT_ASN1_CERTIFICATE;
             if (params->outfile == NULL)
                 params->outfile = "root_asn1_cert.pem";
         } else if (0 == strcmp(argv[optind], "root_xtt_cert")) {
-            params->obj_name = XTT_ROOT_XTT_CERTIFICATE;
+            params->obj_name = XTPM_ROOT_XTT_CERTIFICATE;
             if (params->outfile == NULL)
                 params->outfile = "root_xtt_cert.bin";
         } else if (0 == strcmp(argv[optind], "basename")) {
-            params->obj_name = XTT_BASENAME;
+            params->obj_name = XTPM_BASENAME;
             if (params->outfile == NULL)
                 params->outfile = "basename.bin";
         } else {

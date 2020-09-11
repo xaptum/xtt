@@ -28,7 +28,7 @@ extern "C" {
 
 #ifdef USE_TPM
 #include <xtt/tpm/context.h>
-#include <xtt/tpm/nvram.h>
+#include <xaptum-tpm/nvram.h>
 #endif
 
 typedef enum {
@@ -69,7 +69,7 @@ struct cli_params {
 
 #ifdef USE_TPM
     struct xtt_tpm_params tpm_params;
-    enum xtt_object_name obj_name;
+    enum xtpm_object_name obj_name;
 #endif
 
 };
