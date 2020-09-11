@@ -26,7 +26,7 @@ find_package(sodium 1.0.11 REQUIRED QUIET)
 if(USE_TPM)
         add_definitions(-DUSE_TPM)
         find_package(TSS2 REQUIRED QUIET)
-        find_package(xaptum-tpm 0.5.7 REQUIRED QUIET)
+        find_package(xaptum-tpm 1.0.0 REQUIRED QUIET)
         find_package(ecdaa 1.0.0 COMPONENTS tpm REQUIRED QUIET)
 endif()
 

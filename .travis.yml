@@ -25,7 +25,7 @@ env:
     - AMCL_TAG=4.7.3
     - AMCL_DIR=${TRAVIS_BUILD_DIR}/amcl/install
     - TPM2_TSS_DIR=${TRAVIS_BUILD_DIR}/tpm2-tss/
-    - XAPTUM_TPM_TAG=v0.5.8
+    - XAPTUM_TPM_TAG=v1.0.0
     - XAPTUM_TPM_DIR=${TRAVIS_BUILD_DIR}/xaptum-tpm/
     - AMCL_CURVES=FP256BN,NIST256
     - ECDAA_TAG=v1.0.0
