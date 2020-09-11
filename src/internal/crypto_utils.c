@@ -23,6 +23,11 @@
 #include <xtt/daa_wrapper.h>
 #include <xtt/certificates.h>
 
+#ifdef USE_TPM
+#include <xaptum-tpm.h>
+#include <tss2/tss2_tpm2_types.h>
+#endif
+
 #include <stddef.h>
 #include <string.h>
 #include <assert.h>
@@ -94,6 +99,37 @@ int longterm_sign_ecdsap256(unsigned char *signature_out,
                                    msg_len,
                                    &self->longterm_private_key.ecdsap256);
 }
+
+#ifdef USE_TPM
+int longterm_sign_ecdsap256TPM(unsigned char *signature_out,
+                               const unsigned char *msg,
+                               uint16_t msg_len,
+                               const struct xtt_client_handshake_context *self)
+{
+    TPM2B_DIGEST hash = {};
+    struct xtt_crypto_hmac xtt_hash = {};
+    if (0 != xtt_crypto_hash_sha256(&xtt_hash, msg, msg_len))
+        return XTT_RETURN_CRYPTO;
+    memcpy(hash.buffer, &xtt_hash.buf, sizeof(xtt_crypto_sha256));
+    hash.size = xtt_hash.len;
+
+    TPMT_SIGNATURE tpm_signature = {};
+    if (TSS2_RC_SUCCESS != xtpm_sign(self->tcti_context,
+                                     &self->longterm_private_key_tpm,
+                                     &hash,
+                                     &tpm_signature))
+        return XTT_RETURN_CRYPTO;
+
+    memcpy(signature_out,
+           &tpm_signature.signature.ecdsa.signatureR.buffer[0],
+           tpm_signature.signature.ecdsa.signatureR.size);
+    memcpy(&signature_out[tpm_signature.signature.ecdsa.signatureR.size],
+           tpm_signature.signature.ecdsa.signatureS.buffer,
+           tpm_signature.signature.ecdsa.signatureS.size);
+
+    return XTT_RETURN_SUCCESS;
+}
+#endif
 
 int verify_root_ecdsap256(const unsigned char *signature, //equivalent to verify_signature
                         const struct xtt_server_certificate_raw_type *certificate,
