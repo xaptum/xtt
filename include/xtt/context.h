@@ -27,6 +27,7 @@
 #include <xtt/daa_wrapper.h>
 
 #ifdef USE_TPM
+#include <xaptum-tpm/keys.h>
 #include <tss2/tss2_sys.h>
 #endif
 
@@ -187,6 +188,17 @@ struct xtt_client_handshake_context {
     union {
         xtt_ecdsap256_priv_key ecdsap256;
     } longterm_private_key;
+
+#ifdef USE_TPM
+    TSS2_TCTI_CONTEXT *tcti_context;
+
+    TPMI_RH_HIERARCHY hierarchy;
+    char hierarchy_password[MAX_TPM_PASSWORD_LENGTH];
+    size_t hierarchy_password_length;
+
+    TPM2_HANDLE parent_handle;
+    struct xtpm_key longterm_private_key_tpm;
+#endif
 };
 
 struct xtt_server_cookie_context {
@@ -251,7 +263,7 @@ struct xtt_client_group_context {
 
 #ifdef USE_TPM
     // If using a TPM:
-    TPM_HANDLE key_handle;
+    TPM2_HANDLE key_handle;
     char key_password[MAX_TPM_PASSWORD_LENGTH];
     uint16_t key_password_length;
     TSS2_TCTI_CONTEXT *tcti_context;
@@ -266,6 +278,22 @@ xtt_initialize_client_handshake_context(struct xtt_client_handshake_context* ctx
                                         uint16_t out_buffer_size,
                                         xtt_version version,
                                         xtt_suite_spec suite_spec);
+
+#ifdef USE_TPM
+xtt_return_code_type
+xtt_initialize_client_handshake_context_TPM(struct xtt_client_handshake_context* ctx_out,
+                                            unsigned char *in_buffer,
+                                            uint16_t in_buffer_size,
+                                            unsigned char *out_buffer,
+                                            uint16_t out_buffer_size,
+                                            xtt_version version,
+                                            xtt_suite_spec suite_spec,
+                                            TPMI_RH_HIERARCHY hierarchy,
+                                            const char *hierarchy_password,
+                                            size_t hierarchy_password_length,
+                                            TPM2_HANDLE parent_handle,
+                                            TSS2_TCTI_CONTEXT *tcti_context);
+#endif
 
 xtt_return_code_type
 xtt_initialize_server_handshake_context(struct xtt_server_handshake_context* ctx_out,
@@ -300,7 +328,7 @@ xtt_initialize_client_group_context_lrswTPM(struct xtt_client_group_context *ctx
                                             xtt_daa_credential_lrsw *cred,
                                             const unsigned char *basename,
                                             uint16_t basename_length,
-                                            TPM_HANDLE key_handle,
+                                            TPM2_HANDLE key_handle,
                                             const char *key_password,
                                             uint16_t key_password_length,
                                             TSS2_TCTI_CONTEXT *tcti_context);

@@ -22,6 +22,10 @@
 
 #include <stddef.h>
 
+#ifdef USE_TPM
+#include <xaptum-tpm/keys.h>
+#endif
+
 #include <xtt/crypto_types.h>
 
 #ifdef __cplusplus
@@ -48,6 +52,19 @@ int xtt_x509_from_ecdsap256_keypair(const xtt_ecdsap256_pub_key *pub_key_in,
                                   const xtt_identity_type *common_name,
                                   unsigned char *certificate_out,
                                   size_t certificate_out_length);
+
+#ifdef USE_TPM
+/*
+ * Same as above, but uses a TPM signing key.
+ */
+int xtt_x509_from_ecdsap256_TPM(const xtt_ecdsap256_pub_key *pub_key_in,
+                                const struct xtpm_key *priv_key_in,
+                                TSS2_TCTI_CONTEXT *tcti_context,
+                                const xtt_identity_type *common_name,
+                                unsigned char *certificate_out,
+                                size_t certificate_out_length);
+#endif
+
 /*
  * Writes the ECDSA keypair from the keys given
  *

@@ -4,7 +4,7 @@ list(APPEND CMAKE_MODULE_PATH CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/cmake)
 
 project(xtt
         LANGUAGES C
-        VERSION "0.10.4"
+        VERSION "0.11.0"
         )
 
 set(XTT_VERSION ${PROJECT_VERSION})
@@ -20,13 +20,14 @@ option(BUILD_SHARED_LIBS "Build as a shared library" ON)
 option(BUILD_STATIC_LIBS "Build as a static library" OFF)
 option(BUILD_TOOL "Build XTT tool" ON)
 
-find_package(ecdaa 0.10.0 REQUIRED QUIET)
+find_package(ecdaa 1.0.0 REQUIRED QUIET)
 find_package(sodium 1.0.11 REQUIRED QUIET)
 
 if(USE_TPM)
         add_definitions(-DUSE_TPM)
-        find_package(xaptum-tpm 0.5.7 REQUIRED QUIET)
-        find_package(ecdaa 0.10.0 COMPONENTS tpm REQUIRED QUIET)
+        find_package(TSS2 REQUIRED QUIET)
+        find_package(xaptum-tpm 1.0.0 REQUIRED QUIET)
+        find_package(ecdaa 1.0.0 COMPONENTS tpm REQUIRED QUIET)
 endif()
 
 # If not building as a shared library, force build as a static.  This
@@ -68,8 +69,6 @@ set(XTT_SRCS
 if(USE_TPM)
   list(APPEND XTT_SRCS
         src/tpm/context.c
-        src/tpm/handles.c
-        src/tpm/nvram.c
         )
 endif()
 
@@ -97,6 +96,9 @@ if(BUILD_SHARED_LIBS)
   )
 
   if(USE_TPM)
+    target_link_libraries(xtt PUBLIC tss2::sys)
+    target_link_libraries(xtt PUBLIC tss2::tcti-device)
+    target_link_libraries(xtt PUBLIC tss2::tcti-mssim)
     target_link_libraries(xtt PUBLIC xaptum-tpm::xaptum-tpm)
     target_link_libraries(xtt PRIVATE ecdaa::ecdaa-tpm)
   endif()
@@ -132,6 +134,9 @@ if(BUILD_STATIC_LIBS)
           PRIVATE AMCL::AMCL
   )
   if(USE_TPM)
+    target_link_libraries(xtt_static PUBLIC tss2::sys)
+    target_link_libraries(xtt_static PUBLIC tss2::tcti-device)
+    target_link_libraries(xtt_static PUBLIC tss2::tcti-mssim)
     target_link_libraries(xtt_static PUBLIC xaptum-tpm::xaptum-tpm)
     target_link_libraries(xtt_static PRIVATE ecdaa::ecdaa-tpm)
   else()

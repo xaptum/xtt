@@ -59,6 +59,13 @@ int longterm_sign_ecdsap256(unsigned char *signature_out,
                           uint16_t msg_len,
                           const struct xtt_client_handshake_context *self);
 
+#ifdef USE_TPM
+int longterm_sign_ecdsap256TPM(unsigned char *signature_out,
+                               const unsigned char *msg,
+                               uint16_t msg_len,
+                               const struct xtt_client_handshake_context *self);
+#endif
+
 int verify_root_ecdsap256(const unsigned char *signature,
                         const struct xtt_server_certificate_raw_type *certificate,
                         const struct xtt_server_root_certificate_context *self);
