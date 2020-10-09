@@ -1,3 +1,23 @@
+xtt (0.11.0-1) bionic; urgency=medium
+
+  [ Zane Beckwith ]
+  * util: Delete any existing contents of file before writing output.
+  * test: Only run "tool_test" if BUILD_TOOL=ON.
+  * README: Add Debian Buster to installation instructions.
+  * travis: Install local tpm2-tss (tpm2-software implementation).
+  * gitignore: Add tpm2-tss local installation directory.
+  * Use v1.0.0 of ecdaa.
+  * Use tpm2-software TSS (rather than xaptum-tpm TSS).
+  * Remove tpm/nvram, and use xaptum-tpm's implementation instead.
+  * Use v1.0.0 of xaptum-tpm.
+  * crypto: Bring back SHA256.
+  * Allow using a TPM for "longterm" key operations.
+  * tool: Use tpm-ecdsa for longterm key in client.
+  * asn1: Add TPM-based certificate generation function.
+  * Bump minor version, to 0.11.0.
+
+ -- Zane Beckwith <zane.beckwith@xaptum.com>  Fri, 09 Oct 2020 19:47:00 +0000
+
 xtt (0.10.4-1) unstable; urgency=medium
 
   [ Zane Beckwith ]
