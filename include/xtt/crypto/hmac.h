@@ -33,6 +33,7 @@ extern "C" {
  * They are used to ensure that the :xtt_crypto_hmac: generic buffer
  * is large enough for any HMAC output.
  */
+typedef struct {unsigned char data[32];} xtt_crypto_sha256;
 typedef struct {unsigned char data[64];} xtt_crypto_sha512;
 typedef struct {unsigned char data[64];} xtt_crypto_blake2b;
 
@@ -50,6 +51,7 @@ typedef struct {unsigned char data[64];} xtt_crypto_blake2b;
 struct xtt_crypto_hmac {
     union {
         unsigned char buf;
+        xtt_crypto_sha256 sha256;
         xtt_crypto_sha512 sha512;
         xtt_crypto_blake2b blake2b;
     };

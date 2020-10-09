@@ -51,7 +51,7 @@ xtt_daa_sign_lrswTPM(unsigned char *signature_out,
                      const unsigned char *basename,
                      uint16_t basename_len,
                      xtt_daa_credential_lrsw *cred,
-                     TPM_HANDLE key_handle,
+                     TPM2_HANDLE key_handle,
                      const char *key_password,
                      uint16_t key_password_length,
                      TSS2_TCTI_CONTEXT *tcti_context)
