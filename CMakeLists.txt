@@ -57,7 +57,8 @@ set(XTT_SRCS
         src/util/root.c
         src/util/generate_server_certificate.c
         src/util/generate_x509_certificate.c
-        src/util/internal/asn1.c
+        src/util/internal/cert_x509.c
+        src/util/internal/key_asn1.c
         src/internal/byte_utils.c
         src/internal/key_derivation.c
         src/internal/crypto_utils.c

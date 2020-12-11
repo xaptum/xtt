@@ -1,6 +1,6 @@
 /******************************************************************************
  *
- * Copyright 2017 Xaptum, Inc.
+ * Copyright 2017-2020 Xaptum, Inc.
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -18,7 +18,8 @@
 
 #include <xtt/util/asn1.h>
 #include <xtt/util/util_errors.h>
-#include "internal/asn1.h"
+#include "internal/cert_x509.h"
+#include "internal/key_asn1.h"
 
 #include <xtt/crypto_wrapper.h>
 #include <xtt/crypto_types.h>
@@ -30,9 +31,9 @@
 #define XTT_ECDSAP256_PRIVATE_KEY_OFFSET 7
 #define XTT_ECDSAP256_PUBLIC_KEY_OFFSET 56
 
-size_t xtt_x509_certificate_length(void)
+size_t xtt_x509_certificate_max_length(void)
 {
-    return XTT_X509_CERTIFICATE_LENGTH;
+    return XTT_X509_CERTIFICATE_MAX_LENGTH;
 }
 
 size_t xtt_asn1_private_key_length(void)
@@ -46,30 +47,26 @@ int xtt_x509_from_ecdsap256_TPM(const xtt_ecdsap256_pub_key *pub_key_in,
                                 TSS2_TCTI_CONTEXT *tcti_context,
                                 const xtt_identity_type *common_name,
                                 unsigned char *certificate_out,
-                                size_t certificate_out_length)
+                                size_t *certificate_length_out)
 {
-    assert(XTT_X509_CERTIFICATE_LENGTH == get_certificate_length());
-
-    unsigned char *pub_key_location;
-    unsigned char *signature_location;
-    unsigned char *signature_input_location;
-    size_t signature_input_length;
-    xtt_identity_string common_name_as_string;
-
-    if (certificate_out_length < XTT_X509_CERTIFICATE_LENGTH)
-      return CERT_CREATION_ERROR;
-
-    int convert_ret = xtt_identity_to_string(common_name, &common_name_as_string);
-    if (0 != convert_ret)
+    if (*certificate_length_out < XTT_X509_CERTIFICATE_MAX_LENGTH)
         return CERT_CREATION_ERROR;
 
-    build_x509_skeleton(certificate_out, &pub_key_location, &signature_location, &signature_input_location, &signature_input_length, common_name_as_string.data);
+    xtt_identity_string common_name_as_string = {};
+    if (0 != xtt_identity_to_string(common_name, &common_name_as_string))
+        return CERT_CREATION_ERROR;
 
-    memcpy(pub_key_location, pub_key_in->data, sizeof(xtt_ecdsap256_pub_key));
+    unsigned char *to_be_signed_location = NULL;
+    size_t to_be_signed_length = 0;
+    build_x509_preamble(&common_name_as_string,
+                        pub_key_in,
+                        certificate_out,
+                        &to_be_signed_location,
+                        &to_be_signed_length);
 
     TPM2B_DIGEST hash = {};
     struct xtt_crypto_hmac xtt_hash = {};
-    if (0 != xtt_crypto_hash_sha256(&xtt_hash, signature_input_location, signature_input_length))
+    if (0 != xtt_crypto_hash_sha256(&xtt_hash, to_be_signed_location, to_be_signed_length))
         return CERT_CREATION_ERROR;
     memcpy(hash.buffer, &xtt_hash.buf, sizeof(xtt_crypto_sha256));
     hash.size = xtt_hash.len;
@@ -81,67 +78,59 @@ int xtt_x509_from_ecdsap256_TPM(const xtt_ecdsap256_pub_key *pub_key_in,
                                      &tpm_signature))
         return CERT_CREATION_ERROR;
 
-    memcpy(signature_location,
-           &tpm_signature.signature.ecdsa.signatureR.buffer[0],
-           tpm_signature.signature.ecdsa.signatureR.size);
-    memcpy(signature_location + tpm_signature.signature.ecdsa.signatureR.size,
-           tpm_signature.signature.ecdsa.signatureS.buffer,
-           tpm_signature.signature.ecdsa.signatureS.size);
+    append_x509_signature(&tpm_signature.signature.ecdsa.signatureR.buffer[0],
+                          &tpm_signature.signature.ecdsa.signatureS.buffer[0],
+                          certificate_out);
+
+    *certificate_length_out = certificate_length(certificate_out);
 
     return 0;
 }
 #endif
 
 int xtt_x509_from_ecdsap256_keypair(const xtt_ecdsap256_pub_key *pub_key_in,
-                                  const xtt_ecdsap256_priv_key *priv_key_in,
-                                  const xtt_identity_type *common_name,
-                                  unsigned char *certificate_out,
-                                  size_t certificate_out_length)
+                                    const xtt_ecdsap256_priv_key *priv_key_in,
+                                    const xtt_identity_type *common_name,
+                                    unsigned char *certificate_out,
+                                    size_t *certificate_length_out)
 {
-    assert(XTT_X509_CERTIFICATE_LENGTH == get_certificate_length());
-
-    unsigned char *pub_key_location;
-    unsigned char *signature_location;
-    unsigned char *signature_input_location;
-    size_t signature_input_length;
-    xtt_identity_string common_name_as_string;
-
-    if (certificate_out_length < XTT_X509_CERTIFICATE_LENGTH)
-      return CERT_CREATION_ERROR;
-
-    int convert_ret = xtt_identity_to_string(common_name, &common_name_as_string);
-    if (0 != convert_ret)
+    if (*certificate_length_out < XTT_X509_CERTIFICATE_MAX_LENGTH)
         return CERT_CREATION_ERROR;
 
-    build_x509_skeleton(certificate_out, &pub_key_location, &signature_location, &signature_input_location, &signature_input_length, common_name_as_string.data);
-
-    memcpy(pub_key_location, pub_key_in->data, sizeof(xtt_ecdsap256_pub_key));
-
-    int sign_ret = xtt_crypto_sign_ecdsap256(signature_location, signature_input_location, signature_input_length, priv_key_in);
-
-    if (0 != sign_ret) {
+    xtt_identity_string common_name_as_string = {};
+    if (0 != xtt_identity_to_string(common_name, &common_name_as_string))
         return CERT_CREATION_ERROR;
-    } else {
-        return 0;
-    }
+
+    unsigned char *to_be_signed_location = NULL;
+    size_t to_be_signed_length = 0;
+    build_x509_preamble(&common_name_as_string,
+                        pub_key_in,
+                        certificate_out,
+                        &to_be_signed_location,
+                        &to_be_signed_length);
+
+    unsigned char combined_sig[sizeof(xtt_ecdsap256_signature)] = {};
+    if (0 != xtt_crypto_sign_ecdsap256(combined_sig,
+                                       to_be_signed_location,
+                                       to_be_signed_length,
+                                       priv_key_in))
+        return CERT_CREATION_ERROR;
+
+    append_x509_signature(&combined_sig[0],
+                          &combined_sig[P256_BIGNUM_SIZE],
+                          certificate_out);
+
+    *certificate_length_out = certificate_length(certificate_out);
+
+    return 0;
 }
 
 int xtt_write_ecdsap256_keypair(xtt_ecdsap256_pub_key *pub_key, xtt_ecdsap256_priv_key *priv_key, const char *keypair_file)
 {
-    // 1) Create ASN.1 wrapped key pair
     unsigned char keypair[XTT_ASN1_PRIVATE_KEY_LENGTH] = {0};
-    assert(XTT_ASN1_PRIVATE_KEY_LENGTH == get_asn1privatekey_length());
 
-    unsigned char *privkey_location;
-    unsigned char *pubkey_location;
+    build_asn1_key(pub_key, priv_key, keypair);
 
-    build_asn1_key_skeleton(keypair, &privkey_location, &pubkey_location);
-
-    memcpy(privkey_location, priv_key->data, sizeof(xtt_ecdsap256_priv_key));
-
-    memcpy(pubkey_location, pub_key->data, sizeof(xtt_ecdsap256_pub_key));
-
-    // 2) Write key pair to file
     int save_ret = xtt_save_key_to_file(keypair, XTT_ASN1_PRIVATE_KEY_LENGTH, keypair_file);
     if (save_ret < 0) {
         return SAVE_TO_FILE_ERROR;
