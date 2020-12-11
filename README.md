@@ -85,6 +85,7 @@ The following CMake configuration options are supported.
 | BUILD_SHARED_LIBS    | ON, OFF        | ON         | Build shared libraries.                                |
 | BUILD_STATIC_LIBS    | ON, OFF        | OFF        | Build static libraries.                                |
 | BUILD_TESTING        | ON, OFF        | ON         | Build the test suite.                                  |
+| TEST_USE_OPENSSL     | ON, OFF        | ON         | Run tests that require an OpenSSL installation.        |
 | STATIC_SUFFIX        | <string>       | <none>     | Appends a suffix to the static lib name.               |
 
 ### Installing
