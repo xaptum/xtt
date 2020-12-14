@@ -774,12 +774,13 @@ int report_results_client(xtt_identity_type *requested_client_id,
     // 3) Save longterm keypair as X509 certificate and ASN.1-encoded private key
     if (use_tpm) {
 #ifdef USE_TPM
-        unsigned char cert_buf[XTT_X509_CERTIFICATE_LENGTH] = {0};
-        if (0 != xtt_x509_from_ecdsap256_TPM(&my_longterm_key, &ctx->longterm_private_key_tpm, tpm_ctx->tcti_context, &my_assigned_id, cert_buf, sizeof(cert_buf))) {
+        unsigned char cert_buf[XTT_X509_CERTIFICATE_MAX_LENGTH] = {0};
+        size_t cert_len = sizeof(cert_buf);
+        if (0 != xtt_x509_from_ecdsap256_TPM(&my_longterm_key, &ctx->longterm_private_key_tpm, tpm_ctx->tcti_context, &my_assigned_id, cert_buf, &cert_len)) {
             fprintf(stderr, "Error creating X509 certificate\n");
             return CERT_CREATION_ERROR;
         }
-        write_ret = xtt_save_to_file(cert_buf, sizeof(cert_buf), longterm_public_key_out_file, 0644);
+        write_ret = xtt_save_to_file(cert_buf, cert_len, longterm_public_key_out_file, 0644);
         if(write_ret < 0){
             return SAVE_TO_FILE_ERROR;
         }
@@ -789,6 +790,7 @@ int report_results_client(xtt_identity_type *requested_client_id,
             return 1;
         }
 #else
+        (void)tpm_ctx;
         fprintf(stderr, "Attempted to use a TPM, but not built with TPM enabled!\n");
         return TPM_ERROR;
 #endif
@@ -799,12 +801,13 @@ int report_results_client(xtt_identity_type *requested_client_id,
             return 1;
         }
 
-        unsigned char cert_buf[XTT_X509_CERTIFICATE_LENGTH] = {0};
-        if (0 != xtt_x509_from_ecdsap256_keypair(&my_longterm_key, &my_longterm_private_key, &my_assigned_id, cert_buf, sizeof(cert_buf))) {
+        unsigned char cert_buf[XTT_X509_CERTIFICATE_MAX_LENGTH] = {0};
+        size_t cert_len = sizeof(cert_buf);
+        if (0 != xtt_x509_from_ecdsap256_keypair(&my_longterm_key, &my_longterm_private_key, &my_assigned_id, cert_buf, &cert_len)) {
             fprintf(stderr, "Error creating X509 certificate\n");
             return CERT_CREATION_ERROR;
         }
-        write_ret = xtt_save_to_file(cert_buf, sizeof(cert_buf), longterm_public_key_out_file, 0644);
+        write_ret = xtt_save_to_file(cert_buf, cert_len, longterm_public_key_out_file, 0644);
         if(write_ret < 0){
             return SAVE_TO_FILE_ERROR;
         }

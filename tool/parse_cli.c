@@ -454,6 +454,8 @@ void parse_runclient_cli(int argc, char** argv, struct cli_params *params){
         fprintf(stderr, "Unknown tcti_type '%s'\n", tcti_str);
         exit(1);
     }
+#else
+    (void)nondefault_priv_file;
 #endif
 }
 
