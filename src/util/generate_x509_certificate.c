@@ -49,13 +49,14 @@ int xtt_generate_x509_certificate(const char *keypair_filename, const char *id_f
     }
 
     // 3) Create certificate and save to file.
-    unsigned char cert_buf[XTT_X509_CERTIFICATE_LENGTH] = {0};
-    ret = xtt_x509_from_ecdsap256_keypair(&pub, &priv, &id, cert_buf, sizeof(cert_buf));
+    unsigned char cert_buf[XTT_X509_CERTIFICATE_MAX_LENGTH] = {0};
+    size_t cert_len = sizeof(cert_buf);
+    ret = xtt_x509_from_ecdsap256_keypair(&pub, &priv, &id, cert_buf, &cert_len);
     if (0 != ret) {
         return CERT_CREATION_ERROR;
     }
 
-    write_ret = xtt_save_cert_to_file(cert_buf, sizeof(cert_buf), certificate_filename);
+    write_ret = xtt_save_cert_to_file(cert_buf, cert_len, certificate_filename);
     if (write_ret < 0) {
         return SAVE_TO_FILE_ERROR;
     }
