@@ -4,7 +4,7 @@ list(APPEND CMAKE_MODULE_PATH CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/cmake)
 
 project(xtt
         LANGUAGES C
-        VERSION "0.11.0"
+        VERSION "0.12.0"
         )
 
 set(XTT_VERSION ${PROJECT_VERSION})
@@ -19,6 +19,7 @@ option(USE_TPM "use a TPM" ON)
 option(BUILD_SHARED_LIBS "Build as a shared library" ON)
 option(BUILD_STATIC_LIBS "Build as a static library" OFF)
 option(BUILD_TOOL "Build XTT tool" ON)
+option(TEST_USE_OPENSSL "Run tests that require an OpenSSL installation" ON)
 
 find_package(ecdaa 1.0.0 REQUIRED QUIET)
 find_package(sodium 1.0.11 REQUIRED QUIET)
@@ -57,7 +58,8 @@ set(XTT_SRCS
         src/util/root.c
         src/util/generate_server_certificate.c
         src/util/generate_x509_certificate.c
-        src/util/internal/asn1.c
+        src/util/internal/cert_x509.c
+        src/util/internal/key_asn1.c
         src/internal/byte_utils.c
         src/internal/key_derivation.c
         src/internal/crypto_utils.c
