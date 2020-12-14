@@ -4,7 +4,7 @@ list(APPEND CMAKE_MODULE_PATH CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/cmake)
 
 project(xtt
         LANGUAGES C
-        VERSION "0.11.0"
+        VERSION "0.12.0"
         )
 
 set(XTT_VERSION ${PROJECT_VERSION})
