@@ -1,6 +1,6 @@
 /******************************************************************************
  *
- * Copyright 2018 Xaptum, Inc.
+ * Copyright 2017-2020 Xaptum, Inc.
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -16,39 +16,25 @@
  *
  *****************************************************************************/
 
-#include <xtt/tpm/handles.h>
+#ifndef XTT_INTERNAL_KEY_ASN1_H
+#define XTT_INTERNAL_KEY_ASN1_H
+#pragma once
 
-uint32_t xtt_key_handle(void)
-{
-    return XTT_KEY_HANDLE;
-}
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-uint32_t xtt_gpk_handle(void)
-{
-    return XTT_GPK_HANDLE;
-}
+#include <xtt/crypto_types.h>
 
-uint32_t xtt_cred_handle(void)
-{
-    return XTT_CRED_HANDLE;
-}
+#include <stddef.h>
 
-uint32_t xtt_cred_sig_handle(void)
-{
-    return XTT_CRED_SIG_HANDLE;
-}
+void
+build_asn1_key(const xtt_ecdsap256_pub_key *pub_key,
+               const xtt_ecdsap256_priv_key *priv_key,
+               unsigned char *key_out);
 
-uint32_t xtt_root_asn1cert_handle(void)
-{
-    return XTT_ROOT_ASN1CERT_HANDLE;
+#ifdef __cplusplus
 }
+#endif
 
-uint32_t xtt_basename_handle(void)
-{
-    return XTT_BASENAME_HANDLE;
-}
-
-uint32_t xtt_root_xttcert_handle(void)
-{
-    return XTT_ROOT_XTTCERT_HANDLE;
-}
+#endif

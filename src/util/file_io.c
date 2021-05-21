@@ -24,7 +24,7 @@
 
 int xtt_save_to_file(unsigned char *buffer, size_t bytes_to_write, const char *filename, mode_t permission)
 {
-    int fd = open(filename, O_WRONLY | O_CREAT | O_CLOEXEC, permission);
+    int fd = open(filename, O_WRONLY | O_CREAT | O_CLOEXEC | O_TRUNC, permission);
     if (fd == -1){
     return SAVE_TO_FILE_ERROR;
     }

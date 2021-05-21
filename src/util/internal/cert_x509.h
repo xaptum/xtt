@@ -1,6 +1,6 @@
 /******************************************************************************
  *
- * Copyright 2018 Xaptum, Inc.
+ * Copyright 2017-2020 Xaptum, Inc.
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -16,42 +16,34 @@
  *
  *****************************************************************************/
 
-#ifndef XTT_TPM_NVRAM_H
-#define XTT_TPM_NVRAM_H
+#ifndef XTT_INTERNAL_CERT_X509_H
+#define XTT_INTERNAL_CERT_X509_H
 #pragma once
-
-#include <xtt/tpm/context.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-enum xtt_object_name {
-    XTT_GROUP_PUBLIC_KEY,
-    XTT_CREDENTIAL,
-    XTT_CREDENTIAL_SIGNATURE,
-    XTT_ROOT_ASN1_CERTIFICATE,
-    XTT_BASENAME,
-    XTT_ROOT_XTT_CERTIFICATE,
-};
+#include <xtt/crypto_types.h>
 
-TSS2_RC
-xtt_read_object(unsigned char* out_buffer,
-                uint16_t out_buffer_size,
-                uint16_t *out_length,
-                enum xtt_object_name object_name,
-                struct xtt_tpm_context *tpm_ctx);
+#include <stddef.h>
 
-TSS2_RC
-xtt_read_nvram(unsigned char *out,
-               uint16_t size,
-               TPM_HANDLE index,
-               struct xtt_tpm_context *tpm_ctx);
+#define P256_BIGNUM_SIZE 32
 
-TSS2_RC
-xtt_get_nvram_size(uint16_t *size_out,
-                   TPM_HANDLE index,
-                   struct xtt_tpm_context *tpm_ctx);
+void
+build_x509_preamble(const xtt_identity_string *common_name,
+                    const xtt_ecdsap256_pub_key *pub_key,
+                    unsigned char *certificate_out,
+                    unsigned char **to_be_signed_location_out,
+                    size_t *to_be_signed_length_out);
+
+void
+append_x509_signature(const unsigned char *signature_r,
+                      const unsigned char *signature_s,
+                      unsigned char *certificate_out);
+
+size_t
+certificate_length(const unsigned char *certificate);
 
 #ifdef __cplusplus
 }

@@ -1,6 +1,6 @@
 /******************************************************************************
  *
- * Copyright 2017 Xaptum, Inc.
+ * Copyright 2017-2020 Xaptum, Inc.
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -22,14 +22,18 @@
 
 #include <stddef.h>
 
+#ifdef USE_TPM
+#include <xaptum-tpm/keys.h>
+#endif
+
 #include <xtt/crypto_types.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#define XTT_X509_CERTIFICATE_LENGTH 352
-size_t xtt_x509_certificate_length(void);
+#define XTT_X509_CERTIFICATE_MAX_LENGTH 360
+size_t xtt_x509_certificate_max_length(void);
 
 #define XTT_ASN1_PRIVATE_KEY_LENGTH 121
 size_t xtt_asn1_private_key_length(void);
@@ -37,17 +41,30 @@ size_t xtt_asn1_private_key_length(void);
 
 /*
  * Creates a x509 certificate from pub_key_in, priv_key_in, and common_name
- * and writes the certificate into certificate_out
+ * and writes the certificate into certificate_out (and its length into certificate_length_out)
  *
  * Returns:
  * 0 on success
  * CERT_CREATION_ERROR on failure
 */
 int xtt_x509_from_ecdsap256_keypair(const xtt_ecdsap256_pub_key *pub_key_in,
-                                  const xtt_ecdsap256_priv_key *priv_key_in,
-                                  const xtt_identity_type *common_name,
-                                  unsigned char *certificate_out,
-                                  size_t certificate_out_length);
+                                    const xtt_ecdsap256_priv_key *priv_key_in,
+                                    const xtt_identity_type *common_name,
+                                    unsigned char *certificate_out,
+                                    size_t *certificate_length_out);
+
+#ifdef USE_TPM
+/*
+ * Same as above, but uses a TPM signing key.
+ */
+int xtt_x509_from_ecdsap256_TPM(const xtt_ecdsap256_pub_key *pub_key_in,
+                                const struct xtpm_key *priv_key_in,
+                                TSS2_TCTI_CONTEXT *tcti_context,
+                                const xtt_identity_type *common_name,
+                                unsigned char *certificate_out,
+                                size_t *certificate_length_out);
+#endif
+
 /*
  * Writes the ECDSA keypair from the keys given
  *

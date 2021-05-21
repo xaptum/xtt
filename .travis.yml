@@ -24,16 +24,21 @@ env:
     - LIBSODIUM_DIR=${TRAVIS_BUILD_DIR}/libsodium
     - AMCL_TAG=4.7.3
     - AMCL_DIR=${TRAVIS_BUILD_DIR}/amcl/install
-    - XAPTUM_TPM_TAG=v0.5.8
+    - TPM2_TSS_DIR=${TRAVIS_BUILD_DIR}/tpm2-tss/
+    - XAPTUM_TPM_TAG=v1.0.0
     - XAPTUM_TPM_DIR=${TRAVIS_BUILD_DIR}/xaptum-tpm/
     - AMCL_CURVES=FP256BN,NIST256
-    - ECDAA_TAG=v0.10.0
+    - ECDAA_TAG=v1.0.0
     - ECDAA_DIR=${TRAVIS_BUILD_DIR}/ecdaa
     - SHARED_LIBS=ON
     - XTT_INSTALL_DIR=${TRAVIS_BUILD_DIR}/install
 
+before_install:
+  - sudo apt-get -y --no-install-recommends install autoconf-archive libgcrypt11-dev 
+
 before_script:
   - .travis/install-libsodium.sh ${LIBSODIUM_TAG} ${LIBSODIUM_DIR}
+  - .travis/install-tpm2-tss.sh ${TPM2_TSS_DIR} ${INSTALL_PREFIX}
   - .travis/install-xaptum-tpm.sh ${XAPTUM_TPM_TAG} ${XAPTUM_TPM_DIR}
   - .travis/install-amcl.sh ${AMCL_TAG} ${AMCL_DIR} ${AMCL_CURVES}
   - .travis/install-ecdaa.sh ${ECDAA_TAG} ${ECDAA_DIR}

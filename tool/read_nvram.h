@@ -24,10 +24,11 @@
 extern "C" {
 #endif
 
-#include <xtt/tpm/nvram.h>
 #include <xtt/tpm/context.h>
 
-int read_nvram(const struct xtt_tpm_params *params, const char* outfile, enum xtt_object_name obj_name);
+#include <xaptum-tpm/nvram.h>
+
+int read_nvram(const struct xtt_tpm_params *params, const char* outfile, enum xtpm_object_name obj_name);
 
 
 #ifdef __cplusplus

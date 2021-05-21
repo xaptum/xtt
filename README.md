@@ -16,14 +16,14 @@ TODO: Actually briefly summarize protocol justification and features.
 `xtt` is available for the following distributions. It may also be
 built from source.
 
-### Debian (Stretch)
+### Debian (Stretch or Buster)
 
 ``` bash
 # Install the Xaptum API repo GPG signing key.
 apt-key adv --keyserver keyserver.ubuntu.com --recv-keys c615bfaa7fe1b4ca
 
-# Add the repository to your APT sources
-echo "deb http://dl.bintray.com/xaptum/deb stretch main" > /etc/apt/sources.list.d/xaptum.list
+# Add the repository to your APT sources, replacing <dist> with either jessie, stretch, or buster.
+echo "deb http://dl.bintray.com/xaptum/deb <dist> main" > /etc/apt/sources.list.d/xaptum.list
 
 # Install the library.
 sudo apt-get install libxtt-dev
@@ -85,6 +85,7 @@ The following CMake configuration options are supported.
 | BUILD_SHARED_LIBS    | ON, OFF        | ON         | Build shared libraries.                                |
 | BUILD_STATIC_LIBS    | ON, OFF        | OFF        | Build static libraries.                                |
 | BUILD_TESTING        | ON, OFF        | ON         | Build the test suite.                                  |
+| TEST_USE_OPENSSL     | ON, OFF        | ON         | Run tests that require an OpenSSL installation.        |
 | STATIC_SUFFIX        | <string>       | <none>     | Appends a suffix to the static lib name.               |
 
 ### Installing
