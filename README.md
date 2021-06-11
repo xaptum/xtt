@@ -1,4 +1,4 @@
-# XTT IoT security protocol
+3# XTT IoT security protocol
 
 [![Release](https://img.shields.io/github/release/xaptum/xtt.svg)](https://github.com/xaptum/xtt/releases)
 [![Build Status](https://travis-ci.org/xaptum/xtt.svg?branch=master)](https://travis-ci.org/xaptum/xtt)
@@ -19,11 +19,15 @@ built from source.
 ### Debian (Stretch or Buster)
 
 ``` bash
+DIST=$(lsb_release -cs)
+
 # Install the Xaptum API repo GPG signing key.
+sudo apt-get install dirmngr
 apt-key adv --keyserver keyserver.ubuntu.com --recv-keys c615bfaa7fe1b4ca
 
-# Add the repository to your APT sources, replacing <dist> with either jessie, stretch, or buster.
-echo "deb http://dl.bintray.com/xaptum/deb <dist> main" > /etc/apt/sources.list.d/xaptum.list
+# Add the repository to your APT sources
+echo "deb https://xaptum.jfrog.io/artifactory/debian ${DIST} main" | sudo tee /etc/apt/sources.list.d/xaptum.list
+sudo apt-get update
 
 # Install the library.
 sudo apt-get install libxtt-dev
