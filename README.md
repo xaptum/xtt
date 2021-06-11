@@ -16,7 +16,7 @@ TODO: Actually briefly summarize protocol justification and features.
 `xtt` is available for the following distributions. It may also be
 built from source.
 
-### Debian (Stretch or Buster)
+### Debian (Stretch, Buster) or Ubuntu (Bionic)
 
 ``` bash
 DIST=$(lsb_release -cs)
