@@ -27,26 +27,13 @@ extern "C" {
 #include <tss2/tss2_sys.h>
 #include <tss2/tss2_tcti.h>
 
-typedef enum {
-    XTT_TCTI_SOCKET,
-    XTT_TCTI_DEVICE,
-} xtt_tcti_type;
-
-struct xtt_tpm_params {
-    xtt_tcti_type tcti;
-    const char *dev_file;
-    const char *hostname;
-    const char *port;
-};
-
 struct xtt_tpm_context {
-    unsigned char tcti_context_buffer[256];
     TSS2_TCTI_CONTEXT *tcti_context;
     unsigned char sapi_context_buffer[5120];
     TSS2_SYS_CONTEXT *sapi_context;
 };
 
-int xtt_init_tpm_context(struct xtt_tpm_context *ctx, const struct xtt_tpm_params *params);
+int xtt_init_tpm_context(struct xtt_tpm_context *ctx, const char* nameConf);
 
 void xtt_free_tpm_context(struct xtt_tpm_context *ctx);
 

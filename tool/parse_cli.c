@@ -298,10 +298,7 @@ void parse_runclient_cli(int argc, char** argv, struct cli_params *params){
     params->usetpm = 0;
     params->suitespec = "X25519_LRSW_ECDSAP256_CHACHA20POLY1305_SHA512";
 #ifdef USE_TPM
-    char *tcti_str = "device";
-    params->tpm_params.dev_file = "/dev/tpm0";
-    params->tpm_params.hostname = "localhost";
-    params->tpm_params.port = "2321";
+    params->tcti_conf = "device:/dev/tpm0";
 #endif
     const char *usage_str = "Run XTT client.\n\n"
         "Usage: %s %s [-h] [-p <file>] [-s option] [-a <file>] [-q <file>] [-r <file>] [-d <file>] [-c <file>] [-k <file>]"
@@ -330,8 +327,7 @@ void parse_runclient_cli(int argc, char** argv, struct cli_params *params){
         "\t\t-v --longtermpriv            Longterm Private Key output location [default = longterm_priv.bin]\n"
 #ifdef USE_TPM
         "\t\t-m --tpmuse                  Indicates to use TPM [default = false]\n"
-        "\t\t-t --tctitype                Which TCTI socket is used ('device' or 'socket') [default = device]\n"
-        "\t\t-f --devfile                 Device file input location if tcti == device [default = /dev/tpm0]\n"
+        "\t\t-t --tcti                    TCTI conf options [default = device:/dev/tpm0]\n"
 #endif
         ;
 
@@ -352,8 +348,7 @@ void parse_runclient_cli(int argc, char** argv, struct cli_params *params){
         {"help", no_argument, NULL, 'h'},
 #ifdef USE_TPM
         {"tpmuse", no_argument, NULL, 'm'},
-        {"tctitype", required_argument, NULL, 't'},
-        {"devfile", required_argument, NULL, 'f'},
+        {"tcti", required_argument, NULL, 't'},
 #endif
 
         {NULL, 0, NULL, 0}
@@ -424,15 +419,11 @@ void parse_runclient_cli(int argc, char** argv, struct cli_params *params){
                 params->usetpm = 1;
                 break;
             case 't':
-                tcti_str = optarg;
-                break;
-            case 'f':
-                params->tpm_params.dev_file = optarg;
+                params->tcti_conf = optarg;
                 break;
 #else
             case 'm':
             case 't':
-            case 'f':
                 printf("TPM options are not supported, because not built with TPM support.");
                 exit(1);
 #endif
@@ -445,15 +436,6 @@ void parse_runclient_cli(int argc, char** argv, struct cli_params *params){
 #ifdef USE_TPM
     if (!nondefault_priv_file && 1 == params->usetpm)
         params->longtermpriv = "longterm_priv.pem";
-
-    if (0 == strcmp(tcti_str, "device")) {
-        params->tpm_params.tcti = XTT_TCTI_DEVICE;
-    } else if (0 == strcmp(tcti_str, "socket")) {
-        params->tpm_params.tcti = XTT_TCTI_SOCKET;
-    } else {
-        fprintf(stderr, "Unknown tcti_type '%s'\n", tcti_str);
-        exit(1);
-    }
 #else
     (void)nondefault_priv_file;
 #endif
@@ -463,19 +445,13 @@ static
 void parse_nvram_cli(int argc, char** argv, struct cli_params *params)
 {
 #ifdef USE_TPM
-    char *tcti_str = "device";
-    params->tpm_params.dev_file = "/dev/tpm0";
-    params->tpm_params.hostname = "localhost";
-    params->tpm_params.port = "2321";
+    params->tcti_conf = "device:/dev/tpm0";
     params->outfile = NULL;
     const char *usage_str = "Dump to file an NVRAM object provisioned on a Xaptum TPM.\n\n"
         "Usage: %s [-h] [-t device|socket] [-d <path>] [-a <ip>] [-p <port>] [-o <file>] <object-name>\n"
         "\tOptions:\n"
         "\t\t-h --help              Display this message.\n"
-        "\t\t-t --tcti              TPM TCTI type (device|socket) [default = device].\n"
-        "\t\t-d --tpm-device-file   TCTI device file, if tcti==device [default = '/dev/tpm0'].\n"
-        "\t\t-a --tpm-ip-address    IP hostname of TPM TCP server, if tcti==socket [default = 'localhost'].\n"
-        "\t\t-p --tpm-port          TCP port of TPM TCP server, if tcti==socket [default = 2321].\n"
+        "\t\t-t --tcti              TPM TCTI conf optiosn [default = device:/dev/tpm0].\n"
         "\t\t-o --output-file       Output file. [default: '<object-name>.[bin,pem]']\n"
         "\tArguments:\n"
         "\t\tobject-name\tOne of daa_gpk, daa_cred, daa_cred_sig, root_asn1_cert, root_xtt_cert, or basename\n"
@@ -484,28 +460,16 @@ void parse_nvram_cli(int argc, char** argv, struct cli_params *params)
     static struct option cli_options[] =
     {
         {"tcti", required_argument, NULL, 't'},
-        {"tpm-device-file", required_argument, NULL, 'd'},
-        {"tpm-ip-address", required_argument, NULL, 'a'},
-        {"tpm-port", required_argument, NULL, 'p'},
         {"output-file", required_argument, NULL, 'o'},
         {"help", no_argument, NULL, 'h'},
         {NULL, 0, NULL, 0}
     };
 
     int c;
-    while ((c = getopt_long(argc, argv, "t:d:a:p:o:h", cli_options, NULL)) != -1) {
+    while ((c = getopt_long(argc, argv, "t:o:h", cli_options, NULL)) != -1) {
         switch (c) {
             case 't':
-                tcti_str = optarg;
-                break;
-            case 'd':
-                params->tpm_params.dev_file = optarg;
-                break;
-            case 'a':
-                params->tpm_params.hostname = optarg;
-                break;
-            case 'p':
-                params->tpm_params.port = optarg;
+                params->tcti_conf = optarg;
                 break;
             case 'o':
                 params->outfile = optarg;
@@ -549,14 +513,6 @@ void parse_nvram_cli(int argc, char** argv, struct cli_params *params)
         exit(1);
     }
 
-    if (0 == strcmp(tcti_str, "device")) {
-        params->tpm_params.tcti = XTT_TCTI_DEVICE;
-    } else if (0 == strcmp(tcti_str, "socket")) {
-        params->tpm_params.tcti = XTT_TCTI_SOCKET;
-    } else {
-        fprintf(stderr, "Unknown tcti_type '%s'\n", tcti_str);
-        exit(1);
-    }
 #else
     (void)argc;
     (void)argv;

@@ -169,7 +169,7 @@ int run_client(struct cli_params* params)
 #ifdef USE_TPM
     int tpm_ctx_ret = SUCCESS;
     if (use_tpm) {
-        tpm_ctx_ret = xtt_init_tpm_context(&tpm_ctx, &params->tpm_params);
+        tpm_ctx_ret = xtt_init_tpm_context(&tpm_ctx, params->tcti_conf);
         if (SUCCESS != tpm_ctx_ret) {
             fprintf(stderr, "Error initializing TPM context: %d\n", tpm_ctx_ret);
             return tpm_ctx_ret;
