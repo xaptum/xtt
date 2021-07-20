@@ -68,7 +68,7 @@ struct cli_params {
     const char* outfile;
 
 #ifdef USE_TPM
-    struct xtt_tpm_params tpm_params;
+    const char* tcti_conf;
     enum xtpm_object_name obj_name;
 #endif
 

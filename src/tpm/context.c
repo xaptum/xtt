@@ -19,47 +19,20 @@
 #include <xtt/util/util_errors.h>
 #include <xtt/tpm/context.h>
 
-#include <tss2/tss2_tcti_device.h>
-#include <tss2/tss2_tcti_mssim.h>
+#include <tss2/tss2_tctildr.h>
 
 #include <string.h>
 #include <assert.h>
 #include <stdio.h>
 
-int xtt_init_tpm_context(struct xtt_tpm_context *ctx, const struct xtt_tpm_params *params)
+int xtt_init_tpm_context(struct xtt_tpm_context *ctx, const char* nameConf)
 {
     // tpm2-software's TSS2 implementation seems to have issues
     // if the memory used for the TCTI and SYS contexts aren't zeroed-out before initialization...
     memset(ctx, 0, sizeof(struct xtt_tpm_context));
 
-    ctx->tcti_context = (TSS2_TCTI_CONTEXT*)ctx->tcti_context_buffer;
-
-    size_t tcti_ctx_size;
-    switch (params->tcti) {
-        case XTT_TCTI_SOCKET: {
-            char config_string[64];
-            size_t ret = snprintf(config_string, sizeof(config_string), "host=%s,port=%s", params->hostname, params->port);
-            if (ret >= sizeof(config_string)) {
-                return TPM_ERROR;
-            }
-            if (TSS2_RC_SUCCESS != Tss2_Tcti_Mssim_Init(NULL, &tcti_ctx_size, config_string)) {
-                return TPM_ERROR;
-            }
-            assert(tcti_ctx_size < sizeof(ctx->tcti_context_buffer));
-            if (TSS2_RC_SUCCESS != Tss2_Tcti_Mssim_Init(ctx->tcti_context, &tcti_ctx_size, config_string)) {
-                return TPM_ERROR;
-            }
-            break;
-        }
-        case XTT_TCTI_DEVICE:
-            if (TSS2_RC_SUCCESS != Tss2_Tcti_Device_Init(NULL, &tcti_ctx_size, params->dev_file)) {
-                return TPM_ERROR;
-            }
-            assert(tcti_ctx_size < sizeof(ctx->tcti_context_buffer));
-            if (TSS2_RC_SUCCESS != Tss2_Tcti_Device_Init(ctx->tcti_context, &tcti_ctx_size, params->dev_file)) {
-                return TPM_ERROR;
-            }
-            break;
+    if (TSS2_RC_SUCCESS != Tss2_TctiLdr_Initialize(nameConf, &ctx->tcti_context)) {
+        return TPM_ERROR;
     }
 
     TSS2_ABI_VERSION abi_version = TSS2_ABI_VERSION_CURRENT;
@@ -77,5 +50,5 @@ int xtt_init_tpm_context(struct xtt_tpm_context *ctx, const struct xtt_tpm_param
 void xtt_free_tpm_context(struct xtt_tpm_context *ctx)
 {
     Tss2_Sys_Finalize(ctx->sapi_context);
-    Tss2_Tcti_Finalize(ctx->tcti_context);
+    Tss2_TctiLdr_Finalize(&ctx->tcti_context);
 }

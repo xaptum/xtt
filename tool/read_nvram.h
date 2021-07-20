@@ -28,7 +28,7 @@ extern "C" {
 
 #include <xaptum-tpm/nvram.h>
 
-int read_nvram(const struct xtt_tpm_params *params, const char* outfile, enum xtpm_object_name obj_name);
+int read_nvram(const char* tcti_conf, const char* outfile, enum xtpm_object_name obj_name);
 
 
 #ifdef __cplusplus

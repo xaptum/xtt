@@ -28,11 +28,11 @@
 
 #define MAX_NVRAM_SIZE 768
 
-int read_nvram(const struct xtt_tpm_params *params, const char* outfile, enum xtpm_object_name obj_name)
+int read_nvram(const char* tcti_conf, const char* outfile, enum xtpm_object_name obj_name)
 {
     struct xtt_tpm_context ctx;
 
-    int ctx_ret = xtt_init_tpm_context(&ctx, params);
+    int ctx_ret = xtt_init_tpm_context(&ctx, tcti_conf);
     if (SUCCESS != ctx_ret) {
         fprintf(stderr, "Error initializing TPM context: %d\n", ctx_ret);
         return ctx_ret;

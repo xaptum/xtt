@@ -80,7 +80,7 @@ int main(int argc, char **argv)
         }
         case action_readnvram: {
 #ifdef USE_TPM
-            out = read_nvram(&params.tpm_params, params.outfile, params.obj_name);
+            out = read_nvram(params.tcti_conf, params.outfile, params.obj_name);
 #else
             fprintf(stderr, "Attempted to use a TPM, but not built with TPM enabled!\n");
             out = TPM_ERROR;
